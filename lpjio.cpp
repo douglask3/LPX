@@ -55,7 +55,7 @@ const int co2_dim_values[NCO2] = { 1, 2, 3 };  // Values for the C dimension
 
 // Missing values to use for output files.
 
-const double FMISSING = 1.0E35;
+const float FMISSING = 1.0E35;
 const int IMISSING = -999;
 
 
@@ -90,7 +90,6 @@ struct RunParameters {
     spinup_out_freq(0),
     rampup_out_freq(0),                        //Doug 07/09
     run_out_freq(1),
-    rampup_out_years(1),                // Doug 11/11
     run_out_years(0)                    //Doug 06/09: Parameter describing the year from when outputs start.
     ,co2_var("CO2"),c13_var("C13"),c14_var("C14")
     { }
@@ -109,7 +108,7 @@ struct RunParameters {
   bool sun_is_cloud;
   MASK_TYPE mask_type;
   bool wetdays_fixed;
-  double fixed_wetdays;
+  float fixed_wetdays;
 
 
   // Soil type data - either a single fixed value or a filename for a
@@ -126,14 +125,14 @@ struct RunParameters {
   string ann_popdens_var;
   string crop_file,crop_var;    //Doug 04/09
   bool crop_fixed;              //Doug 04/09
-  double fixed_crop;             //Doug 04/09
+  float fixed_crop;             //Doug 04/09
   string pas_file,pas_var;      //Doug 04/09
   bool pas_fixed;               //Doug 04/09
-  double fixed_pas;              //Doug 04/09
+  float fixed_pas;              //Doug 04/09
   string lightn_file;
   string lightn_var;
   bool a_nd_fixed;
-  double fixed_a_nd;
+  float fixed_a_nd;
   string a_nd_file;
   string a_nd_var;
 
@@ -154,7 +153,7 @@ struct RunParameters {
   // input (provided rampup_years is not equal to zero). Zero
   // rampup_out_freq means no ouput during ramp_up.
 
-  int rampup_years, rampup_data_years,  rampup_out_freq, rampup_out_years;  //Doug 11/11
+  int rampup_years, rampup_data_years,  rampup_out_freq;
 
 
   // The interval in years between output records written during
@@ -176,7 +175,7 @@ struct RunParameters {
 
   // CO2 concentration.
   
-  double co2_conc[NCO2];
+  float co2_conc[NCO2];
   string co2_file, c13_file, c14_north_file, c14_equator_file, c14_south_file;
   string co2_var, c13_var, c14_var;
 
@@ -208,7 +207,7 @@ struct RunParameters {
 
 struct Grid {
   int nlat, nlon;
-  vector<double> lats, lons;
+  vector<float> lats, lons;
 
   Grid() : nlat(0), nlon(0) { }
   Grid(string file);
@@ -258,7 +257,7 @@ struct LPJOutputVariable {
   LPJVariable *def;
   NcVar **annual_nc, **mean_nc, **sdev_nc, **min_nc, **max_nc;
   int buff_size;
-  double *annual_buff, *avg_buff, *sdev_buff, *min_buff, *max_buff;
+  float *annual_buff, *avg_buff, *sdev_buff, *min_buff, *max_buff;
   bool annual,mean, sdev, min, max;
   int accum_years;
   int out_index;
@@ -385,9 +384,7 @@ LPJVariable LPJ_VARIABLES[] = {
   { "arh_grid",      SIMPLE          },    //Doug 07/09: cheat again, for hetro. resp.
   { "acflux_fire_grid", SIMPLE       },    //Doug 07/09: another cherat for carbon burnt
   { "gdd_grid",      SIMPLE          },    //Doug 07/09: bioclimatic varible growing degree days base 5
-  { "alpha_ws",      SIMPLE          },    //Doug 07/09: Bioclimatic varible for water stress
-  { "fwet",          SIMPLE_MONTHLY  },
-  { "fdry",          SIMPLE_MONTHLY  }    
+  { "alpha_ws",      SIMPLE          }    //Doug 07/09: Bioclimatic varible for water stress
 };
 
 
@@ -434,17 +431,17 @@ Array *a_nd_vals;               // Human fire ignition data.
 
 int no_of_months;               // Climate data size (in months).
 
-double *clim_temp;               // Climate data for current point.
-double *clim_precip;
-double *clim_sun;
-double *clim_wetdays;
-double *clim_tmin;
-double *clim_tmax;
-double *clim_windsp;
-double *clim_lightn;
-double *clim_ann_popdens;
-double *clim_crop;                // Doug 04/09
-double *clim_pas;                 // Doug 04/09
+float *clim_temp;               // Climate data for current point.
+float *clim_precip;
+float *clim_sun;
+float *clim_wetdays;
+float *clim_tmin;
+float *clim_tmax;
+float *clim_windsp;
+float *clim_lightn;
+float *clim_ann_popdens;
+float *clim_crop;                // Doug 04/09
+float *clim_pas;                 // Doug 04/09
 
 int land_points, points_done;   // Point counters.
 int latidx, lonidx;
@@ -469,11 +466,11 @@ bool co2_dim_needed = false;
 LPJOutputVariable **out_vars = 0; // Output variables.
 int out_var_count = 0;
 
-double * co2_vals;
-double * c13_vals;
-double * c14_north_vals;
-double * c14_equator_vals;
-double * c14_south_vals;
+float * co2_vals;
+float * c13_vals;
+float * c14_north_vals;
+float * c14_equator_vals;
+float * c14_south_vals;
 
 
 //======================================================================
@@ -493,8 +490,8 @@ static void read_a_nd(Array *a_nd, string a_nd_file,
 static void check_var_grid(NcVar *var, NcFile *nc,
                            string var_name, string file_name);
 static void open_output_files(string file_name, string directory_name);
-static void handle_output_record(string name, double *data);
-static int read_co2(string var_name, string file_name, double **data);
+static void handle_output_record(string name, float *data);
+static int read_co2(string var_name, string file_name, float **data);
 
 //======================================================================
 //
@@ -511,13 +508,13 @@ static int read_co2(string var_name, string file_name, double **data);
 //   
 
 // In fortran : real dummy_array(1:2,1:3,1:4)
-typedef double (*DummyFortranArray)[3][2];
+typedef float (*DummyFortranArray)[3][2];
 
 extern "C" void initio_(DummyFortranArray dummy_array)
 {
 
   // Check array order
-  double dummy = 1.0;
+  float dummy = 1.0;
 
   for( int i = 0; i < 2; ++i ) {
     for( int j = 0; j < 3; ++j ) {
@@ -526,8 +523,8 @@ extern "C" void initio_(DummyFortranArray dummy_array)
           cerr << "FATAL ERROR : layout of fortran arrays in C++ is not what was expected\n";
           exit( -1 );
         }
-        // As a double[]
-        double * d = (double *)dummy_array;
+        // As a float[]
+        float * d = (float *)dummy_array;
         if( d[(( k * 3 ) + j ) * 2 + i] != dummy ) {
           cerr << "FATAL ERROR : layout of fortran arrays in C++ is not what was expected\n";
           exit( -1 );
@@ -997,17 +994,17 @@ extern "C" void initio_(DummyFortranArray dummy_array)
     exit(1);
   }
 
-  clim_temp = new double[no_of_months];
-  clim_precip = new double[no_of_months];
-  clim_sun = new double[no_of_months];
-  clim_wetdays = new double[no_of_months];
-  clim_tmin = new double[no_of_months];
-  clim_tmax = new double[no_of_months];
-  clim_windsp = new double[no_of_months];
-  clim_lightn = new double[NMON];
-  clim_ann_popdens = new double[no_of_months / NMON];
-  clim_crop = new double[no_of_months / NMON];   //Doug 04/09
-  clim_pas = new double[no_of_months / NMON];   //Doug 04/09
+  clim_temp = new float[no_of_months];
+  clim_precip = new float[no_of_months];
+  clim_sun = new float[no_of_months];
+  clim_wetdays = new float[no_of_months];
+  clim_tmin = new float[no_of_months];
+  clim_tmax = new float[no_of_months];
+  clim_windsp = new float[no_of_months];
+  clim_lightn = new float[NMON];
+  clim_ann_popdens = new float[no_of_months / NMON];
+  clim_crop = new float[no_of_months / NMON];   //Doug 04/09
+  clim_pas = new float[no_of_months / NMON];   //Doug 04/09
 
   if( no_of_months / NMON != read_co2( params.co2_var, params.co2_file, &co2_vals )) {
       cerr << "ERROR: incompatible time dimensions in co2 files" << endl;
@@ -1047,7 +1044,7 @@ extern "C" void initio_(DummyFortranArray dummy_array)
 #elif defined(LPJ_STEP_1B)
   if (params.rampup_years !=0) {                                         //Doug 07/09
     if (params.rampup_out_freq != 0)                                     //Doug 07/09
-      out_year_count += (params.rampup_years-params.rampup_out_years-1) / params.rampup_out_freq;    //Doug 07/09
+      out_year_count += params.rampup_years / params.rampup_out_freq;    //Doug 07/09
   }
 #elif defined(LPJ_STEP_2)
   if (params.run_out_freq == 0)
@@ -1062,7 +1059,6 @@ extern "C" void initio_(DummyFortranArray dummy_array)
   }
 
 #else
-
   if (params.spinup_out_freq != 0)
     out_year_count += params.spinup_years / params.spinup_out_freq;
 
@@ -1082,7 +1078,6 @@ extern "C" void initio_(DummyFortranArray dummy_array)
                         //outputs by years before ouput start
   }
 #endif
-
 
     cerr << out_year_count;
   out_years = new int[out_year_count];
@@ -1119,7 +1114,6 @@ extern "C" void initio_(DummyFortranArray dummy_array)
   }
 
 #else
-
   if (params.spinup_out_freq != 0) {
     for (int idx = 1;
          idx <= params.spinup_years / params.spinup_out_freq; ++idx)
@@ -1149,7 +1143,6 @@ extern "C" void initio_(DummyFortranArray dummy_array)
 #endif
 
 
-
   // Diagnostic output.
 
 // Doug 07/09: if rampup years havent been set, the stop rpogram if in step_1b mode
@@ -1160,18 +1153,15 @@ extern "C" void initio_(DummyFortranArray dummy_array)
   }
 #endif
 
-
   cerr << "Total land points:  " << land_points << endl;
 
 #ifdef LPJ_STEP_1A
   cerr << "Spinup written too: " << params.spinup_file << endl;
 #endif
 
-
 #ifdef LPJ_STEP_1B
   cerr << "Spinup read from:   " << params.spinup_file << endl;
 #endif
-
 
   cerr << "Spinup years:       " << params.spinup_years << endl;
   cerr << "Spinup output freq: ";
@@ -1184,11 +1174,9 @@ extern "C" void initio_(DummyFortranArray dummy_array)
     cerr << "Rampup written too: " << params.rampup_file << endl;
 #endif
 
-
 #ifdef LPJ_STEP_2
     cerr << "Rampup read from:   " << params.rampup_file << endl;
 #endif
-
 
     cerr << "Rampup years:       " << params.rampup_years << endl;
     cerr << "Rampup output freq: ";
@@ -1279,7 +1267,6 @@ extern "C" int get_run_years_( int * run_years )
 
 #endif
 
-
 //----------------------------------------------------------------------
 //
 //  getgrid
@@ -1288,8 +1275,8 @@ extern "C" int get_run_years_( int * run_years )
 //  latitude and soil type to the main LPJ module.  Also deal with
 //  end condition if there are no more points to process.
 
-extern "C" int getgrid_(double *latitude, double *longitude, int *soiltype,
-                    double *lightn, double *a_nd, int *dogridcell)
+extern "C" int getgrid_(float *latitude, float *longitude, int *soiltype,
+                    float *lightn, float *a_nd, int *dogridcell)
 {
   // Set up return values.
 
@@ -1397,13 +1384,13 @@ extern "C" int getgrid_(double *latitude, double *longitude, int *soiltype,
       if (params.sun_is_cloud) clim_sun[mon] = 100.0 - clim_sun[mon];
       //Kirsten: correct cloudiness if >100 contemporary!
       if ((clim_sun[mon]>100.0) && (clim_sun[mon]<1099)) {
-        //      cerr << "sunshine > 100 " << clim_sun[mon] << endl;
+	//	cerr << "sunshine > 100 " << clim_sun[mon] << endl;
         clim_sun[mon]=100.0;
         //cerr << "now corrected: " << clim_sun[mon] << endl;
       }
       //Kirsten: correct cloudiness if <0 contemporary!
       if ((clim_sun[mon]<0.0) && (clim_sun[mon]<1099)) {
-        //cerr << "sunshine < 0" << clim_sun[mon] << endl;
+	//cerr << "sunshine < 0" << clim_sun[mon] << endl;
         clim_sun[mon]=0.0;
         //cerr << "now corrected: " << clim_sun[mon] << endl;
       }
@@ -1433,14 +1420,14 @@ extern "C" int getgrid_(double *latitude, double *longitude, int *soiltype,
 //  Doug 07/09: add instances of rampup_years
 
 extern "C" int getclimate_(int *year,
-                           double *mtemp,
-                           double *mtemp_dmin, double *mtemp_dmax,
-                           double *mprec, double *mwet, double *msun,
-                           double *mwindsp,
-                           double *popden,
-                           double *crop, //Doug 04/09
-                           double *pas,  //Doug 04/09
-                           double *co2, int *doyear)
+                           float *mtemp,
+                           float *mtemp_dmin, float *mtemp_dmax,
+                           float *mprec, float *mwet, float *msun,
+                           float *mwindsp,
+                           float *popden,
+                           float *crop,	//Doug 04/09
+                           float *pas,	//Doug 04/09
+                           float *co2, int *doyear)
 {
   // The total length of the simulation is params.spinup_years of
   // spin-up, followed by as many years as we have data for.
@@ -1506,14 +1493,13 @@ void output_to_text_file_0( OUT & out, const char * name, T * value )
 }
 
 template< typename OUT >
-void output_to_text_file_0( OUT & out, const char * name, double * value )
+void output_to_text_file_0( OUT & out, const char * name, float * value )
 {
     bool ok = isfinite( *value );
 #ifdef WARN_ABNORMAL_VALUES
     if( !ok ) cerr << "WARNING : " << name << " has an abnormal value" << endl;
 #endif
-
-    double val = ok ? *value : 0.0;
+    float val = ok ? *value : 0.0;
     out << name << " " << scientific << setprecision(12) << val << "\n";
 }
 
@@ -1528,7 +1514,7 @@ void output_to_text_file_1( OUT & out, const char * name, T * values, int size )
 }
 
 template< typename OUT >
-void output_to_text_file_1( OUT & out, const char * name, double * values, int size )
+void output_to_text_file_1( OUT & out, const char * name, float * values, int size )
 {
     out << name;
     for( int i = 0; i < size; ++i ) {
@@ -1536,8 +1522,7 @@ void output_to_text_file_1( OUT & out, const char * name, double * values, int s
 #ifdef WARN_ABNORMAL_VALUES
         if( !ok ) cerr << "WARNING : " << name << " has an abnormal value at " << i << endl;
 #endif
-
-        double val = ok ? values[i] : 0.0;
+        float val = ok ? values[i] : 0.0;
         out << " " << scientific << setprecision(12) << val;
     }
     out << "\n";
@@ -1557,7 +1542,7 @@ void output_to_text_file_2( OUT & out, const char * name, T * values, int size_1
 }
 
 template< typename OUT >
-void output_to_text_file_2( OUT & out, const char * name, double * values, int size_1, int size_2 )
+void output_to_text_file_2( OUT & out, const char * name, float * values, int size_1, int size_2 )
 {
     out << name;
     for( int i = 0; i < size_1; ++i ) {
@@ -1566,8 +1551,7 @@ void output_to_text_file_2( OUT & out, const char * name, double * values, int s
 #ifdef WARN_ABNORMAL_VALUES
             if( !ok ) cerr << "WARNING : " << name << " has an abnormal value at (" << i << ", " << j << ")" << endl;
 #endif
-
-            double val = ok ? values[j * size_1 + i] : 0;
+            float val = ok ? values[j * size_1 + i] : 0;
             out << " " << scientific << setprecision(12) << val;
             //out << " " << values[j][i];
         }
@@ -1591,7 +1575,7 @@ void output_to_text_file_3( OUT & out, const char * name, T * values, int size_1
 }
 
 template< typename OUT >
-void output_to_text_file_3( OUT & out, const char * name, double * values, int size_1, int size_2, int size_3 )
+void output_to_text_file_3( OUT & out, const char * name, float * values, int size_1, int size_2, int size_3 )
 {
     out << name;
     for( int i = 0; i < size_1; ++i ) {
@@ -1601,8 +1585,7 @@ void output_to_text_file_3( OUT & out, const char * name, double * values, int s
 #ifdef WARN_ABNORMAL_VALUES
                 if( !ok ) cerr << "WARNING : " << name << " has an abnormal value at (" << i << ", " << j << ", " << k << ")" << endl;
 #endif
-
-                double val = ok ? values[(( k * size_2 ) + j ) * size_1 + i] : 0;
+                float val = ok ? values[(( k * size_2 ) + j ) * size_1 + i] : 0;
                 out << " " << scientific << setprecision(12) << val;
                 //out << " " << values[k][j][i];
             }
@@ -1637,10 +1620,8 @@ extern "C" int init_saved_dataa_()
 #ifdef LPJ_STEP_1A
     year1000out.open( params.spinup_file.c_str() );
 #else
-
     year1000out.open( params.rampup_file.c_str() );
 #endif
-
 
     return 0;
 }
@@ -1666,73 +1647,73 @@ extern "C" int put_saved_data_(
              int *year,
              // initgrid variables
              // tree,  Constant array
-             double *k_fast_ave,
-             double *k_slow_ave,
-             double *litter_decom_ave,
+             float *k_fast_ave,
+             float *k_slow_ave,
+             float *litter_decom_ave,
              int   *present,
-             double *litter_ag,
-             double *fuel_1hr,
-             double *fuel_10hr,
-             double *fuel_100hr,
-             double *fuel_1000hr,
-             double *litter_bg,
-             double *crownarea,
-             // double *mprec,    used by initgrid
-             double *w,
-             double *w_t,
-             double *dwscal365,
-             double *lm_ind,
-             double *sm_ind,
-             double *hm_ind,
-             double *rm_ind,
-             double *fpc_grid,
-             double *mnpp,
-             double *anpp,
+             float *litter_ag,
+             float *fuel_1hr,
+             float *fuel_10hr,
+             float *fuel_100hr,
+             float *fuel_1000hr,
+             float *litter_bg,
+             float *crownarea,
+             // float *mprec,    used by initgrid
+             float *w,
+             float *w_t,
+             float *dwscal365,
+             float *lm_ind,
+             float *sm_ind,
+             float *hm_ind,
+             float *rm_ind,
+             float *fpc_grid,
+             float *mnpp,
+             float *anpp,
              int   *leafondays,
              int   *leafoffdays,
              int   *leafon,
-             double *snowpack,
-             double *mtemp_old,
-             // double *mtemp,    used only
-             double *maxthaw_old,
-             // double *delta_thawday,  unused in lpjmain, removed
-             double *mw1,
-             double *mw2,
-             double *mw1_t,
-             double *mw2_t,
-             double *uw1,
-             double *uw2,
-             double *fw,
-             // double *soilpar,   used only
-             double *mcica,
-             double *mgpp,
-             double *lresp,
-             double *sresp,
-             double *rresp,
-             double *gresp,
-             double *aresp,
-             double *dbh,
-             double *tau_c,
-             double *cl_t,
-             double *height_class,
-             double *agpp,
+             float *snowpack,
+             float *mtemp_old,
+             // float *mtemp,    used only
+             float *maxthaw_old,
+             // float *delta_thawday,  unused in lpjmain, removed
+             float *mw1,
+             float *mw2,
+             float *mw1_t,
+             float *mw2_t,
+             float *uw1,
+             float *uw2,
+             float *fw,
+             // float *soilpar,   used only
+             float *mcica,
+             float *mgpp,
+             float *lresp,
+             float *sresp,
+             float *rresp,
+             float *gresp,
+             float *aresp,
+             float *dbh,
+             float *tau_c,
+             float *cl_t,
+             float *height_class,
+             float *agpp,
              // Others
-             double *cpool_fast,
-             double *cpool_slow,
-             double *bm_inc,
-             double *nind,
-             double *gdd,
-             double *lai_ind,
-             double *height,
-             double *w_ep,
-             double *gdd_buf,
-             double *mtemp_min_buf,
-             double *mtemp_max_buf,
-             double *lm_sapl,
-             double *sm_sapl,
-             double *hm_sapl,
-             double *rm_sapl,
-             double *meangc
+             float *cpool_fast,
+             float *cpool_slow,
+             float *bm_inc,
+             float *nind,
+             float *gdd,
+             float *lai_ind,
+             float *height,
+             float *w_ep,
+             float *gdd_buf,
+             float *mtemp_min_buf,
+             float *mtemp_max_buf,
+             float *lm_sapl,
+             float *sm_sapl,
+             float *hm_sapl,
+             float *rm_sapl,
+             float *meangc
         )
 {
     output_to_text_file_0( year1000out, "latidx", &latidx );
@@ -1933,7 +1914,6 @@ extern "C" int put_saved_data_(
 
 #endif
 
-
 #if defined(LPJ_STEP_1B) || defined(LPJ_STEP_2)
 
 template< typename IN, typename T >
@@ -2023,10 +2003,8 @@ extern "C" int init_saved_datab_()
        year1000in.open( params.spinup_file.c_str() );
     
 #else
-
     year1000in.open( params.spinup_file.c_str() );
 #endif
-
     
 
     return 0;
@@ -2052,73 +2030,73 @@ extern "C" int get_saved_data_(
              int *year,
              // initgrid variables
              // tree,  Constant array
-             double *k_fast_ave,
-             double *k_slow_ave,
-             double *litter_decom_ave,
+             float *k_fast_ave,
+             float *k_slow_ave,
+             float *litter_decom_ave,
              int   *present,
-             double *litter_ag,
-             double *fuel_1hr,
-             double *fuel_10hr,
-             double *fuel_100hr,
-             double *fuel_1000hr,
-             double *litter_bg,
-             double *crownarea,
-             // double *mprec,    used by initgrid
-             double *w,
-             double *w_t,
-             double *dwscal365,
-             double *lm_ind,
-             double *sm_ind,
-             double *hm_ind,
-             double *rm_ind,
-             double *fpc_grid,
-             double *mnpp,
-             double *anpp,
+             float *litter_ag,
+             float *fuel_1hr,
+             float *fuel_10hr,
+             float *fuel_100hr,
+             float *fuel_1000hr,
+             float *litter_bg,
+             float *crownarea,
+             // float *mprec,    used by initgrid
+             float *w,
+             float *w_t,
+             float *dwscal365,
+             float *lm_ind,
+             float *sm_ind,
+             float *hm_ind,
+             float *rm_ind,
+             float *fpc_grid,
+             float *mnpp,
+             float *anpp,
              int   *leafondays,
              int   *leafoffdays,
              int   *leafon,
-             double *snowpack,
-             double *mtemp_old,
-             // double *mtemp,    used only
-             double *maxthaw_old,
-             // double *delta_thawday,  unused in lpjmain, removed
-             double *mw1,
-             double *mw2,
-             double *mw1_t,
-             double *mw2_t,
-             double *uw1,
-             double *uw2,
-             double *fw,
-             // double *soilpar,   used only
-             double *mcica,
-             double *mgpp,
-             double *lresp,
-             double *sresp,
-             double *rresp,
-             double *gresp,
-             double *aresp,
-             double *dbh,
-             double *tau_c,
-             double *cl_t,
-             double *height_class,
-             double *agpp,
+             float *snowpack,
+             float *mtemp_old,
+             // float *mtemp,    used only
+             float *maxthaw_old,
+             // float *delta_thawday,  unused in lpjmain, removed
+             float *mw1,
+             float *mw2,
+             float *mw1_t,
+             float *mw2_t,
+             float *uw1,
+             float *uw2,
+             float *fw,
+             // float *soilpar,   used only
+             float *mcica,
+             float *mgpp,
+             float *lresp,
+             float *sresp,
+             float *rresp,
+             float *gresp,
+             float *aresp,
+             float *dbh,
+             float *tau_c,
+             float *cl_t,
+             float *height_class,
+             float *agpp,
              // Others
-             double *cpool_fast,
-             double *cpool_slow,
-             double *bm_inc,
-             double *nind,
-             double *gdd,
-             double *lai_ind,
-             double *height,
-             double *w_ep,
-             double *gdd_buf,
-             double *mtemp_min_buf,
-             double *mtemp_max_buf,
-             double *lm_sapl,
-             double *sm_sapl,
-             double *hm_sapl,
-             double *rm_sapl,
-             double *meangc
+             float *cpool_fast,
+             float *cpool_slow,
+             float *bm_inc,
+             float *nind,
+             float *gdd,
+             float *lai_ind,
+             float *height,
+             float *w_ep,
+             float *gdd_buf,
+             float *mtemp_min_buf,
+             float *mtemp_max_buf,
+             float *lm_sapl,
+             float *sm_sapl,
+             float *hm_sapl,
+             float *rm_sapl,
+             float *meangc
         )
 {
     int latidx_read, lonidx_read;
@@ -2333,7 +2311,6 @@ extern "C" int get_saved_data_(
 
 #endif
 
-
 //----------------------------------------------------------------------
 //
 //  outannual
@@ -2341,60 +2318,60 @@ extern "C" int get_saved_data_(
 //  Collect a year's worth of output for one grid cell.
 
 extern "C" int outannual_(int *year, int *present,
-                          double *nind,
-                          double *lm_ind, double *rm_ind,
-                          double *sm_ind, double *hm_ind,
-                          double *fpc_grid,
-                          double *anpp, double *acflux_estab,
-                          double *litter_ag, double *litter_bg,
-                          double *cpool_fast, double *cpool_slow,
-                          double *arh, double *afire_frac, double *acflux_fire,
-                          double *mcflux_fire,
-                          double *arunoff, double *sla, double *mpar,
-                          double *mapar, double *mphen, double *anpp_add,
-                          double *mnpp,
-                          double *mnpp_grid,    //Doug 06/09
-                          double *mrunoff, double *aaet,
-                          double *mrh, double *mnpp_add, double *maet,
-                          double *mtemp_soil, double *mcica,
-                          double *lresp, double *sresp, double *rresp,
-                          double *gresp, double *aresp,
-                          double *mauw1, double *mauw2,
-                          double *maep, double *aaep,
-                          double *mpet_grid, double *apet_grid,
-                          double *mintc, double *aintc,
-                          double *meangc, double *mgp,
-                          double *num_fire, double *annum_fire,
-                          double *area_burnt, double *an_areafires, 
-                          double *mfdi, double *an_fdi,
-                          double *an_fseason, 
-                          double *acflux_trace, double *mcflux_trace, 
-                          double *m_fc_crown, double *an_fc_crown, 
-                          double *m_i_surface, double *an_i_surface, 
-                          double *gdd, double *height, double *mgpp,
-                          double *wu, double *wl, double *dphen,
-                          double *dphen_change,                    // Doug 05/09
-                          double *dhuman_ign, double *dlightn,      // Yan: 24/10/07
-                          double *mw1, double *mw2,      // Yan: 22/11/07
-                          double *num_fire_human, double *num_fire_lightn,             // Yan: 22/11/07
-                          double *annum_fire_human, double *annum_fire_lightn,         // Yan: 22/11/07
-                          double *area_burnt_human, double *area_burnt_lightn,         // Yan: 22/11/07
-                          double *an_areafires_human, double *an_areafires_lightn,     // Yan: 22/11/07
-                          double *afire_frac_human, double *afire_frac_lightn,         // Yan: 22/11/07
-                          double *char_net_fuel_0,               
-                          double *livegrass_0, double *dead_fuel_0,             
-                          double *dead_fuel_all_0, double *fuel_all_0,    
-                          double *fuel_1hr_total_0, double *fuel_10hr_total_0,            
-                          double *fuel_100hr_total_0, double *fuel_1000hr_total_0,
-                          double *mfuel_1hr_total, double *mfuel_10hr_total,           //Doug 03/09: monthly fuel
-                          double *mfuel_100hr_total, double *mfuel_1000hr_total,       //Doug 03/09: monthly fuel
-                          double *mlivegrass,                                         //Doug 05/09: monthly fuel
-                          double *deltaa, double *deltaa_fpc, double *delt_c13_fpc,        
-                          double *mfire_frac, 
-                          double *fbdep, double * litter_decom_ave, double * turnover_ind,
-                          double *crop, double *pas,                                    //Doug 05/09: crop and pasture proportions
-                          double *anpp_grid, double *arh_grid, double *acflux_fire_grid,//Doug 07/09: the cheats
-                          double *gdd_grid, double *alpha_ws, double *fwet, double *fdry)                          //Doug 07/09: vioclimatic varibles         
+                          float *nind,
+                          float *lm_ind, float *rm_ind,
+                          float *sm_ind, float *hm_ind,
+                          float *fpc_grid,
+                          float *anpp, float *acflux_estab,
+                          float *litter_ag, float *litter_bg,
+                          float *cpool_fast, float *cpool_slow,
+                          float *arh, float *afire_frac, float *acflux_fire,
+                          float *mcflux_fire,
+                          float *arunoff, float *sla, float *mpar,
+                          float *mapar, float *mphen, float *anpp_add,
+                          float *mnpp,
+                          float *mnpp_grid,    //Doug 06/09
+                          float *mrunoff, float *aaet,
+                          float *mrh, float *mnpp_add, float *maet,
+                          float *mtemp_soil, float *mcica,
+                          float *lresp, float *sresp, float *rresp,
+                          float *gresp, float *aresp,
+                          float *mauw1, float *mauw2,
+                          float *maep, float *aaep,
+                          float *mpet_grid, float *apet_grid,
+                          float *mintc, float *aintc,
+                          float *meangc, float *mgp,
+                          float *num_fire, float *annum_fire,
+                          float *area_burnt, float *an_areafires, 
+                          float *mfdi, float *an_fdi,
+                          float *an_fseason, 
+                          float *acflux_trace, float *mcflux_trace, 
+                          float *m_fc_crown, float *an_fc_crown, 
+                          float *m_i_surface, float *an_i_surface, 
+                          float *gdd, float *height, float *mgpp,
+                          float *wu, float *wl, float *dphen,
+                          float *dphen_change,                    // Doug 05/09
+                          float *dhuman_ign, float *dlightn,      // Yan: 24/10/07
+                          float *mw1, float *mw2,      // Yan: 22/11/07
+                          float *num_fire_human, float *num_fire_lightn,             // Yan: 22/11/07
+                          float *annum_fire_human, float *annum_fire_lightn,         // Yan: 22/11/07
+                          float *area_burnt_human, float *area_burnt_lightn,         // Yan: 22/11/07
+                          float *an_areafires_human, float *an_areafires_lightn,     // Yan: 22/11/07
+                          float *afire_frac_human, float *afire_frac_lightn,         // Yan: 22/11/07
+			  float *char_net_fuel_0,		
+			  float *livegrass_0, float *dead_fuel_0,             
+                          float *dead_fuel_all_0, float *fuel_all_0,	
+                          float *fuel_1hr_total_0, float *fuel_10hr_total_0,		
+                          float *fuel_100hr_total_0, float *fuel_1000hr_total_0,
+                          float *mfuel_1hr_total, float *mfuel_10hr_total,           //Doug 03/09: monthly fuel
+                          float *mfuel_100hr_total, float *mfuel_1000hr_total,       //Doug 03/09: monthly fuel
+                          float *mlivegrass,                                         //Doug 05/09: monthly fuel
+                          float *deltaa, float *deltaa_fpc, float *delt_c13_fpc, 	
+                          float *mfire_frac, 
+                          float *fbdep, float * litter_decom_ave, float * turnover_ind,
+                          float *crop, float *pas,                                    //Doug 05/09: crop and pasture proportions
+                          float *anpp_grid, float *arh_grid, float *acflux_fire_grid,//Doug 07/09: the cheats
+                          float *gdd_grid, float *alpha_ws)                          //Doug 07/09: vioclimatic varibles         
 {
   // Skip output during spin-up if required.
   // Doug 06/09: Skip output if before fist year of ouput
@@ -2411,17 +2388,17 @@ extern "C" int outannual_(int *year, int *present,
 
 
   // Calculate bare ground fraction.
-  double fbare = 0.0;
+  float fbare = 0.0;
   for (int idx = 0; idx < NPFT; ++idx) fbare += fpc_grid[idx];
   fbare = 1.0 - fbare;
   if (fbare > 1.0) fbare = 1.0;
   if (fbare < 0.0) fbare = 0.0;
 
   //Sarah soilc=litter_bg(1:9) + cpool_slow + cpool_fast
-  double litter_bg_sum[NCO2] = { 0.0, 0.0, 0.0 };
-  double soilc[NCO2] = { 0.0, 0.0, 0.0 };
-  double anpp_pft_sum[NCO2] = { 0.0, 0.0, 0.0 };
-  double anpp_sum[NCO2] = { 0.0, 0.0, 0.0 };
+  float litter_bg_sum[NCO2] = { 0.0, 0.0, 0.0 };
+  float soilc[NCO2] = { 0.0, 0.0, 0.0 };
+  float anpp_pft_sum[NCO2] = { 0.0, 0.0, 0.0 };
+  float anpp_sum[NCO2] = { 0.0, 0.0, 0.0 };
 
   
   for (int idx = 0; idx < NPFT; ++idx) {
@@ -2573,8 +2550,6 @@ extern "C" int outannual_(int *year, int *present,
   handle_output_record("acflux_fire_grid",acflux_fire_grid);         //Doug 07/09: another cheat
   handle_output_record("gdd_grid",gdd_grid);                         //Doug 07/09: growing degree days base 5
   handle_output_record("alpha_ws",  alpha_ws);                       //Doug 07/09: bioclimatic alpha
-  handle_output_record("fwet",  fwet);
-  handle_output_record("fdry",  fdry);
 
   // Output is written every params.spinup_out_freq years during
   // spin-up (averaged over that period).  During the transient part
@@ -2719,10 +2694,10 @@ LPJOutputVariable::LPJOutputVariable(LPJVariable *in_def,
   min = collect.min;
   max = collect.max;
   avg_buff = sdev_buff = min_buff = max_buff = 0;
-  if (mean || sdev) avg_buff = new double[buff_size];
-  if (sdev) sdev_buff = new double[buff_size];
-  if (min) min_buff = new double[buff_size];
-  if (max) max_buff = new double[buff_size];
+  if (mean || sdev) avg_buff = new float[buff_size];
+  if (sdev) sdev_buff = new float[buff_size];
+  if (min) min_buff = new float[buff_size];
+  if (max) max_buff = new float[buff_size];
   if (mean) mean_nc = new NcVar*[out_year_count];
   if (sdev) sdev_nc = new NcVar*[out_year_count];
   if (min) min_nc = new NcVar*[out_year_count];
@@ -2758,156 +2733,156 @@ void LPJOutputVariable::set_nc(int idx, NcFile &n)
   switch (def->type) {
   case SIMPLE:
     if (mean)
-      mean_nc[idx] = n.add_var(def->name, ncDouble, lat_dim, lon_dim);
+      mean_nc[idx] = n.add_var(def->name, ncFloat, lat_dim, lon_dim);
     if (sdev)
-      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncDouble,
+      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncFloat,
                                lat_dim, lon_dim);
     if (min)
-      min_nc[idx] = n.add_var(min_nm.c_str(), ncDouble,
+      min_nc[idx] = n.add_var(min_nm.c_str(), ncFloat,
                               lat_dim, lon_dim);
     if (max)
-      max_nc[idx] = n.add_var(max_nm.c_str(), ncDouble,
+      max_nc[idx] = n.add_var(max_nm.c_str(), ncFloat,
                               lat_dim, lon_dim);
     break;
   case SIMPLE_MONTHLY:
     if (mean)
-      mean_nc[idx] = n.add_var(def->name, ncDouble,
+      mean_nc[idx] = n.add_var(def->name, ncFloat,
                                month_dim, lat_dim, lon_dim);
     if (sdev)
-      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncDouble,
+      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncFloat,
                                month_dim, lat_dim, lon_dim);
     if (min)
-      min_nc[idx] = n.add_var(min_nm.c_str(), ncDouble,
+      min_nc[idx] = n.add_var(min_nm.c_str(), ncFloat,
                               month_dim, lat_dim, lon_dim);
     if (max)
-      max_nc[idx] = n.add_var(max_nm.c_str(), ncDouble,
+      max_nc[idx] = n.add_var(max_nm.c_str(), ncFloat,
                               month_dim, lat_dim, lon_dim);
     break;
   case SIMPLE_DAILY:
     if (mean)
-      mean_nc[idx] = n.add_var(def->name, ncDouble,
+      mean_nc[idx] = n.add_var(def->name, ncFloat,
                                day_dim, lat_dim, lon_dim);
     if (sdev)
-      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncDouble,
+      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncFloat,
                                day_dim, lat_dim, lon_dim);
     if (min)
-      min_nc[idx] = n.add_var(min_nm.c_str(), ncDouble,
+      min_nc[idx] = n.add_var(min_nm.c_str(), ncFloat,
                               day_dim, lat_dim, lon_dim);
     if (max)
-      max_nc[idx] = n.add_var(max_nm.c_str(), ncDouble,
+      max_nc[idx] = n.add_var(max_nm.c_str(), ncFloat,
                               day_dim, lat_dim, lon_dim);
     break;
   case PER_PFT:
     if (mean)
-      mean_nc[idx] = n.add_var(def->name, ncDouble,
+      mean_nc[idx] = n.add_var(def->name, ncFloat,
                                pft_dim, lat_dim, lon_dim);
     if (sdev)
-      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncDouble,
+      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncFloat,
                                pft_dim, lat_dim, lon_dim);
     if (min)
-      min_nc[idx] = n.add_var(min_nm.c_str(), ncDouble,
+      min_nc[idx] = n.add_var(min_nm.c_str(), ncFloat,
                               pft_dim, lat_dim, lon_dim);
     if (max)
-      max_nc[idx] = n.add_var(max_nm.c_str(), ncDouble,
+      max_nc[idx] = n.add_var(max_nm.c_str(), ncFloat,
                               pft_dim, lat_dim, lon_dim);
     break;
   case PER_PFT_MONTHLY:
     if (mean)
-      mean_nc[idx] = n.add_var(def->name, ncDouble,
+      mean_nc[idx] = n.add_var(def->name, ncFloat,
                                month_dim, pft_dim, lat_dim, lon_dim);
     if (sdev)
-      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncDouble,
+      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncFloat,
                                month_dim, pft_dim, lat_dim, lon_dim);
     if (min)
-      min_nc[idx] = n.add_var(min_nm.c_str(), ncDouble,
+      min_nc[idx] = n.add_var(min_nm.c_str(), ncFloat,
                               month_dim, pft_dim, lat_dim, lon_dim);
     if (max)
-      max_nc[idx] = n.add_var(max_nm.c_str(), ncDouble,
+      max_nc[idx] = n.add_var(max_nm.c_str(), ncFloat,
                               month_dim, pft_dim, lat_dim, lon_dim);
     break;
   
   case PER_PFT_DAILY:
     if (mean)
-      mean_nc[idx] = n.add_var(def->name, ncDouble,
+      mean_nc[idx] = n.add_var(def->name, ncFloat,
                                day_dim, pft_dim, lat_dim, lon_dim);
     if (sdev)
-      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncDouble,
+      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncFloat,
                                day_dim, pft_dim, lat_dim, lon_dim);
     if (min)
-      min_nc[idx] = n.add_var(min_nm.c_str(), ncDouble,
+      min_nc[idx] = n.add_var(min_nm.c_str(), ncFloat,
                               day_dim, pft_dim, lat_dim, lon_dim);
     if (max)
-      max_nc[idx] = n.add_var(max_nm.c_str(), ncDouble,
+      max_nc[idx] = n.add_var(max_nm.c_str(), ncFloat,
                               day_dim, pft_dim, lat_dim, lon_dim);
     break;
   case TRACE:
     if (mean)
-      mean_nc[idx] = n.add_var(def->name, ncDouble,
+      mean_nc[idx] = n.add_var(def->name, ncFloat,
                                trace_dim, lat_dim, lon_dim);
     if (sdev)
-      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncDouble,
+      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncFloat,
                                trace_dim, lat_dim, lon_dim);
     if (min)
-      min_nc[idx] = n.add_var(min_nm.c_str(), ncDouble,
+      min_nc[idx] = n.add_var(min_nm.c_str(), ncFloat,
                               trace_dim, lat_dim, lon_dim);
     if (max)
-      max_nc[idx] = n.add_var(max_nm.c_str(), ncDouble,
+      max_nc[idx] = n.add_var(max_nm.c_str(), ncFloat,
                               trace_dim, lat_dim, lon_dim);
     break;
   case TRACE_MONTHLY:
     if (mean)
-      mean_nc[idx] = n.add_var(def->name, ncDouble,
+      mean_nc[idx] = n.add_var(def->name, ncFloat,
                                month_dim, trace_dim, lat_dim, lon_dim);
     if (sdev)
-      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncDouble,
+      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncFloat,
                                month_dim, trace_dim, lat_dim, lon_dim);
     if (min)
-      min_nc[idx] = n.add_var(min_nm.c_str(), ncDouble,
+      min_nc[idx] = n.add_var(min_nm.c_str(), ncFloat,
                               month_dim, trace_dim, lat_dim, lon_dim);
     if (max)
-      max_nc[idx] = n.add_var(max_nm.c_str(), ncDouble,
+      max_nc[idx] = n.add_var(max_nm.c_str(), ncFloat,
                               month_dim, trace_dim, lat_dim, lon_dim);
     break;
   case PER_CO2:
     if (mean)
-      mean_nc[idx] = n.add_var(def->name, ncDouble,
+      mean_nc[idx] = n.add_var(def->name, ncFloat,
                                co2_dim, lat_dim, lon_dim);
     if (sdev)
-      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncDouble,
+      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncFloat,
                                co2_dim, lat_dim, lon_dim);
     if (min)
-      min_nc[idx] = n.add_var(min_nm.c_str(), ncDouble,
+      min_nc[idx] = n.add_var(min_nm.c_str(), ncFloat,
                               co2_dim, lat_dim, lon_dim);
     if (max)
-      max_nc[idx] = n.add_var(max_nm.c_str(), ncDouble,
+      max_nc[idx] = n.add_var(max_nm.c_str(), ncFloat,
                               co2_dim, lat_dim, lon_dim);
     break;
   case PER_CO2_MONTHLY:
     if (mean)
-      mean_nc[idx] = n.add_var(def->name, ncDouble,
+      mean_nc[idx] = n.add_var(def->name, ncFloat,
                                month_dim, co2_dim, lat_dim, lon_dim);
     if (sdev)
-      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncDouble,
+      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncFloat,
                                month_dim, co2_dim, lat_dim, lon_dim);
     if (min)
-      min_nc[idx] = n.add_var(min_nm.c_str(), ncDouble,
+      min_nc[idx] = n.add_var(min_nm.c_str(), ncFloat,
                               month_dim, co2_dim, lat_dim, lon_dim);
     if (max)
-      max_nc[idx] = n.add_var(max_nm.c_str(), ncDouble,
+      max_nc[idx] = n.add_var(max_nm.c_str(), ncFloat,
                               month_dim, co2_dim, lat_dim, lon_dim);
     break;
   case PER_CO2_PFT:
     if (mean)
-      mean_nc[idx] = n.add_var(def->name, ncDouble,
+      mean_nc[idx] = n.add_var(def->name, ncFloat,
                                pft_dim, co2_dim, lat_dim, lon_dim);
     if (sdev)
-      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncDouble,
+      sdev_nc[idx] = n.add_var(sdev_nm.c_str(), ncFloat,
                                pft_dim, co2_dim, lat_dim, lon_dim);
     if (min)
-      min_nc[idx] = n.add_var(min_nm.c_str(), ncDouble,
+      min_nc[idx] = n.add_var(min_nm.c_str(), ncFloat,
                               pft_dim, co2_dim, lat_dim, lon_dim);
     if (max)
-      max_nc[idx] = n.add_var(max_nm.c_str(), ncDouble,
+      max_nc[idx] = n.add_var(max_nm.c_str(), ncFloat,
                               pft_dim, co2_dim, lat_dim, lon_dim);
     break;
   }
@@ -2929,20 +2904,20 @@ void LPJOutputVariable::set_nc(int idx, NcFile &n)
   }
 
   if (mean) {
-    //mean_nc[idx]->add_att("missing_value", 01.0E20f);
-    //mean_nc[idx]->add_att("_FillValue", 01.0E20f);
+    mean_nc[idx]->add_att("missing_value", 1.0E20f);
+    mean_nc[idx]->add_att("_FillValue", 1.0E20f);
   }
   if (sdev) {
-    //sdev_nc[idx]->add_att("missing_value", 01.0E20f);
-    //sdev_nc[idx]->add_att("_FillValue", 01.0E20f);
+    sdev_nc[idx]->add_att("missing_value", 1.0E20f);
+    sdev_nc[idx]->add_att("_FillValue", 1.0E20f);
   }
   if (min) {
-    //min_nc[idx]->add_att("missing_value", 01.0E20f);
-    //min_nc[idx]->add_att("_FillValue", 01.0E20f);
+    min_nc[idx]->add_att("missing_value", 1.0E20f);
+    min_nc[idx]->add_att("_FillValue", 1.0E20f);
   }
   if (max) {
-    //max_nc[idx]->add_att("missing_value", 01.0E20f);
-    //max_nc[idx]->add_att("_FillValue", 01.0E20f);
+    max_nc[idx]->add_att("missing_value", 1.0E20f);
+    max_nc[idx]->add_att("_FillValue", 1.0E20f);
   }
 }
 
@@ -2957,8 +2932,8 @@ void LPJOutputVariable::clear_buffs(void)
   for (int idx = 0; idx < buff_size; ++idx) {
     if (avg_buff) avg_buff[idx] = 0.0f;
     if (sdev_buff) sdev_buff[idx] = 0.0f;
-    if (min_buff) min_buff[idx] = 01.0E20f;
-    if (max_buff) max_buff[idx] = -01.0E20f;
+    if (min_buff) min_buff[idx] = 1.0E20f;
+    if (max_buff) max_buff[idx] = -1.0E20f;
   }
 
   accum_years = 0;
@@ -2980,7 +2955,7 @@ bool LPJOutputVariable::average_and_output(void)
       // the data and avg_buff[idx] the sum of the data.
       if (sdev) {
         // rounding may lead to negative value
-        double v = sdev_buff[idx] * accum_years - avg_buff[idx] * avg_buff[idx];
+        float v = sdev_buff[idx] * accum_years - avg_buff[idx] * avg_buff[idx];
           if( v < 0 ) {
             //if( v < -0.001 ) cerr << "Unexpected negative value (" << v << ") in average_and_output for " << def->name << "\n";
             v = 0;
@@ -3208,7 +3183,7 @@ void LPJOutputVariable::transpose_buffers(int time_axis_len,
                                           int other_axis_len)
 {
   if (mean) {
-    double *tmp = new double[buff_size];
+    float *tmp = new float[buff_size];
     for (int pft = 0; pft < other_axis_len; ++pft)
       for (int tim = 0; tim < time_axis_len; ++tim)
         tmp[tim * other_axis_len + pft] = avg_buff[pft * time_axis_len + tim];
@@ -3216,7 +3191,7 @@ void LPJOutputVariable::transpose_buffers(int time_axis_len,
     avg_buff = tmp;
   }
   if (sdev) {
-    double *tmp = new double[buff_size];
+    float *tmp = new float[buff_size];
     for (int pft = 0; pft < other_axis_len; ++pft)
       for (int tim = 0; tim < time_axis_len; ++tim)
         tmp[tim * other_axis_len + pft] =
@@ -3225,7 +3200,7 @@ void LPJOutputVariable::transpose_buffers(int time_axis_len,
     sdev_buff = tmp;
   }
   if (min) {
-    double *tmp = new double[buff_size];
+    float *tmp = new float[buff_size];
     for (int pft = 0; pft < other_axis_len; ++pft)
       for (int tim = 0; tim < time_axis_len; ++tim)
         tmp[tim * other_axis_len + pft] = min_buff[pft * time_axis_len + tim];
@@ -3233,7 +3208,7 @@ void LPJOutputVariable::transpose_buffers(int time_axis_len,
     min_buff = tmp;
   }
   if (max) {
-    double *tmp = new double[buff_size];
+    float *tmp = new float[buff_size];
     for (int pft = 0; pft < other_axis_len; ++pft)
       for (int tim = 0; tim < time_axis_len; ++tim)
         tmp[tim * other_axis_len + pft] = max_buff[pft * time_axis_len + tim];
@@ -3644,8 +3619,8 @@ Grid::Grid(string file)
 
   lats.resize(nlat = lat_dim->size());
   lons.resize(nlon = lon_dim->size());
-  for (int idx = 0; idx < nlat; ++idx) lats[idx] = lat_var->as_double(idx);
-  for (int idx = 0; idx < nlon; ++idx) lons[idx] = lon_var->as_double(idx);
+  for (int idx = 0; idx < nlat; ++idx) lats[idx] = lat_var->as_float(idx);
+  for (int idx = 0; idx < nlon; ++idx) lons[idx] = lon_var->as_float(idx);
 }
 
 
@@ -3721,7 +3696,7 @@ static void read_mask(BoolArray *mask, string mask_file, Grid &grid,
         (*mask)(lonidx, latidx) = (tmp[lonidx] == 1);
     }
   } else {
-    double tmp[grid.nlon];
+    float tmp[grid.nlon];
     for (int latidx = 0; latidx < grid.nlat; ++latidx) {
       if (!var->set_cur(latidx, 0) || !var->get(tmp, 1, grid.nlon)) {
         cerr << "ERROR: failed reading land mask" << endl;
@@ -3892,7 +3867,7 @@ static void read_a_nd(Array *a_nd, string a_nd_file,
 //  Read co2 concentration data from netCDF file.
 //
 
-static int read_co2(string var_name, string file_name, double **data)
+static int read_co2(string var_name, string file_name, float **data)
 {
   // Open the human ignition data file.
 
@@ -3922,7 +3897,7 @@ static int read_co2(string var_name, string file_name, double **data)
 
 
   // Get the co2 concentration data data.
-  *data = new double[time_dim->size()];
+  *data = new float[time_dim->size()];
   if (!var->set_cur(long(0)) ||
       !var->get(*data, time_dim->size())) {
       cerr << "ERROR: failed reading co2 concentration data" << endl;
@@ -4042,10 +4017,10 @@ static void open_output_files(string file_name, string directory_name)
 
     // Create coordinate variables.
 
-    NcVar *lat_var = nc->add_var("lat", ncDouble, lat_dim);
+    NcVar *lat_var = nc->add_var("lat", ncFloat, lat_dim);
     lat_var->add_att("long_name", "Latitude");
     lat_var->add_att("units", "degrees_north");
-    NcVar *lon_var = nc->add_var("lon", ncDouble, lon_dim);
+    NcVar *lon_var = nc->add_var("lon", ncFloat, lon_dim);
     lon_var->add_att("long_name", "Longitude");
     lon_var->add_att("units", "degrees_east");
     NcVar *pft_var = nc->add_var("pft", ncInt, pft_dim);
@@ -4125,7 +4100,7 @@ static void open_output_files(string file_name, string directory_name)
 //  Handle averaging of data passed from a single call to outannual.
 //
 
-static void handle_output_record(string name, double *data)
+static void handle_output_record(string name, float *data)
 {
   for (int idx = 0; idx < out_var_count; ++idx) {
     if (name == out_vars[idx]->def->name) {

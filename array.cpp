@@ -1,6 +1,5 @@
 #include "Array.hh"
-#include <stdio.h>
-#include <stdlib.h>
+
 
 // Structural methods.
 
@@ -38,13 +37,7 @@ Array &Array::operator=(float val)
 
 void Array::rotate(int shift)
 {
-//  float tmp[shift > 0 ? shift : -shift];  //Doug 11/10: changed to lines below in order to make compatatble with fortran compiler
-  float *tmp;
-  if (shift>0) {
-    tmp=(float*)malloc(sizeof(float)*shift);
-  } else  {
-    tmp=(float*)malloc(sizeof(float)*(-shift));
-  }
+  float tmp[shift > 0 ? shift : -shift];
   for (int r = 0; r < _nrows; ++r) {
     float *row = _rows[r];
     if (shift < 0) {
@@ -195,12 +188,8 @@ void Array::regrid(const Array &in, const float *in_x, const float *in_y,
   // points bracketing the output point, i.e. the points that should
   // be used for interpolation.  Similarly for the y values.
 
-//  int xbrack[out.cols()], ybrack[out.rows()]; //Doug 11/10: replaced with lines below the next to make compatatible with intel compiler
+  int xbrack[out.cols()], ybrack[out.rows()];
   int inidx = 0;
-  int *xbrack;
-  int *ybrack;
-  xbrack=(int*)malloc(sizeof(int)*out.cols());
-  ybrack=(int*)malloc(sizeof(int)*out.rows());
   for (int outidx = 0; outidx < out.cols(); ++outidx) {
     while (inidx <= in.cols() - 3 && in_x[inidx + 1] < out_x[outidx]) ++inidx;
     xbrack[outidx] = inidx;
@@ -310,12 +299,7 @@ void Array::regrid_average(const Array &in,
                            Array &out,
                            const float *out_x1, const float *out_y1)
 {
-//  float out_x[out.cols() + 1], out_y[out.rows() + 1]; //Doug 11/10: replaced with lines below to make compatatble with intel compiler
-  float *out_x;
-  float *out_y;
-  out_x=(float*)malloc(sizeof(float)*out.cols()+1);
-  out_y=(float*)malloc(sizeof(float)*out.rows()+1);
-
+  float out_x[out.cols() + 1], out_y[out.rows() + 1];
   for (int idx = 1; idx < out.cols() - 1; ++idx)
     out_x[idx] = (out_x1[idx - 1] + out_x1[idx]) / 2.0;
   for (int idx = 1; idx < out.rows() - 1; ++idx)
@@ -341,12 +325,8 @@ void Array::regrid_average(const Array &in,
   // brack_x[col] + 1 thus give the indices into the in_x array of the
   // points bracketing the output point.  Similarly for the y values.
 
-//  int xbrack[out.cols() + 1], ybrack[out.rows() + 1]; //Doug 11/10: replaced with lines below to make compatatble with intel compiler
+  int xbrack[out.cols() + 1], ybrack[out.rows() + 1];
   int idx = 0;
-  int *xbrack;
-  int *ybrack;
-  xbrack=(int*)malloc(sizeof(int)*out.cols()+1);
-  ybrack=(int*)malloc(sizeof(int)*out.rows()+1);
   for (int outidx = 0; outidx < out.cols() + 1; ++outidx) {
     while (idx <= in.cols() - 3 && in_x[idx + 1] < out_x[outidx]) ++idx;
     xbrack[outidx] = idx;
@@ -492,11 +472,7 @@ void Array::regrid_discrete(const Array &in,
   // points bracketing the output point, i.e. the points that should
   // be used for interpolation.  Similarly for the y values.
 
-//  int xbrack[out.cols()], ybrack[out.rows()]; //Doug 11/10: rep;aced with lines below to make compatable with intel compiler
-  int *xbrack;
-  int *ybrack;
-  xbrack=(int*)malloc(sizeof(int)*out.cols());  
-  ybrack=(int*)malloc(sizeof(int)*out.rows());
+  int xbrack[out.cols()], ybrack[out.rows()];
   int inidx = 0;
   for (int outidx = 0; outidx < out.cols(); ++outidx) {
     while (inidx <= in.cols() && in_x[inidx + 1] < out_x[outidx]) ++inidx;
@@ -630,14 +606,7 @@ IntArray &IntArray::operator=(int val)
 
 void IntArray::rotate(int shift)
 {
-//  int tmp[shift > 0 ? shift : -shift];//Doug 11/10: changed to lines below in order to make compatatble with fortran compiler
-  int *tmp;
-  if (shift>0) {
-    tmp=(int*)malloc(sizeof(int)*shift);
-  } else  {
-    tmp=(int*)malloc(sizeof(int)*(-shift));
-  }
-
+  int tmp[shift > 0 ? shift : -shift];
   for (int r = 0; r < _nrows; ++r) {
     int *row = _rows[r];
     if (shift < 0) {
@@ -803,13 +772,7 @@ void IntArray::regrid_discrete(const IntArray &in,
   // points bracketing the output point, i.e. the points that should
   // be used for interpolation.  Similarly for the y values.
 
-//  int xbrack[out.cols()], ybrack[out.rows()]; //Doug 11/10: relaced with line below
-
-  int *xbrack;
-  int *ybrack;
-  xbrack=(int*)malloc(sizeof(int)*out.cols());
-  ybrack=(int*)malloc(sizeof(int)*out.rows());
-
+  int xbrack[out.cols()], ybrack[out.rows()];
   int inidx = 0;
   for (int outidx = 0; outidx < out.cols(); ++outidx) {
     while (inidx <= in.cols() && in_x[inidx + 1] < out_x[outidx]) ++inidx;
@@ -918,13 +881,7 @@ BoolArray::~BoolArray()
 
 void BoolArray::rotate(int shift)
 {
-//  bool tmp[shift > 0 ? shift : -shift];  //Doug 11/10: changed to lines below in order to make compatatble with fortran compiler
-  bool *tmp;
-  if (shift>0) {
-    tmp=(bool*)malloc(sizeof(bool)*shift);
-  } else  {
-    tmp=(bool*)malloc(sizeof(bool)*(-shift));
-  }
+  bool tmp[shift > 0 ? shift : -shift];
   for (int r = 0; r < _nrows; ++r) {
     bool *row = _rows[r];
     if (shift < 0) {
@@ -968,12 +925,8 @@ void BoolArray::regrid_discrete(const BoolArray &in,
   // points bracketing the output point, i.e. the points that should
   // be used for interpolation.  Similarly for the y values.
 
-//  int xbrack[out.cols()], ybrack[out.rows()];//Doug 11/10: replaced with lines below the next to make compatatible with intel compiler
+  int xbrack[out.cols()], ybrack[out.rows()];
   int inidx = 0;
-  int *xbrack;
-  int *ybrack;
-  xbrack=(int*)malloc(sizeof(int)*out.cols());
-  ybrack=(int*)malloc(sizeof(int)*out.rows());
   for (int outidx = 0; outidx < out.cols(); ++outidx) {
     while (inidx <= in.cols() && in_x[inidx + 1] < out_x[outidx]) ++inidx;
     xbrack[outidx] = inidx;

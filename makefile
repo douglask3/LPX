@@ -44,13 +44,13 @@
 # FC         = g77
 # FC         =ifort
 
-NETCDF     = /cygdrive/c/Users/dkelley/Documents/Programs/ncdf
+NETCDF     = /usr/local
 FC         = gfortran
 FCOPTIONS  = -x f77-cpp-input
 
 # FCOPTIONS  = -x f77-cpp-input -O3
 # FCOPTIONS  = -fpp -O3
-CPPOPTIONS = /usr/local/include
+CPPOPTIONS = -c -L$(NETCDF)/include/
 CXX        = c++
 CXXOPTIONS = -O3
 LD         = $(FC)

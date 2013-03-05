@@ -1,3 +1,5 @@
+
+
 c
 c CODE VERSION OF JULY 12, 2000.
 c
@@ -141,39 +143,39 @@ c         change in dephen, negative reprents negative. dphen_change is calculte
 c
 c     05/09-06/05: (Stephen & Doug)    IMPLEMENT LAND USE CHANGE 
 c
-c         AGRICULTURAL VERSION (CCMLP Grand Slam expt.)  
-c       Extra input variables for years 1901-1998 (=98 years) '96-98' no landuse conversion
-c       grid cells cleared updated annually
-c       grid cells abandoned updated annually
-c       rap (relative agricultural productivity) for agricultural areas
-c       updated annually              
+c	  AGRICULTURAL VERSION (CCMLP Grand Slam expt.)  
+c  	Extra input variables for years 1901-1998 (=98 years) '96-98' no landuse conversion
+c  	grid cells cleared updated annually
+c  	grid cells abandoned updated annually
+c  	rap (relative agricultural productivity) for agricultural areas
+c  	updated annually              
 c
-c       The model runs as normal assuming natural vegetation. When the
-c       gridcell changes state then the productivity of the natural 
-c       vegetation is taken and the RAP value to receive the agricultural
-c       productivity.
+c  	The model runs as normal assuming natural vegetation. When the
+c  	gridcell changes state then the productivity of the natural 
+c  	vegetation is taken and the RAP value to receive the agricultural
+c  	productivity.
 c
 c
 c
-c       main program calls the ioprogram to find out whether in this
-c       year the gridcell is abandoned or cleared and its state
-c       agricultural or not. In addition this years RAP is supplied.
-c       A new subroutine is constructed (agric) which updates the grid cell
-c       pools if clearance or abandonment in this year. 
-c       The decomposition routine is altered to account for agricultural
-c       above and below ground litter. 
-c       A second subroutine is constructed (agriprod) which calculates
-c       agricultural production and product decompostion (prod1, prod10,
-c       prod100).
+c  	main program calls the ioprogram to find out whether in this
+c  	year the gridcell is abandoned or cleared and its state
+c  	agricultural or not. In addition this years RAP is supplied.
+c  	A new subroutine is constructed (agric) which updates the grid cell
+c  	pools if clearance or abandonment in this year. 
+c  	The decomposition routine is altered to account for agricultural
+c  	above and below ground litter. 
+c  	A second subroutine is constructed (agriprod) which calculates
+c  	agricultural production and product decompostion (prod1, prod10,
+c  	prod100).
 c
-c       Send following information back to the io program:
-c       conversion flux
-c       product flux
-c       pools: agprod1, prod10, prod100
+c  	Send following information back to the io program:
+c  	conversion flux
+c  	product flux
+c  	pools: agprod1, prod10, prod100
 c   
-c       Fire routine is kept in based on the natural conditions. Natural litter
-c       is also calculated and used in the fire routine, but not included
-c       as output in agricultural gridcell C-balance.
+c  	Fire routine is kept in based on the natural conditions. Natural litter
+c  	is also calculated and used in the fire routine, but not included
+c  	as output in agricultural gridcell C-balance.
 c
 c     06/09:          REDUCED ESTABILMENT FOR TREE PFTS ON PASTURE LAND
 C           In estabilment subroutine, establishment of tree pft is reduced by the
@@ -685,17 +687,17 @@ c     variables for fire simulation Kirsten
       real an_fseason
 c DM      real fire_length
       real afire_frac                  ! fraction of gridcell burnt this year
-      real fuel_1hr(1:npft,1:nco2)     ! 1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
+      REAL afire_frac_afap_old		   ! Doug 09/12: Correccting error. Lastyears fire_frac fed through each year
+	  real fuel_1hr(1:npft,1:nco2)     ! 1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
       real fuel_10hr(1:npft,1:nco2)    ! 10hr dead fuel: large twigs
       real fuel_100hr(1:npft,1:nco2)   ! 100hr dead fuel: small branches
       real fuel_1000hr(1:npft,1:nco2)  ! 1000hr dead fuel: logs, bole, large branches
 
-      REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12) 
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12) !Doug 01/09 MFL: to record changes in each
-      REAL fuel_10hr_inc(1:npft,1:nco2,1:12)    !hr fuel load for each month in the
-      REAL fuel_100hr_inc(1:npft,1:nco2,1:12)   !yearly to allow monthly difference to
-      REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)  !considered in fire subroutine
-      REAL afire_frac_afap_old
+      REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)	
+      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09 MFL: to record changes in each
+      REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!hr fuel load for each month in the
+      REAL fuel_100hr_inc(1:npft,1:nco2,1:12)	!yearly to allow monthly difference to
+      REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)	!considered in fire subroutine
 
       REAL mfuel_1hr_total(1:12)                !Doug 03/09: monthly fuel laof (output only)
       REAL mfuel_10hr_total(1:12)
@@ -703,7 +705,7 @@ c DM      real fire_length
       REAL mfuel_1000hr_total(1:12)
       REAL mlivegrass(1:12)                     !Doug 05/09: monthly livegrass (for ouput only)
 
-      REAL fuel_1hr_del(1:npft,1:nco2)          !Doug 01/09 MFL1: record annual change
+      REAL fuel_1hr_del(1:npft,1:nco2)		!Doug 01/09 MFL1: record annual change
       REAL fuel_10hr_del(1:npft,1:nco2)
       REAL fuel_100hr_del(1:npft,1:nco2)
       REAL fuel_1000hr_del(1:npft,1:nco2)
@@ -770,13 +772,13 @@ C Yan
        real an_i_surface_human,an_i_surface_lightn
        real afire_frac_human,afire_frac_lightn
        real an_areafires_human,an_areafires_lightn
-        
-                real char_net_fuel
+	
+		real char_net_fuel
           real char_net_fuel_0
 
           real livegrass_0,dead_fuel_0,dead_fuel_all_0
          real fuel_all_0,fuel_1hr_total_0,fuel_10hr_total_0
-         real fuel_100hr_total_0,fuel_1000hr_total_0       
+         real fuel_100hr_total_0,fuel_1000hr_total_0	   
 
 
 !           real deltaa
@@ -797,9 +799,7 @@ c    Doug & Stephen 05/09: landuse change (for things like deforestation and fur
       REAL cflux_prod_total,prod10_total,prod100_total
       REAL anpp_agri,rap,x10(0:10),x100(0:100)
           PARAMETER(rap=1)
-      REAL agri_t
-      REAL fwet(12)
-      REAL fdry(12)
+      REAl agri_t
 
 c -----------------------------------------------------------------------------
 c                                MAIN PROGRAM
@@ -929,7 +929,7 @@ c DM    Year spinup_years as been done
         call getclimate(year,mtemp,mtemp_dmin,mtemp_dmax,mprec,mwet,
      *    msun,mwindsp,
      *    popden,
-     *    crop,pas,     !Doug 04/09
+     *    crop,pas,	!Doug 04/09
      *    co2,doyear)   !DIETER,kirsten
         !mtemp=mtemp+273.15
         !mtemp_dmin=mtemp_dmin+273.15
@@ -971,7 +971,7 @@ c DM   To avoid random values when tree(pft) is false
         call getclimate(year,mtemp,mtemp_dmin,mtemp_dmax,mprec,
      *    mwet,msun,mwindsp,
      *    popden,
-     *    crop,pas,     !Doug 04/09
+     *    crop,pas,	!Doug 04/09
      *    co2,doyear)   !DIETER,kirsten
 
         !mtemp=mtemp+273.15
@@ -1014,11 +1014,11 @@ c    Doug 06/09: initalise land use logicals
 
 c         Interpolate monthly climate data to daily values
 c         for variables that do not depend on year
-c         Doug 01/09: moved down so daily lightening strikes s dependant on wet days
+c	  Doug 01/09: moved down so daily lightening strikes s dependant on wet days
 c
 c          call daily1(mlightn,dlightn_control)
 
-          fuel_1hr_del=fuel_1hr         !Doug MFL1
+          fuel_1hr_del=fuel_1hr		!Doug MFL1
           fuel_10hr_del=fuel_10hr
 
           fuel_100hr_del=fuel_100hr
@@ -1031,6 +1031,7 @@ c         Doug 03/09: MFL; set fuel incraments to zero
           fuel_10hr_inc=0.0
           fuel_100hr_inc=0.0
           fuel_1000hr_inc=0.0
+		  afire_frac_afap_old=0.0
 
         do while (doyear)
 c         --------------------------------------
@@ -1043,7 +1044,6 @@ c         Interpolate monthly climate data to daily values
           call daily(mtemp_dmax,dtemp_max)
           call prdaily(mprec,dprec,mwet,year)
 
-          afire_frac_afap_old=0
 c Doug 07/09: Calculate a GDD for each grid cell. Used for ouput only.
           gdd_grid=0
           DO day=1,365
@@ -1054,9 +1054,9 @@ c Doug 07/09: Calculate a GDD for each grid cell. Used for ouput only.
 
 
 
-          call daily2(lat,lon,mlightn,dprec,dlightn,fwet,fdry)    !Doug 01/09: functions
-                                                !distributed lighting                                                                           !differently on days with & 
-                                                !without precipitation
+          call daily2(lat,lon,mlightn,dprec,dlightn)	!Doug 01/09: functions
+						!distributed lighting 										!differently on days with & 
+						!without precipitation
           dlightn=dlightn 
 
           call daily(msun,dsun)
@@ -1111,7 +1111,7 @@ c         Implement PFT bioclimatic limits
 
 c        Doug 05/09: agriculture routine, updates pools due to abandonment
 c        or clearance of grid cell 
-          
+	  
           call agriculture(clear,mtemp_min20,tree,agri_burn, 
      *      lm_ind,sm_ind,hm_ind,rm_ind,nind,convflux,agri_litter_ag,
      *      agri_litter_bg,litter_ag,litter_bg,abandon,prod10,prod100,
@@ -1160,7 +1160,7 @@ c         Calculation of leaf, sapwood, and fine-root turnover
           call turnover(pftpar,present,tree,lm_ind,sm_ind,hm_ind,
      *      rm_ind,litter_ag,litter_bg,fuel_1hr,fuel_10hr,fuel_100hr,
      *      fuel_1hr_inc_pos,fuel_1hr_inc_neg,
-     *      fuel_10hr_inc, fuel_100hr_inc,      !Doug 01/09: fuel_xhr_inc
+     *      fuel_10hr_inc, fuel_100hr_inc,	!Doug 01/09: fuel_xhr_inc
      *      nind,turnover_ind)
 
 
@@ -1175,7 +1175,7 @@ c         on litter remaining after year's decomposition
      *      fuel_100hr_inc,fuel_1000hr_inc,       !Doug 01/09: fuel_xhr_inc
      *      mw1,mw1_t, mtemp_soil,cpool_fast,cpool_slow,
      *      arh,mrh,year,k_fast_ave,k_slow_ave,litter_decom_ave,
-     *      agri_litter_ag,agri_litter_bg,agri)         !Doug 05/09: agriculture varibles added for land use change stuff
+     *      agri_litter_ag,agri_litter_bg,agri)		!Doug 05/09: agriculture varibles added for land use change stuff
 
 
 c         Removal of PFTs with negative C increment this year
@@ -1228,7 +1228,7 @@ c         (including heat damage and due to lower limit of npp for boreal trees)
 
 
 c         Calculation of biomass destruction by fire disturbance
-        fuel_1hr_del=fuel_1hr_del-fuel_1hr              !Doug MFL1
+        fuel_1hr_del=fuel_1hr_del-fuel_1hr		!Doug MFL1
         fuel_10hr_del=fuel_10hr_del-fuel_10hr
         fuel_100hr_del=fuel_100hr_del-fuel_100hr
         fuel_1000hr_del=fuel_1000hr_del-fuel_1000hr
@@ -1239,7 +1239,7 @@ c         Calculation of biomass destruction by fire disturbance
      *      litter_ag,litter_bg,fuel_1hr,
      *      fuel_10hr,fuel_100hr,fuel_1000hr,
      *      fuel_1hr_inc_pos, fuel_1hr_inc_neg, fuel_10hr_inc,
-     *      fuel_100hr_inc, fuel_1000hr_inc,                         !Doug 01/09 MFL: fuel_xhr_inc
+     *      fuel_100hr_inc, fuel_1000hr_inc,	                     !Doug 01/09 MFL: fuel_xhr_inc
      *      fuel_1hr_del, fuel_10hr_del, fuel_100hr_del, 
      *      fuel_1000hr_del,                                         !Doug 01/09 MFL1
      *      mfuel_1hr_total, mfuel_10hr_total,                       !Doug 03/09: outputs for monthly fuel loads
@@ -1263,7 +1263,7 @@ c         Calculation of biomass destruction by fire disturbance
      * fuel_100hr_total_0,fuel_1000hr_total_0,
      * mfire_frac,lon,crop,pas,fbdep,ni_acc,afire_frac_afap_old)
 
-          fuel_1hr_del=fuel_1hr         !Doug MFL1
+          fuel_1hr_del=fuel_1hr		!Doug MFL1
           fuel_10hr_del=fuel_10hr
 
           fuel_100hr_del=fuel_100hr
@@ -1283,7 +1283,7 @@ c         update of individual structure and FPC.
 
 
 
-          call establishment(pftpar,present,survive,estab,nind, 
+          call establishment(pftpar,present,survive,estab,nind,	
      *      lm_ind,sm_ind,rm_ind,hm_ind,lm_sapl,sm_sapl,rm_sapl,
      *      hm_sapl,crownarea,fpc_grid,lai_ind,height,dbh,tau_c,
      *      cl_t,sla,wooddens,latosa,mprec,reinickerp,litter_ag,
@@ -1383,9 +1383,9 @@ c  acflux_fire(1)
      *      deltaa,deltaa_fpc,delt_c13_fpc,
      *      mfire_frac,
      *      fbdep,litter_decom_ave,turnover_ind,
-     *      crop,pas,   !Doug 05/09: just checking crops and pasture are implimented properly
+     *      crop,pas,	!Doug 05/09: just checking crops and pasture are implimented properly
      *      anpp_grid,arh_grid,acflux_fire_grid,                  !Doug 07/09: cheating future run ouputs without deltaC's
-     *      gdd_grid,alpha_ws,fwet,fdry)                                    !Doug 07/09: biocliamtic variables for heat and water stress
+     *      gdd_grid,alpha_ws)                                    !Doug 07/09: biocliamtic variables for heat and water stress
 cccc note: you can alternatively use mpet2 and apet to get PET*1.32
 cccc       instead of mpet_grid and apet_grid, respectively
 
@@ -1533,47 +1533,46 @@ c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     SUBROUTINE DAILY2
 c     Doug 01/09: For calculating lightning strikes. Based on linear
-c       interpolation, but with grouping around rain events
+c	interpolation, but with grouping around rain events
 c
-c       Completed in two steps. Step 1 calculates the daily spread of lighning if 
-c       lighning was constant, with more ligtning on days with rainfall then days 
-c       without. Step2 to multiplys by linearly interpolated lighting strkes, and 
-c       scales so total lighting remains the same.  
+c	Completed in two steps. Step 1 calculates the daily spread of lighning if 
+c	lighning was constant, with more ligtning on days with rainfall then days 
+c	without. Step2 to multiplys by linearly interpolated lighting strkes, and 
+c	scales so total lighting remains the same.  
 
-        SUBROUTINE daily2(lat,lon,mval,dval1,dval2,fwet,fdry)
+	SUBROUTINE daily2(lat,lon,mval,dval1,dval2)
 
-        IMPLICIT NONE
+	IMPLICIT NONE
 
-        INTEGER nmonths                 ! number of months in a year
-                PARAMETER (nmonths=12)
-        INTEGER ndayyear                ! number of days in a year
-                PARAMETER (ndayyear=365)
-        INTEGER ndaymonth(1:nmonths)    !number of days in each month
-        INTEGER m
-                DATA (ndaymonth(m),m=1,12)
+	INTEGER	nmonths			! number of months in a year
+		PARAMETER (nmonths=12)
+	INTEGER	ndayyear		! number of days in a year
+		PARAMETER (ndayyear=365)
+	INTEGER	ndaymonth(1:nmonths)	!number of days in each month
+	INTEGER	m
+        	DATA (ndaymonth(m),m=1,12)
      *    / 31,28,31,30,31,30,31,31,30,31,30,31 /
 
 
-C       LOCAL VARAIBLES:
-        INTEGER month,mday, day !month and day of month and day of year
+C	LOCAL VARAIBLES:
+	INTEGER	month,mday, day	!month and day of month and day of year
 
 c     I/O:
-        REAL mval(nmonths),dval1(ndayyear), dval2(ndayyear)
+      	REAL mval(nmonths),dval1(ndayyear), dval2(ndayyear)
 
-c       For step 1:
-        REAL    fdal(365)               !the value of the function that 
-                                        !redistributes lighting for each day
-        REAL    fwet(12),fdry(12)       !Monthly value of fdal. Used for output only.
-        REAL    nwd, pwd                !number and proption of wet days in the month
-        REAL    gceo                    !coeffiant used to calculate proportion of
-                                        !lighting strikes on wet days
-                PARAMETER (gceo=0.00001)
+c	For step 1:
+	REAL	fdal(365)		!the value of the function that 
+					!redistributes lighting for each day
+	REAL	nwd, pwd		!number and proption of wet days in the month
+	REAL	gceo			!coeffiant used to calculate proportion of
+					!lighting strikes on wet days
+		PARAMETER (gceo=0.00001)
 
-c       For step 2:
-        REAL    lmval(2)                !for calculating scaling of rediustributed
-                                        !lightning
+c	For step 2:
+	REAL	lmval(2)		!for calculating scaling of rediustributed
+					!lightning
 
-        REAL    lat,lon
+	REAL	lat,lon
 
 
 
@@ -1582,82 +1581,78 @@ c       ------------------------------------------------------------------------
 c       Step 1
 
         day=0
-        fwet(:)=0;
-        fdry(:)=0;
 
-        DO month=1,nmonths      !Month of year
+        DO month=1,nmonths	!Month of year
           nwd=0
 
 
 
-          DO mday=1,ndaymonth(month)    !day of month
+          DO mday=1,ndaymonth(month)	!day of month
             day=day+1
             IF(dval1(day)>0) nwd=nwd+1
-          END DO        !day of month
+          END DO	!day of month
 
           pwd=nwd/ndaymonth(month) !pwd= fraction of wet days in month 
             day=day-ndaymonth(month)
-            DO mday=1,ndaymonth(month)  !day of month
+            DO mday=1,ndaymonth(month)	!day of month
               day=day+1    !Seaperates days and calcualates lighting for days with and 
                            !without rain
 
               IF(dval1(day)>0) THEN
-                fdal(day)=(pwd**gceo)/nwd                
+                fdal(day)=(pwd**gceo)/nwd
               ELSE
                 fdal(day)=(1-pwd**gceo)/(ndaymonth(month)-nwd)
               END IF
-              fwet(month)=(pwd**gceo)/nwd
-              fdry(month)=(1-pwd**gceo)/(ndaymonth(month)-nwd)
 
             END DO
-          END DO        !Month of year
-        
+          END DO	!Month of year
+	
 c-------------------------------------------------------------------------------
 c Step 2
 
-        
-        CALL    daily1(mval,dval2)              !dval2=lighting for a simple
+	
+	CALL	daily1(mval,dval2)		!dval2=lighting for a simple
                                                 !linear interpolation between
                                                 !montrhly lighting values
 
 
-        day=0
+	day=0
         lmval(:)=0.0
 
-        DO month=1,nmonths !month of year
+	DO month=1,nmonths !month of year
 
-                
-          DO mday=1,ndaymonth(month)    !day of month
+		
+          DO mday=1,ndaymonth(month)	!day of month
             day=day+1
             lmval(1)=lmval(1)+dval2(day)
             dval2(day)=dval2(day)*fdal(day)
             lmval(2)=lmval(2)+dval2(day)
 
-          END DO        !day of month
-        
+          END DO 	!day of month
+	
           DO mday=day+1-ndaymonth(month),day
             IF (lmval(1)==0.AND.lmval(2)==0) THEN
               dval2(mday)=0
-            ELSE IF(lmval(2)==0.AND.lmval(1)/=0)        THEN
+            ELSE IF(lmval(2)==0.AND.lmval(1)/=0)	THEN
               PRINT*, "error:redistrbuting lighting around"
               PRINT*, "wet days in daily2 subroutine"
               STOP
             END IF
 
             dval2(mday)=dval2(mday)*lmval(1)/lmval(2)
-              IF (dval1(mday)>0) dval2(mday)=0  !removes all lightin
+              IF (dval1(mday)>0) dval2(mday)=0	!removes all lightin
                                                 !on wet days
 
          END DO
 
 
-        END DO !month of year
+	END DO !month of year
 
 
 
 
-        return
-        END !SUBROUTINE !Daily2
+	return
+	END !SUBROUTINE	!Daily2
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     SUBROUTINE DAILY1
@@ -1900,7 +1895,7 @@ c Random function: provides random numbers {0-1}
      *        +float(k(4)))*0.01
 
        end
-           
+	   
 
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
@@ -3855,7 +3850,7 @@ c DM      real delta_thawday
       real mw1_t(1:12)
       real mw2_t(1:12)
       real meangc(1:12,1:npft),mgp(1:12,1:npft)
-          real area
+	  real area
 
 
 c     LOCAL:
@@ -4042,7 +4037,7 @@ c         assuming full leaf cover
 c         FIND THE POTENTIAL CANOPY CONDUCTANCE REALISABLE UNDER
 c         NON-WATER-STRESSED CONDITIONS
 
-          do m=1,12     !month
+          do m=1,12	!month
 
 c           Initialisations
 
@@ -4083,7 +4078,7 @@ c             Eqn 21 Haxeltine & Prentice 1996
 c         Linearly interpolate mid-monthly gp to daily values
 
           call daily(gp,dval)
-          do d=1,365    !day
+          do d=1,365	!day
             dgp(d,pft)=dval(d)
           enddo
 
@@ -4466,7 +4461,7 @@ c     & Farquhar 1994
 c     Calculate annual total runoff
 
       arunoff=arunoff_surf+arunoff_drain
-          
+	  
  
       return
       end
@@ -5927,8 +5922,8 @@ c     ARGUMENTS
       real litter_ag(1:npft,1:nco2)
       real fuel_1hr(1:npft,1:nco2)
       REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12) !Doug 01/09: records variations
-      REAL temp_fuel(1:nco2)                    !in fuel for each month (for FIRE)
+      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL temp_fuel(1:nco2)		        !in fuel for each month (for FIRE)
       logical present(1:npft)
       real lm_sapl(1:npft,1:nco2),sm_sapl(1:npft,1:nco2)
       real hm_sapl(1:npft,1:nco2),rm_sapl(1:npft,1:nco2)
@@ -5946,9 +5941,9 @@ c     LOCAL VARIABLES
       temp=0.0
       reprod=0.0
       
-      do pft=1,npft     !pft
+      do pft=1,npft	!pft
 
-        temp_fuel=fuel_1hr(pft,:)       !Doug 01/09: MFL
+        temp_fuel=fuel_1hr(pft,:)	!Doug 01/09: MFL
 
         if (present(pft)) then
 
@@ -5977,7 +5972,7 @@ c         eventually enter the litter pool
 
           if (reprod.gt.0.0) then
              do nc=2,nco2
-                temp=fuel_1hr(pft,nc)
+		temp=fuel_1hr(pft,nc)
                 fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp+
      *               bm_inc(pft,nc)*reprod)/(fuel_1hr(pft,1))
              enddo
@@ -6037,12 +6032,12 @@ c         Reduce biomass increment by reproductive cost
           END IF
         ENDDO                                                          !Doug 01/09: MFL 
 
-      enddo     !pft
+      enddo	!pft
 
       
 
       return
-      end       !reproduction
+      end	!reproduction
 
 
 
@@ -6080,8 +6075,8 @@ c     ARGUMENTS:
       real fuel_1hr(1:npft,1:nco2),fuel_10hr(1:npft,1:nco2)
       real fuel_100hr(1:npft,1:nco2)
       REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12) !Doug 01/09: MFL; records variations
-      REAL fuel_10hr_inc(1:npft,1:nco2,1:12)    !in fuel for each month (for FIRE)
+      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: MFL; records variations
+      REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!in fuel for each month (for FIRE)
       REAL fuel_100hr_inc(1:npft,1:nco2,1:12)
       REAL temp_fuel(1:nco2,1:3)
       real nind(1:npft)
@@ -6126,9 +6121,9 @@ c     ALLAN
 
       do pft=1,npft
 
-        temp_fuel(:,1)=fuel_1hr(pft,:)          !Doug 01/09: MFL
-        temp_fuel(:,2)=fuel_10hr(pft,:)         !Doug 01/09: MFL
-        temp_fuel(:,3)=fuel_100hr(pft,:)        !Doug 01/09: MFL
+        temp_fuel(:,1)=fuel_1hr(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,2)=fuel_10hr(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,3)=fuel_100hr(pft,:)	!Doug 01/09: MFL
 
 c       Turnover rates are reciprocals of tissue longevity
 
@@ -6246,18 +6241,18 @@ c       turnover_ind(pft)=turnover_ind(pft)+sm_turn_drop+hm_turn_drop
         endif
 
         DO nc=1,nco2
-          IF (fuel_1hr(pft,1)-temp_fuel(1,1)>0) THEN                                            !Doug 01/09: MFL
+          IF (fuel_1hr(pft,1)-temp_fuel(1,1)>0) THEN						!Doug 01/09: MFL
             fuel_1hr_inc_pos(pft,nc,:)=fuel_1hr_inc_pos(pft,nc,:)+
      *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
           ELSE
             fuel_1hr_inc_neg(pft,nc,:)=fuel_1hr_inc_neg(pft,nc,:)+
      *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
           END IF
-          fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
+	  fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
      *      (fuel_10hr(pft,nc)-temp_fuel(nc,2))/12
           fuel_100hr_inc(pft,nc,:)=fuel_100hr_inc(pft,nc,:)+
      *      (fuel_100hr(pft,nc)-temp_fuel(nc,3))/12
-        END DO                                                  !Doug 01/09: MFL
+        END DO							!Doug 01/09: MFL
 
       enddo  !pft
 
@@ -6268,7 +6263,7 @@ c       turnover_ind(pft)=turnover_ind(pft)+sm_turn_drop+hm_turn_drop
 
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
-c     SUBROUTINE LITTERSOM              
+c     SUBROUTINE LITTERSOM		
 c     Litter and soil decomposition
 c     Incorporates analytical solution for soil pool sizes once litter inputs
 c     are (assumed to be) at equilibrium, reducing spin-up time for carbon
@@ -6316,8 +6311,8 @@ c     ARGUMENTS
       real fuel_100hr(1:npft,1:nco2)
       real fuel_1000hr(1:npft,1:nco2)
       REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12) !Doug 01/09: records variations
-      REAL fuel_10hr_inc(1:npft,1:nco2,1:12)    !in fuel for each month (for FIRE)
+      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!in fuel for each month (for FIRE)
       REAL fuel_100hr_inc(1:npft,1:nco2,1:12)
       REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)
       REAL temp_fuel(1:npft,1:nco2,1:4)
@@ -6399,10 +6394,10 @@ c DM   arh seemed to be never initialised, I think it is the right place
 
       do m=1,12
 
-        temp_fuel(:,:,1)=fuel_1hr       !Doug 01/09: MFL
-        temp_fuel(:,:,2)=fuel_10hr      !Doug 01/09: MFL
-        temp_fuel(:,:,3)=fuel_100hr     !Doug 01/09: MFL
-        temp_fuel(:,:,4)=fuel_1000hr    !Doug 01/09: MFL
+        temp_fuel(:,:,1)=fuel_1hr	!Doug 01/09: MFL
+        temp_fuel(:,:,2)=fuel_10hr	!Doug 01/09: MFL
+        temp_fuel(:,:,3)=fuel_100hr	!Doug 01/09: MFL
+        temp_fuel(:,:,4)=fuel_1000hr	!Doug 01/09: MFL
 
 
 
@@ -6596,7 +6591,7 @@ c       Empty soil pools below a minimum threshold
         endif
 
 
-        DO nc=1,nco2                                            !Doug 01/09: MFL
+        DO nc=1,nco2						!Doug 01/09: MFL
           DO pft=1,npft
 
             IF (fuel_1hr(pft,1)-temp_fuel(pft,1,1)>0) THEN
@@ -6607,13 +6602,13 @@ c       Empty soil pools below a minimum threshold
      *          fuel_1hr(pft,nc)-temp_fuel(pft,nc,1)
             END IF
           END DO
-          fuel_10hr_inc(:,nc,m)=fuel_10hr_inc(:,nc,m)+
+	  fuel_10hr_inc(:,nc,m)=fuel_10hr_inc(:,nc,m)+
      *      fuel_10hr(:,nc)-temp_fuel(:,nc,2)
           fuel_100hr_inc(:,nc,m)=fuel_100hr_inc(:,nc,m)+
      *      fuel_100hr(:,nc)-temp_fuel(:,nc,3)
           fuel_1000hr_inc(:,nc,m)=fuel_1000hr_inc(:,nc,m)+
      *      fuel_1000hr(:,nc)-temp_fuel(:,nc,4)
-        END DO                                                  !Doug 01/09: MFL
+        END DO							!Doug 01/09: MFL
 
       enddo   !month
 
@@ -6685,8 +6680,8 @@ c     ARGUMENTS
       real fuel_100hr(1:npft,1:nco2)
       real fuel_1000hr(1:npft,1:nco2)
       REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12) !Doug 01/09: records variations
-      REAL fuel_10hr_inc(1:npft,1:nco2,1:12)    !in fuel for each month (for FIRE)
+      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!in fuel for each month (for FIRE)
       REAL fuel_100hr_inc(1:npft,1:nco2,1:12)
       REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)
       REAL temp_fuel(1:nco2,1:4)
@@ -6707,10 +6702,10 @@ c      real nind_kill
 
       do pft=1,npft
 
-        temp_fuel(:,1)=fuel_1hr(pft,:)          !Doug 01/09: MFL
-        temp_fuel(:,2)=fuel_10hr(pft,:)         !Doug 01/09: MFL
-        temp_fuel(:,3)=fuel_100hr(pft,:)        !Doug 01/09: MFL
-        temp_fuel(:,4)=fuel_1000hr(pft,:)       !Doug 01/09: MFL
+        temp_fuel(:,1)=fuel_1hr(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,2)=fuel_10hr(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,3)=fuel_100hr(pft,:)	!Doug 01/09: MFL
+        temp_fuel(:,4)=fuel_1000hr(pft,:)	!Doug 01/09: MFL
 
         if (present(pft)) then
 
@@ -6823,7 +6818,7 @@ c            KIRSTEN: fuel classes
           endif
 
         endif
-        DO nc=1,nco2                                            !Doug 01/09: MFL
+        DO nc=1,nco2						!Doug 01/09: MFL
           IF (fuel_1hr(pft,1)-temp_fuel(1,1)>0) THEN
             fuel_1hr_inc_pos(pft,nc,:)=fuel_1hr_inc_pos(pft,nc,:)+
      *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
@@ -6832,16 +6827,16 @@ c            KIRSTEN: fuel classes
      *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
           END IF
 
-          fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
+	  fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
      *      (fuel_10hr(pft,nc)-temp_fuel(nc,2))/12
           fuel_100hr_inc(pft,nc,:)=fuel_100hr_inc(pft,nc,:)+
      *      (fuel_100hr(pft,nc)-temp_fuel(nc,3))/12
           fuel_1000hr_inc(pft,nc,:)=fuel_1000hr_inc(pft,nc,:)+
      *      (fuel_1000hr(pft,nc)-temp_fuel(nc,4))/12
-        END DO                                                  !Doug 01/09: MFL
+        END DO							!Doug 01/09: MFL
 
 
-      enddo     !pft
+      enddo	!pft
 
       return
       end
@@ -6946,8 +6941,8 @@ c     ARGUMENTS
       real fuel_100hr(1:npft,1:nco2)
       real fuel_1000hr(1:npft,1:nco2)
       REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12) !Doug 01/09: records variations
-      REAL fuel_10hr_inc(1:npft,1:nco2,1:12)    !in fuel for each month (for FIRE)
+      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!in fuel for each month (for FIRE)
       REAL fuel_100hr_inc(1:npft,1:nco2,1:12)
       REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)
       REAL temp_fuel(1:nco2,4)
@@ -7031,10 +7026,10 @@ c#endif
 
       do pft=1,npft
 
-        temp_fuel(:,1)=fuel_1hr(pft,:)          !Doug 01/09: MFL
-        temp_fuel(:,2)=fuel_10hr(pft,:)         !Doug 01/09: MFL
-        temp_fuel(:,3)=fuel_100hr(pft,:)        !Doug 01/09: MFL
-        temp_fuel(:,4)=fuel_1000hr(pft,:)       !Doug 01/09: MFL
+        temp_fuel(:,1)=fuel_1hr(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,2)=fuel_10hr(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,3)=fuel_100hr(pft,:)	!Doug 01/09: MFL
+        temp_fuel(:,4)=fuel_1000hr(pft,:)	!Doug 01/09: MFL
 
         temp=0.0
         lm_temp=0.0
@@ -7615,7 +7610,7 @@ c         Update LAI and FPC
           fpc_inc(pft)=max(0.0,fpc_grid(pft)-fpc_grid_old)
           if(fpc_grid(pft).eq.0.0) present(pft)=.false.
         endif
-        DO nc=1,nco2                                            !Doug 01/09: MFL
+        DO nc=1,nco2						!Doug 01/09: MFL
           IF (fuel_1hr(pft,1)-temp_fuel(1,1)>0) THEN
             fuel_1hr_inc_pos(pft,nc,:)=fuel_1hr_inc_pos(pft,nc,:)+
      *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
@@ -7624,19 +7619,19 @@ c         Update LAI and FPC
      *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
           END IF
 
-          fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
+	  fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
      *      (fuel_10hr(pft,nc)-temp_fuel(nc,2))/12
           fuel_100hr_inc(pft,nc,:)=fuel_100hr_inc(pft,nc,:)+
      *      (fuel_100hr(pft,nc)-temp_fuel(nc,3))/12
           fuel_1000hr_inc(pft,nc,:)=fuel_1000hr_inc(pft,nc,:)+
      *      (fuel_1000hr(pft,nc)-temp_fuel(nc,4))/12
-        END DO                                                  !Doug 01/09: MFL
+        END DO							!Doug 01/09: MFL
 
 
-      enddo     !pft
+      enddo 	!pft
 
       return
-      end       !allocatiob
+      end	!allocatiob
 
 
 
@@ -7678,8 +7673,8 @@ c     ARGUMENTS
       real fuel_100hr(1:npft,1:nco2)
       real fuel_1000hr(1:npft,1:nco2)
       REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)
-      REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12) !Doug 01/09: records variations
-      REAL fuel_10hr_inc(1:npft,1:nco2,1:12)    !in fuel for each month (for FIRE)
+      REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!in fuel for each month (for FIRE)
       REAL fuel_100hr_inc(1:npft,1:nco2,1:12)
       REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)
       REAL temp_fuel(1:nco2,1:4)
@@ -7746,10 +7741,10 @@ c     Calculate total woody FPC, FPC increment and grass cover (= crown area)
 c     LIGHT COMPETITION
       do pft=1,npft
 
-        temp_fuel(:,1)=fuel_1hr(pft,:)          !Doug 01/09: MFL
-        temp_fuel(:,2)=fuel_10hr(pft,:)         !Doug 01/09: MFL
-        temp_fuel(:,3)=fuel_100hr(pft,:)        !Doug 01/09: MFL
-        temp_fuel(:,4)=fuel_1000hr(pft,:)       !Doug 01/09: MFL
+        temp_fuel(:,1)=fuel_1hr(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,2)=fuel_10hr(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,3)=fuel_100hr(pft,:)	!Doug 01/09: MFL
+        temp_fuel(:,4)=fuel_1000hr(pft,:)	!Doug 01/09: MFL
 
         if (present(pft)) then
 
@@ -7787,7 +7782,7 @@ c                 Transfer lost biomass to litter
                      enddo
                   endif
 
-c                 KIRSTEN: fuel classes 
+c                 KIRSTEN: fuel classes	
 
                   temp=fuel_1hr(pft,1)
                   fuel_1hr(pft,1)=fuel_1hr(pft,1)+(lm_ind(pft,1)+
@@ -7915,7 +7910,7 @@ c
           if(fpc_grid(pft).eq.0.0) present(pft)=.false.
         endif    ! present
 
-        DO nc=1,nco2                                            !Doug 01/09: MFL
+        DO nc=1,nco2						!Doug 01/09: MFL
           IF (fuel_1hr(pft,1)-temp_fuel(1,1)>0) THEN
             fuel_1hr_inc_pos(pft,nc,:)=fuel_1hr_inc_pos(pft,nc,:)+
      *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
@@ -7923,20 +7918,20 @@ c
             fuel_1hr_inc_neg(pft,nc,:)=fuel_1hr_inc_neg(pft,nc,:)+
      *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
           END IF
-          fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
+	  fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
      *      (fuel_10hr(pft,nc)-temp_fuel(nc,2))/12
           fuel_100hr_inc(pft,nc,:)=fuel_100hr_inc(pft,nc,:)+
      *      (fuel_100hr(pft,nc)-temp_fuel(nc,3))/12
           fuel_1000hr_inc(pft,nc,:)=fuel_1000hr_inc(pft,nc,:)+
      *      (fuel_1000hr(pft,nc)-temp_fuel(nc,4))/12
-        END DO                                                  !Doug 01/09: MFL
+        END DO							!Doug 01/09: MFL
 
 
 
       enddo  !pft
 
       return
-      end       !light
+      end	!light
 
 
 
@@ -7985,8 +7980,8 @@ c     ARGUMENTS
       real fuel_100hr(1:npft,1:nco2)
       real fuel_1000hr(1:npft,1:nco2)
       REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12) !Doug 01/09: records variations
-      REAL fuel_10hr_inc(1:npft,1:nco2,1:12)    !in fuel for each month (for FIRE)
+      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!in fuel for each month (for FIRE)
       REAL fuel_100hr_inc(1:npft,1:nco2,1:12)
       REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)
       REAL temp_fuel(1:nco2,4)
@@ -8024,10 +8019,10 @@ c     LOCAL VARIABLES
       litter_inc=0.0
 
       do pft=1,npft
-        temp_fuel(:,1)=fuel_1hr(pft,:)          !Doug 01/09: MFL
-        temp_fuel(:,2)=fuel_10hr(pft,:)         !Doug 01/09: MFL
-        temp_fuel(:,3)=fuel_100hr(pft,:)        !Doug 01/09: MFL
-        temp_fuel(:,4)=fuel_1000hr(pft,:)       !Doug 01/09: MFL
+        temp_fuel(:,1)=fuel_1hr(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,2)=fuel_10hr(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,3)=fuel_100hr(pft,:)	!Doug 01/09: MFL
+        temp_fuel(:,4)=fuel_1000hr(pft,:)	!Doug 01/09: MFL
 
 c     initialisation
         heatstress(pft)=0.0
@@ -8190,19 +8185,19 @@ c DM  END CHANGE
             fuel_1hr_inc_neg(pft,nc,:)=fuel_1hr_inc_neg(pft,nc,:)+
      *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
           END IF
-          fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
+	  fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
      *      (fuel_10hr(pft,nc)-temp_fuel(nc,2))/12
           fuel_100hr_inc(pft,nc,:)=fuel_100hr_inc(pft,nc,:)+
      *      (fuel_100hr(pft,nc)-temp_fuel(nc,3))/12
           fuel_1000hr_inc(pft,nc,:)=fuel_1000hr_inc(pft,nc,:)+
      *      (fuel_1000hr(pft,nc)-temp_fuel(nc,4))/12
-        END DO                                                  !Doug 01/09: MFL
+        END DO							!Doug 01/09: MFL
 
 
-      enddo     !pft
+      enddo	!pft
 
       return
-      end       !mortality
+      end	!mortality
 
 
 
@@ -8213,7 +8208,7 @@ c     Biomass destruction through disturbance by fire
 
       subroutine fire(year,start_year,                                       !Doug 07/09: add start_year
      *  pftpar,dtemp,dtemp_min,dtemp_max,dprec,
-     *  dwindsp,dlightn,dphen,dphen_change,litter_ag,litter_bg,fuel_1hr,    !Doug 06/09: dphen_change added for fire paradox experiments                
+     *  dwindsp,dlightn,dphen,dphen_change,litter_ag,litter_bg,fuel_1hr,    !Doug 06/09: dphen_change added for fire paradox experiments		
      *  fuel_10hr, fuel_100hr,fuel_1000hr,
      *  fuel_1hr_inc_pos, fuel_1hr_inc_neg, fuel_10hr_inc,
      *  fuel_100hr_inc, fuel_1000hr_inc,
@@ -8235,7 +8230,7 @@ c     Biomass destruction through disturbance by fire
      * fuel_all_0,fuel_1hr_total_0,fuel_10hr_total_0,
      * fuel_100hr_total_0,fuel_1000hr_total_0,
      * mfire_frac,lon,
-     * crop,pas,fbdep,ni_acc,afire_frac_afap_old)    
+     * crop,pas,fbdep,ni_acc,afire_frac_afap_old)	 
       implicit none
 
 c     PARAMETERS
@@ -8317,18 +8312,18 @@ c     ARGUMENTS
       real dprec(1:365),dwindsp(1:365)
       real dhuman_ign(1:365)      ! Yan
       real dlightn(1:365)              !number of lightning fires per mln.ha
-      integer dlightn_cons               !Doug 12/08: coverting number of fires n dlightn to a constant strike count for the year
+      integer dlightn_cons		 !Doug 12/08: coverting number of fires n dlightn to a constant strike count for the year
       real dphen(1:365,1:npft)
       REAL dphen_change(1:12,1:npft)     !Doug 06/09: for fire paradox experiments
       LOGICAL test_growing_start !Doug 06/09: Tests to see if the start of the growing season has happened yet
       real litter_ag(1:npft,1:nco2),litter_bg(1:npft,1:nco2)
       real fuel_1hr(1:npft,1:nco2),fuel_10hr(1:npft,1:nco2)
-      real fuel_100hr(1:npft,1:nco2)                    
+      real fuel_100hr(1:npft,1:nco2)			
       real fuel_1000hr(1:npft,1:nco2)
 
       REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12) !Doug 01/09: records variations
-      REAL fuel_10hr_inc(1:npft,1:nco2,1:12)    !in fuel for each month (for FIRE)
+      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!in fuel for each month (for FIRE)
       REAL fuel_100hr_inc(1:npft,1:nco2,1:12)
       REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)
 
@@ -8384,7 +8379,7 @@ c     LOCAL VARIABLES
       data (month_length(m),m=1,12)
      *               /31,28,31,30,31,30,31,31,30,31,30,31/
 
-      integer monthno, midday(1:13)                                     !Doug 01/09: MFL
+      integer monthno, midday(1:13)					!Doug 01/09: MFL
         data (midday(monthno),monthno=1,13)
      *    / 16,44,75,105,136,166,197,228,258,289,319,350,381 /
 
@@ -8564,7 +8559,7 @@ cYan  Initialise
       dhuman_ign(:)=0.0
       d_numfire_human(:)=0.0    ! Yan
       d_numfire_lightn(:)=0.0   ! Yan
-        
+	
       d_area_burnt_human(:)=0.0    ! Yan
       d_area_burnt_lightn(:)=0.0   ! Yan
 
@@ -8694,7 +8689,7 @@ c     Initialise
       nind_fuel(:)=0.0
       nind_old(:)=0.0
       nind_kill(:)=0.0
-       ratio_fbd(:)=0.0 !Doug: remove and turn back to scalar
+       ratio_fbd(:)=0.0	!Doug: remove and turn back to scalar
        ratio_dead_fuel=0.0
        ratio_live_fuel=0.0
        dens_deadgrass_ave=0.0
@@ -8750,7 +8745,7 @@ c       ni_acc=0.0
           dlightn_lcc(:)=0
           m_lightn(:)=0
            counter_fire=0
-
+	afire_frac_afap_old=0.0
 
 
 c     Assign a minimum fire fraction (for presentational purposes)
@@ -8795,7 +8790,7 @@ c     if (year.le.spinup_years) then        !!!! Yan: 26/10/07
            
 c     Calculate the length of the fire season (units=days)
       i=1
-      do d=1,365                !day of year
+      do d=1,365		!day of year
 c       Calculate today's fire probability, fire_prob
 c       Assume fire is only possible when temperature is above zero
         if (dtemp(d).gt.0.0.and.moistfactor.gt.0.0) then
@@ -8805,7 +8800,7 @@ c       Assume fire is only possible when temperature is above zero
         endif
 
         fire_length=fire_length+fire_prob
-      enddo                     !day of year
+      enddo			!day of year
       an_fseason=fire_length
 
 c     Calculate annual fire index
@@ -8987,7 +8982,7 @@ c---------------------------------------
         count_yr=1
         count_fdi=1
         afire_frac=0.0
-
+		
         if(year.eq.1.or.year.eq.1000)afire_frac_afap_old=0.0
 
 
@@ -8999,18 +8994,18 @@ c---------------------------------------
        fuel_all_0=0.0
        dead_fuel_all_0=0.0
        dead_fuel_0=0.0
-           net_fuel=0.0
-           
+	   net_fuel=0.0
+	   
         dead_fuel=0.0
         fuel_1hr_total=0.0
         fuel_10hr_total=0.0
         fuel_100hr_total=0.0
         fuel_1000hr_total=0.0
-                dens_fuel_ave=0.0
+		dens_fuel_ave=0.0
         livegrass=0.0
 
 
-        dfuel_leaf=0.0    !Doug 03/09
+	dfuel_leaf=0.0    !Doug 03/09
         test_growing_start=.TRUE.    !Doug 06/09 fire paradox experiments
 
 
@@ -9034,12 +9029,12 @@ c---------------------------------------
        fuel_10hr_left(pft,co2)=fuel_10hr(pft,co2)/0.45  
        fuel_100hr_left(pft,co2)=fuel_100hr(pft,co2)/0.45  
        fuel_1000hr_left(pft,co2)=fuel_1000hr(pft,co2)/0.45  
-           lm_ind_0(pft,co2)=lm_ind(pft,co2)
-           end do
-           nind_0(pft)=nind(pft)
+	   lm_ind_0(pft,co2)=lm_ind(pft,co2)
+	   end do
+	   nind_0(pft)=nind(pft)
        end do
 
-                  
+		  
         do pft=1,npft
           if (present(pft)) then
 
@@ -9057,15 +9052,15 @@ c---------------------------------------
 c   KIRSTEN:  take proportion of grass leafmass, when green grass leaves are on
 c         todays amount of green grass leaves: [gC/m2],influence on ROS only through moist_lg_1hr
 
-           do d=1,365   !day
+           do d=1,365	!day
               livegrass=livegrass+
      *          (lm_ind(pft,1)/0.45*nind(pft))*dphen(d,pft) 
 c     *                        (lm_ind(pft)/0.45*nind(pft))  
-
+				
 c              used in fire effects section only
 c               pot_fc_lg(pft)=(lm_ind(pft)/0.45*nind(pft))   
-            end do      !day
-                        
+            end do	!day
+			
             endif !if(tree)
 
           endif ! if(present(pft))
@@ -9091,7 +9086,7 @@ c       net fuel load
      *    net_fuel=(1.0-MINER_TOT)*(dead_fuel/1000.0)  ! in kg biomass
 
         if(net_fuel.le.0.0)goto 200
-                
+		
 c  TODO : remove if not inside if ...
 
 C  Doug 01/09 MFL: change fuel varables to values before this years reproducton, turnover,
@@ -9147,7 +9142,7 @@ C  littersum (dcay), kill_pft, allocaton, light & mortality subroutines did thei
       mlivegrass(:)=0.0               !Doug 05/09
 
 
-      do d=1,365        !day
+      do d=1,365	!day
 
 c        d_numf_old(d)=0.0
         d_i_surface(d)=0.0
@@ -9170,7 +9165,7 @@ c        deadgrass=0.0  !not used
           fc_100hr(pft,nc)=0.0
           fc_1000hr(pft,nc)=0.0
           pot_fc_lg(pft,nc)=0.0
-         pot_fc_lg_0(pft,nc)=0.0                  
+         pot_fc_lg_0(pft,nc)=0.0		  
         enddo
         nind_fa(pft)=0.0
         nind_kill(pft)=0.0
@@ -9198,11 +9193,11 @@ C    mortality subroutines.
             temp=fuel_1hr_left(pft,1)
 
             fuel_1hr_left(pft,1)=fuel_1hr_left(pft,1)*
-     *        (1-fire_frac(min(1,d-1)))+
+     *        (1-fire_frac(max(1,d-1)))+
      *        fuel_1hr_inc_pos(pft,1,m)/month_length(m)+
      *        fuel_1hr_inc_neg(pft,1,m)/month_length(m)+
      *        fuel_left_minus(pft,1)+dfuel_leaf(d,pft)+
-     *        dfuel_update_1hr(pft,1)/0.45      !stopc
+     *        dfuel_update_1hr(pft,1)/0.45	!stopc
 
             IF (fuel_1hr(pft,1)>0.0) THEN
               DO nc=2,nco2
@@ -9223,7 +9218,7 @@ C    mortality subroutines.
 
             temp=fuel_10hr_left(pft,1)
             fuel_10hr_left(pft,1)=fuel_10hr_left(pft,1)*
-     *        (1-fire_frac(min(1,d-1)))+
+     *        (1-fire_frac(max(1,d-1)))+
      *        (fuel_10hr_inc(pft,1,m))/month_length(m)+
      *        fuel_left_minus(pft,2)+
      *        dfuel_update_10hr(pft,1)/0.45
@@ -9243,7 +9238,7 @@ C    mortality subroutines.
 
             temp=fuel_100hr_left(pft,1)
             fuel_100hr_left(pft,1)=fuel_100hr_left(pft,1)*
-     *        (1-fire_frac(min(1,d-1)))+
+     *        (1-fire_frac(max(1,d-1)))+
      *        (fuel_100hr_inc(pft,1,m))/month_length(m)+
      *        fuel_left_minus(pft,3)+
      *        dfuel_update_100hr(pft,1)/0.45
@@ -9263,7 +9258,7 @@ C    mortality subroutines.
 
             temp=fuel_1000hr_left(pft,1)
             fuel_1000hr_left(pft,1)=fuel_1000hr_left(pft,1)*
-     *        (1-fire_frac(min(1,d-1)))+
+     *        (1-fire_frac(max(1,d-1)))+
      *        (fuel_1000hr_inc(pft,1,m))/month_length(m)+
      *        fuel_left_minus(pft,4)+
      *        dfuel_update_1000hr(pft,1)/0.45
@@ -9357,18 +9352,17 @@ c             to calculate amount of live grass!!
 
         dens_fuel_ave=0.0
         livegrass=0.0
-                net_fuel=0.0
+		net_fuel=0.0
 
        fuel_1000hr_total=0.0
-       
-
+        
         do pft=1,npft
           if (present(pft)) then
 
 
             if (tree(pft)) then
-              fuel_1000hr_total=fuel_1000hr_total+   !Doug 03/09: fuel_1000hr_0(pft,1) --> fuel_1000hr_left(pft,1)   (annual to daily)
-     *                    fuel_1000hr_left(pft,1)*(1.0-afire_frac)/0.45
+			  fuel_1000hr_total=fuel_1000hr_total+fuel_1000hr_left(pft,1)	!Doug 03/09: fuel_1000hr_0(pft,1) --> fuel_1000hr_left(pft,1)	(annual to daily)
+     *                         *(1.0-afire_frac)/0.45
             else !grass
 c   KIRSTEN:  take proportion of grass leafmass, when green grass leaves are on
 c         todays amount of green grass leaves: [gC/m2],influence on ROS only through moist_lg_1hr
@@ -9376,7 +9370,7 @@ c         todays amount of green grass leaves: [gC/m2],influence on ROS only thr
               livegrass=livegrass+
      *(lm_ind_0(pft,1)/0.45*nind_0(pft))*(1.0-afire_frac)*dphen(d,pft)  !g/m2
 
-         
+	 
 c     *                        (lm_ind(pft)/0.45*nind(pft))  !g/m2
 
 
@@ -9387,13 +9381,13 @@ c              used in fire effects section only
               pot_fc_lg(pft,3)=lm_ind(pft,3)
 c               pot_fc_lg(pft)=(lm_ind(pft)/0.45*nind(pft))  !g/m2 
 
-              pot_fc_lg_0(pft,1)=(lm_ind_0(pft,1)/0.45*nind_0(pft))*
-     *          dphen(d,pft) !g/m2 
+		pot_fc_lg_0(pft,1)=(lm_ind_0(pft,1)/0.45*nind_0(pft))
+     *		*dphen(d,pft) !g/m2 
 
             endif
 
           endif
-        enddo   !pft
+        enddo	!pft
 
 
 c Doug 05/09: Fire Paradox experiments
@@ -9468,7 +9462,7 @@ c    ACHTUNG: WEIGHTING per fpc AND fuel load or per fuel load only? Reg-FIRM1: 
           if (present(pft)) then
             if (dead_fuel.gt.0.0) then
               ratio_fbd(pft) = ((fuel_1hr_left(pft,1) + 
-     *              fbd_a * fuel_10hr_left(pft,1) +     !Doug 03/09: fuel_xhr--> fuel_xhr_left (annual to daily fuel)
+     *              fbd_a * fuel_10hr_left(pft,1) + 	!Doug 03/09: fuel_xhr--> fuel_xhr_left (annual to daily fuel)
      *                     fbd_b * fuel_100hr_left(pft,1)) / 0.45) 
      *              / dead_fuel
               dens_fuel_ave = dens_fuel_ave+dens_fuel(pft)*
@@ -9488,8 +9482,8 @@ c    ACHTUNG: change with water scalar value for grasses!!!!
        dlm_lg(d) = max(0.0,((10.0/9.0)*dw1(d)-(1.0/9.0)))
        dlm_lg(d)=dlm_lg(d)/(1.0-dlm_lg(d))
        if(lon.gt.25.0.and.lon.lt.26.0)then
-       !write(1005,*)'dlm_lg,d,lat,lon',dlm_lg,d,lat,lon        !Doug 12/08: Commented out to save space
-       !write(1006,*)'dw1(d),d,lat,lon',dw1(d),d,lat,lon                !Doug 12/08: Commented out to save space
+       !write(1005,*)'dlm_lg,d,lat,lon',dlm_lg,d,lat,lon	!Doug 12/08: Commented out to save space
+       !write(1006,*)'dw1(d),d,lat,lon',dw1(d),d,lat,lon		!Doug 12/08: Commented out to save space
        end if
        ratio_C3_livegrass = pot_fc_lg(8,1) / livegrass
        ratio_C4_livegrass = pot_fc_lg(9,1) / livegrass
@@ -9518,12 +9512,12 @@ c    with grasses
      *    + dens_livegrass_ave * ratio_live_fuel
         endif
          char_net_fuel = net_fuel +(1.0-MINER_TOT)*livegrass/1000.0 ! in kg biomass
-                 if(char_net_fuel.le.0.0)goto 201
-                 
+		 if(char_net_fuel.le.0.0)goto 201
+		 
          char_net_fuel_0=char_net_fuel
 
             
-           IF(char_dens_fuel_ave<=0.0)then      !Doug 03/09: no longer stops, but reloops. Error is now noted in file fort.10
+           IF(char_dens_fuel_ave<=0.0)then	!Doug 03/09: no longer stops, but reloops. Error is now noted in file fort.10
              WRITE(10,*),'********************************'
              WRITE(10,*),'error: char_dens_fuel_ave.le.0.0'
              WRITE(10,*),'--------------------------------'
@@ -9568,7 +9562,7 @@ c     *          + moistfactor_100hr * fuel_100hr_total)/dead_fuel
      *          + moistfactor_100hr * fuel_100hr_total)/dead_fuel
 
 c Kirsten: moistfactor for livegrass less than for dead fuel!
-       call fire_danger_index1(dlm,dlm_lg,dtemp_min,dtemp_max,dprec,    
+       call fire_danger_index1(dlm,dlm_lg,dtemp_min,dtemp_max,dprec,	
      *         d,fuel_1hr_total,fuel_10hr_total,fuel_100hr_total,
      *         dead_fuel,ratio_dead_fuel,ratio_live_fuel,dlm_1hr,
      *         dlm_10hr,dlm_100hr,dlm_1000hr,year,ni_acc,
@@ -9695,10 +9689,10 @@ c  number of fires. only ignitions, when dead fuel load - save computation time
           if(p_ig.gt.1.0)p_ig=1.0
  
         if(bet.lt.1.0)p_ig=p_ig*bet
-           dlightn_cons=sum(dlightn)/365        !Doug 12/08, trying out
-           dlightn_sca(d)=dlightn(d)*0.15*0.2   ! constant lightnng
-c          dlightn_sca(d)=dlightn_cons*0.15*0.2 !Doug 12/08 ""
-            dlightn_sca(d)=dlightn_sca(d)*p_ig!*1       !Doug 12/08: play with scaling of ignitions from lightning
+	   dlightn_cons=sum(dlightn)/365	!Doug 12/08, trying out constant lightnng
+           dlightn_sca(d)=dlightn(d)*0.15*0.2	! 0.15: continous current parameter; 0.2 Cloud-Ground: Total lighting ratio
+c	   dlightn_sca(d)=dlightn_cons*0.15*0.2	!Doug 12/08 ""
+            dlightn_sca(d)=dlightn_sca(d)*p_ig!*1	!Doug 12/08: play with scaling of ignitions from lightning
 
            d_numfire(d)=d_fdi(d)*
 c     *       (human_ign(popden,a_nd,year)+dlightn_sca(d))*0.000001*
@@ -9711,7 +9705,7 @@ C Yan
 
            d_numfire_lightn(d)=d_fdi(d)*
 
-     *       dlightn_sca(d)*0.000001*area_ha*(1.0-afire_frac)           
+     *       dlightn_sca(d)*0.000001*area_ha*(1.0-afire_frac)		
 
              dhuman_ign(d)=human_ign(popden,a_nd,year)
 
@@ -9788,7 +9782,7 @@ c     Do not update annual burnt area stats yet. Need to assess FI threshold fir
 c     Put info into temp vars for now. KIRSTEN: May not be necessary
 c         afire_frac=afire_frac+fire_frac
           afire_frac_temp=afire_frac+fire_frac(d)
-                  an_areafires_temp=an_areafires+d_area_burnt(d)
+		  an_areafires_temp=an_areafires+d_area_burnt(d)
 
 C Yan
           afire_frac_human_temp  
@@ -9816,7 +9810,7 @@ c dead fuel consumption: in g biomass per m?² - not gC/m?² !!
 
       call fuel_consumption(npft,present,fuel_consum,fire_frac,
 !     *  fuel_1hr,fuel_10hr,fuel_100hr,fuel_1000hr,livegrass,pot_fc_lg,
-     *  fuel_1hr_left,fuel_10hr_left,fuel_100hr_left,   !Doug 03/09: fuel_xhr_0-->fuel_xhr_left (annual to daily)
+     *  fuel_1hr_left,fuel_10hr_left,fuel_100hr_left,	!Doug 03/09: fuel_xhr_0-->fuel_xhr_left (annual to daily)
      *  fuel_1000hr_left,livegrass,pot_fc_lg_0,
      *  tree,fuel_1hr_total,moistfactor,dlm,d,MINER_TOT,fc_1hr,fc_lg,
      *  fc_10hr,fc_100hr,fc_1000hr,cf,char_moistfactor,
@@ -9874,7 +9868,7 @@ c          sh=0.0
 
           an_areafires=an_areafires+d_area_burnt(d)
 
-          if(an_areafires.le.0.0000001)an_areafires=0.0           
+          if(an_areafires.le.0.0000001)an_areafires=0.0		  
           if(an_areafires.lt.0.0)then
           write(*,*)'an_areafires < 0.0'
           stop
@@ -9900,7 +9894,7 @@ c          sh=0.0
 
           m_i_surface(m)=m_i_surface(m)+d_i_surface(d)
           an_i_surface=an_i_surface+d_i_surface(d)
-
+			
           area_burnt(m)=area_burnt(m)+d_area_burnt(d)
 C Yan
           num_fire_human(m)=num_fire_human(m)+d_numfire_human(d)
@@ -9945,12 +9939,12 @@ c   surface fire: update fuel load per dead fuel class and litter_ag in general
 
          fuel_1000hr(pft,1)=fuel_1000hr(pft,1)-fc_1000hr(pft,1)
          fuel_1000hr_left(pft,1)=fuel_1000hr_left(pft,1)-
-     *     fc_1000hr(pft,1)     !Doug 03/09
+     *     fc_1000hr(pft,1)	!Doug 03/09
 
 
          litter_ag(pft,1)=litter_ag(pft,1)-(fc_1hr(pft,1)*0.45)-
      *   (fc_10hr(pft,1)*0.45)-(fc_100hr(pft,1)*0.45)-fc_1000hr(pft,1)
-         
+	 
 
 c        fuel_1hr_left(pft,1)=fuel_1hr_0(pft,1)*(1.0-afire_frac)
 c        fuel_10hr_left(pft,1)=fuel_10hr_0(pft,1)*(1.0-afire_frac)
@@ -10085,7 +10079,7 @@ c       But make them available for burning in the next year ! Kirsten
      *                (lm_ind(pft,1) + 0.045 * ag_non_leaf_ind(pft,1)))
 
 
-       dfuel_update_1hr(pft,1)=fuel_update_1hr(pft,1)-temp      !Doug 03/09, find daily update
+       dfuel_update_1hr(pft,1)=fuel_update_1hr(pft,1)-temp	!Doug 03/09, find daily update
 
 
 
@@ -10108,7 +10102,7 @@ c       But make them available for burning in the next year ! Kirsten
      *               (nind_kill(pft) * (1-ck(pft)) *
      *               (0.075 * ag_non_leaf_ind(pft,1)))
 
-       dfuel_update_10hr(pft,1)=fuel_update_10hr(pft,1)-temp    !Doug 05/09
+       dfuel_update_10hr(pft,1)=fuel_update_10hr(pft,1)-temp	!Doug 05/09
 
 
        if (fuel_update_10hr(pft,1) .gt. 0.) then
@@ -10118,7 +10112,7 @@ c       But make them available for burning in the next year ! Kirsten
      *            (0.075 * ag_non_leaf_ind(pft,1)*
      *            ag_non_leaf_ind(pft,nc))))/fuel_update_10hr(pft,1)
 
-             dfuel_update_10hr(pft,nc)=nind_kill(pft) * (1-ck(pft)) *   !Doug 06/09
+             dfuel_update_10hr(pft,nc)=nind_kill(pft) * (1-ck(pft)) *	!Doug 06/09
      *            (0.075 * ag_non_leaf_ind(pft,1)*
      *            ag_non_leaf_ind(pft,nc))
           enddo
@@ -10134,7 +10128,7 @@ c     cambial damage and left-overs from crown scorching
      *      (0.95 * 0.21 * ag_non_leaf_ind(pft,1)))
 c     *               (0.8 * 0.21 * ag_non_leaf_ind(pft)))
 
-       dfuel_update_100hr(pft,1)=fuel_update_100hr(pft,1)-temp  !Doug 05/09
+       dfuel_update_100hr(pft,1)=fuel_update_100hr(pft,1)-temp	!Doug 05/09
 
 
        if (fuel_update_100hr(pft,1) .gt. 0.) then
@@ -10146,7 +10140,7 @@ c     *               (0.8 * 0.21 * ag_non_leaf_ind(pft)))
      *            ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc))))
      *            /fuel_update_100hr(pft,1)
 
-             dfuel_update_100hr(pft,nc)=nind_kill(pft) * (1-ck(pft)) *  !Doug 06/09
+             dfuel_update_100hr(pft,nc)=nind_kill(pft) * (1-ck(pft)) * 	!Doug 06/09
      *            (0.21*ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc))
      *            + nind_kill(pft)*ck(pft)*(0.95 * 0.21 * 
      *            ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc))
@@ -10161,7 +10155,7 @@ c      cambial damage and crown scorching together
 
      *                 nind_kill(pft) * (0.67 * ag_non_leaf_ind(pft,1))
 
-       dfuel_update_1000hr(pft,1)=fuel_update_1000hr(pft,1)-temp        !Doug 05/09
+       dfuel_update_1000hr(pft,1)=fuel_update_1000hr(pft,1)-temp	!Doug 05/09
  
 
        if (fuel_update_1000hr(pft,1) .gt. 0.) then
@@ -10171,7 +10165,7 @@ c      cambial damage and crown scorching together
      *            ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc)))
      *            /fuel_update_1000hr(pft,1)
 
-             dfuel_update_1000hr(pft,nc)=nind_kill(pft) * (0.67 *       !Doug 06/09
+             dfuel_update_1000hr(pft,nc)=nind_kill(pft) * (0.67 * 	!Doug 06/09
      *            ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc))
           enddo
        endif
@@ -10406,7 +10400,7 @@ C Yan
             count_int=0
           endif
 
-        fuel_1hr_left(:,1)=fuel_1hr_left(:,1)/0.45                      !Doug 03/01
+        fuel_1hr_left(:,1)=fuel_1hr_left(:,1)/0.45			!Doug 03/01
         fuel_10hr_left(:,1)=fuel_10hr_left(:,1)/0.45
         fuel_100hr_left(:,1)=fuel_100hr_left(:,1)/0.45
         fuel_1000hr_left(:,1)=fuel_1000hr_left(:,1)/0.45
@@ -10424,10 +10418,8 @@ C Yan
           mfuel_1000hr_total(min(m,12))=mfuel_1000hr_total(min(m,12))+
      *      (fuel_1000hr_total*(1-fire_frac(d)))/month_length(min(m,12))
 
-
           mlivegrass(min(m,12))=mlivegrass(min(m,12))+
      *      (livegrass*(1-fire_frac(d)))/month_length(min(m,12))
-
 
 
 c     stop daily loop if entire grid cell burnt
@@ -10445,7 +10437,7 @@ c       pause
 201       continue
        enddo !daily time step
 
-        fuel_1hr_left(:,1)=fuel_1hr_left(:,1)*0.45                      !Doug 03/01
+        fuel_1hr_left(:,1)=fuel_1hr_left(:,1)*0.45			!Doug 03/01
         fuel_10hr_left(:,1)=fuel_10hr_left(:,1)*0.45
         fuel_100hr_left(:,1)=fuel_100hr_left(:,1)*0.45
         fuel_1000hr_left(:,1)=fuel_1000hr_left(:,1)*0.45
@@ -10457,7 +10449,7 @@ c       pause
             fuel_1hr_left(pft,1)=fuel_1hr_left(pft,1)*
      *        (1-fire_frac(365))+
      *        fuel_left_minus(pft,1)+
-     *        dfuel_update_1hr(pft,1)/0.45      !stopc
+     *        dfuel_update_1hr(pft,1)/0.45	!stopc
 
             IF (fuel_1hr(pft,1)>0.0) THEN
               DO nc=2,nco2
@@ -10543,15 +10535,19 @@ c       pause
         end if
 
        afire_frac=an_areafires/area_ha
-
+		
        do m=1,12
          mfire_frac(m)=area_burnt(m)/area_ha
+		 if (lat>-36 .AND. lat<-35.5 .AND. lon>144 .AND. lon<144.5) THEN
+			print*, mfire_frac(m)
+			!if (m==12) stop
+		  end if
          if(mfire_frac(m).lt.0.0001)then
           mfire_frac(m)=0.0
           area_burnt(m)=0.0
          end if
        end do
-
+         
        if(afire_frac.lt.0.0001)then
            afire_frac=0.0
            an_areafires=0.0
@@ -10603,7 +10599,7 @@ c
 c       Doug 04/09: again, poas and crop is now scalar instead of array
 c       so the old search method for correct cell has been removed
 
-            IF(crop+pas>10) THEN                                
+            IF(crop+pas>10) THEN				
 
                an_areafires=0.0
                acflux_fire(1)=0.0
@@ -10828,7 +10824,7 @@ c     leading to slightly negative balances.
 
 
 
-         fuel_1hr_total_0=fuel_1hr_total*0.45   ! Doug: remove
+         fuel_1hr_total_0=fuel_1hr_total*0.45	! Doug: remove
          fuel_10hr_total_0=fuel_10hr_total*0.45
          fuel_100hr_total_0=fuel_100hr_total*0.45
          fuel_1000hr_total_0=fuel_1000hr_total*0.45
@@ -10844,7 +10840,7 @@ c     leading to slightly negative balances.
 
 
       return
-      end       !FIRE
+      end	!FIRE
 
 
 c----------------------------------------------------------------------
@@ -10885,7 +10881,7 @@ c     LOCAL VARIABLES
 
       DO pft=1,npft
         IF (present(pft)) THEN                  !.AND.tree(pft)==.TRUE.
-          delta_phen=dphen(1,pft)-dphen(365,pft)        !Doug 03/09, need to refer to previous years dphen?
+          delta_phen=dphen(1,pft)-dphen(365,pft)	!Doug 03/09, need to refer to previous years dphen?
 
           fuel_1hr_inc_total=SUM(fuel_1hr_inc_pos(pft,1,:))/
      *      (1+sum(dphen(:,pft))*(1-exp(leaf_decayc(pft))))
@@ -10903,7 +10899,7 @@ c            END IF
 c          END DO
 
 
-          delta_phen_total=0.0
+	  delta_phen_total=0.0
 
           DO d=1,365
             IF (d>1)  delta_phen=dphen(d,pft)-dphen(d-1,pft)
@@ -10974,7 +10970,7 @@ c
 !        parameter (alpha=0.0015)
 !      real alpha_1hr, alpha_10hr,alpha_100hr
 !      real alpha_livegrass,alpha_1000hr
-!        parameter (alpha_1hr=0.001,alpha_10hr=0.00005424)      
+!        parameter (alpha_1hr=0.001,alpha_10hr=0.00005424)	
 !        parameter (alpha_100hr=0.00001485, alpha_1000hr = 0.000001) 
 c        parameter (alpha_livegrass=0.0005) 
 c     Allan: Alpha values for livegrass and 1000hr dead fuels are particularly
@@ -11069,7 +11065,7 @@ c
 !        endif
 
 !      return
-!      end      !FIRE DANGER INDEX
+!      end	!FIRE DANGER INDEX
 
 
 c----------------------------------------------------------------------
@@ -11102,9 +11098,9 @@ c
       real alpha_1hr, alpha_10hr,alpha_100hr
       real alpha_livegrass,alpha_1000hr
 
-        parameter (alpha_1hr=0.001,alpha_10hr=0.00005424)       !Doug 08/12: fiddleing with the alphas
+        parameter (alpha_1hr=0.001,alpha_10hr=0.00005424)	!Doug 08/12: fiddleing with the alphas
         parameter (alpha_100hr=0.00001485,
-     *          alpha_1000hr = 0.000001) 
+     *		alpha_1000hr = 0.000001) 
 c        parameter (alpha_1hr=0.025,alpha_10hr=0.0025)
 c        parameter (alpha_100hr=0.00025, alpha_1000hr = 0.000025) 
 c        parameter (alpha_livegrass=0.0005) 
@@ -11189,9 +11185,9 @@ c Leilei 11/08: dlm= the sum of dlm for each different fuel load/
        dlm(d)=((dlm_1hr(d)*fuel_1hr_total+dlm_10hr(d)*
      *         fuel_10hr_total+
      *         dlm_100hr(d)*fuel_100hr_total)/dead_fuel)
-     *         *ratio_dead_fuel+                        !Doug 12/08 *1
-     *         dlm_lg(d)*ratio_live_fuel                !Doug 12/08 remove
-c     *         *1      
+     *         *ratio_dead_fuel+			!Doug 12/08 *1
+     *         dlm_lg(d)*ratio_live_fuel		!Doug 12/08 remove
+c     *		*1	
  
 c probability of fire spread
 *        if (dlm(d).le.moistfactor) then
@@ -11279,7 +11275,7 @@ c       human_ign=6.8*(exp(-0.5*(popden1**0.5)))*a_nd_const*popden1
 !       human_ign=30.0*(exp(-0.5*(popden**0.5)))*a_nd*popden
       human_ign=0.0
       end
-        
+	
 
 c-------------------------------------------------------------------------------
 c     FUNCTION LIGHTNING
@@ -11327,8 +11323,8 @@ c     emissitivity of flames unitless
 
       real part_dens
         parameter (part_dens=513.0)! this is oven-dry particle density (kg/m3)
-                
-       real char_dens_fuelbed           
+		
+       real char_dens_fuelbed		
 
 c    initialise
       beta=0.0
@@ -11395,8 +11391,8 @@ c     mineral dampening coefficient
         parameter (pi=3.14159265)
       real part_dens
         parameter (part_dens=513.0)! this is oven-dry particle density (kg/m3)
-                
-       real char_dens_fuelbed           
+		
+       real char_dens_fuelbed		
 
 c    initialise
 c      mw1(:)=0.0
@@ -11462,8 +11458,8 @@ c       if (char_sigma.le.0.00001) then
 c        xi=(exp((0.792+3.7597*(sigma**0.5))*
 c     *     ((dens_fuel_ave/513.0)+0.1)))/
 c     *     (192.0+7.9095*sigma)
-         
-                xi = (exp((0.792 + 3.7597 * (char_sigma**0.5)) *
+	 
+	        xi = (exp((0.792 + 3.7597 * (char_sigma**0.5)) *
      *     (beta + 0.1))) / (192 + 7.9095 * char_sigma) 
 
        endif
@@ -11531,7 +11527,7 @@ c-------------------------------------------------------------------------------
 c    subroutine for calculation of fuel consumption in the area affected by fire
 
       subroutine fuel_consumption(npft,present,fuel_consum,fire_frac,
-     *  fuel_1hr_left,fuel_10hr_left,fuel_100hr_left,           !Doug 03/09: fuel_xhr_0 --> fuel_xhr_left (annual --> daily)
+     *  fuel_1hr_left,fuel_10hr_left,fuel_100hr_left,		!Doug 03/09: fuel_xhr_0 --> fuel_xhr_left (annual --> daily)
      *   fuel_1000hr_left,livegrass_left,pot_fc_lg_0,
      *  tree,fuel_1hr_total,moistfactor,dlm,d,MINER_TOT,fc_1hr,fc_lg,
      *  fc_10hr,fc_100hr,fc_1000hr,cf,char_moistfactor,
@@ -11579,7 +11575,7 @@ c     local variables
 c      real dw1(1:365)
       real tau_l(1:npft)
 
-      real fuel_1hr_left(1:npft,1:nco2),fuel_10hr_left(1:npft,1:nco2)           !Doug 03/09: fuel_xhr_0 --> fuel_xhr_left (annual --> daily)
+      real fuel_1hr_left(1:npft,1:nco2),fuel_10hr_left(1:npft,1:nco2)		!Doug 03/09: fuel_xhr_0 --> fuel_xhr_left (annual --> daily)
       real fuel_100hr_left(1:npft,1:nco2)
       real fuel_1000hr_left(1:npft,1:nco2)
       real livegrass_left,pot_fc_lg_0(1:npft,1:nco2)
@@ -11819,7 +11815,7 @@ c    Used to calculate fire intensity in the FLAMING FRONT.
 
 
       return
-      end       !fuel_consumption
+      end	!fuel_consumption
 
 #ifdef NOT_DEF
 c subroutine not used
@@ -12093,7 +12089,7 @@ c -----------------------------------------------------------------------------
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     SUBROUTINE ESTABLISHMENT
-c     Establishment of new individuals (saplings) of woody PFTs,        
+c     Establishment of new individuals (saplings) of woody PFTs,	
 c     grass establishment, removal of PFTs not adapted to current climate,
 c     update of individual structure and FPC.
 
