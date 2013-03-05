@@ -68,7 +68,8 @@
 #	Pasture: annual gridded paster for each cell. Only used on some runs, but still there’s a line 
 #		for it in the file.
 #	Lightn: gridded lighting climatology (no time dimension…. yet).
-#	A_ND: no longer used, but still listed as an input. Maybe I’ll find time to remove this at some #		point. Annual, gridded input of whatever you want, cos it makes no difference.
+#	A_ND: no longer used, but still listed as an input. Maybe I’ll find time to remove this at some 
+#		point. Annual, gridded input of whatever you want, cos it makes no difference.
 #	CO2_FILE: Annual (not gridded) atmospheric CO2 concentration
 #	C13_FILE: Annual (not gridded) atmospheric delta C13 values.
 #	C14_NORTH_FILE: Annual (not gridded) atmospheric delta C14 values for the northern 
@@ -98,7 +99,9 @@
 #	SPINUP_FILE: This is the file where the state of the model after the spin-up will be stored. 
 #	RAMPUP_FILE: This is the file where the state of the model after the ramp-up will be stored.
 #	OUTPUT_FILE: This is the netcdf file where defined outputs will be stored.
-#	OUTPUT_VAR: A variable you’d like to output. You will need an OUPUT_VAR line for each variable your outputting. You’ll have to look in the lpjmain code and search through the available variables for now. At some point, I will put an OUPUT key together.
+#	OUTPUT_VAR: A variable you’d like to output. You will need an OUPUT_VAR line for each variable 
+#       your outputting. You’ll have to look in the lpjmain code and search through the available 
+#       variables for now. At some point, I will put an OUPUT key together.
 #
 # Once this is all set up, you’re ready to run. Run the model with the following commands:
 #   1) > motif-lpj : obtained by the make one_step command. Runs the model in 1 step, useful for 
@@ -125,3 +128,7 @@
 # Goodluck!
 #
 # Doug (douglas.kelley@students.mq.edu.au)
+
+
+# Sitch, S., Smith, B., & Prentice, I. (2003). Evaluation of ecosystem dynamics, plant geography
+# and terrestrial carbon cycling in the LPJ dynamic global vegetation model. Global Change Biology
