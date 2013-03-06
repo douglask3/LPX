@@ -1,5 +1,5 @@
 
- 
+
 c
 c CODE VERSION OF JULY 12, 2000.
 c
@@ -1585,6 +1585,12 @@ c	For step 2:
 					!lightning
 
       REAL	lat,lon
+	  REAL flt, fdry(1:nmonths),fwet
+	  	REAL	gceo0,gceo1,gceo2			!coeffiant used to calculate proportion of
+					!lighting strikes on wet days
+		PARAMETER (gceo0=0.00001)
+		PARAMETER (gceo1=0.0432)
+		PARAMETER (gceo2=-0.888)
 
 
 
@@ -1616,14 +1622,30 @@ c		total lighting data from Vaisala
 
           pwd=nwd/ndaymonth(month) !pwd= fraction of wet days in month 
             day=day-ndaymonth(month)
+			flt=gceo1*pwd**gceo2
+
+			IF (flt<0) flt=0
+			IF (flt>1) flt=1
+			
+			IF (nwd==0) THEN
+			  fdry(month)=1/(ndaymonth(month))
+	          fwet=0
+			ELSE
+			  fdry(month)=(flt)/
+     *          ((ndaymonth(month)-nwd))
+
+			  fwet=(1-flt)/
+     *          (nwd)
+			END IF
+			
             DO mday=1,ndaymonth(month)	!day of month
-              day=day+1    !Seperates days and calcualates lightning for days with and 
+              day=day+1    !Seperates days and calcualates lighting for days with and 
                            !without rain
 
               IF(dval1(day)>0) THEN
-                fdal(day)=(pwd**gceo)/nwd
+                fdal(day)=fwet
               ELSE
-                fdal(day)=(1-pwd**gceo)/(ndaymonth(month)-nwd)
+                fdal(day)=fdry(month)
               END IF
 
             END DO
@@ -1656,9 +1678,11 @@ c Step 2
             IF (lmval(1)==0.AND.lmval(2)==0) THEN
               dval2(mday)=0
             ELSE IF(lmval(2)==0.AND.lmval(1)/=0)	THEN
-              PRINT*, "error:redistrbuting lighting around"
-              PRINT*, "wet days in daily_lightning subroutine"
-              STOP
+              !PRINT*, "error:redistrbuting lighting around"
+              !PRINT*, "wet days in daily2 subroutine"
+              !STOP
+			  lmval(1)=0
+			  lmval(2)=1
             END IF
 
             dval2(mday)=cgf(month)*dval2(mday)*lmval(1)/lmval(2)
@@ -1673,7 +1697,7 @@ c Step 2
 
 
 	return
-	END !SUBROUTINE	!daily_lightning
+	END !SUBROUTINE	!Daily2
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     SUBROUTINE DAILY1
@@ -8766,7 +8790,7 @@ c       ni_acc=0.0
           dlightn_lcc(:)=0
           m_lightn(:)=0
            counter_fire=0
-         afire_frac_afap_old=0.0
+           afire_frac_afap_old=0
 
 
 c     Assign a minimum fire fraction (for presentational purposes)
@@ -9214,7 +9238,7 @@ C    mortality subroutines.
             temp=fuel_1hr_left(pft,1)
 
             fuel_1hr_left(pft,1)=fuel_1hr_left(pft,1)*
-     *        (1-fire_frac(max(1,d-1)))+
+     *        (1-fire_frac(min(1,d-1)))+
      *        fuel_1hr_inc_pos(pft,1,m)/month_length(m)+
      *        fuel_1hr_inc_neg(pft,1,m)/month_length(m)+
      *        fuel_left_minus(pft,1)+dfuel_leaf(d,pft)+
@@ -9239,7 +9263,7 @@ C    mortality subroutines.
 
             temp=fuel_10hr_left(pft,1)
             fuel_10hr_left(pft,1)=fuel_10hr_left(pft,1)*
-     *        (1-fire_frac(max(1,d-1)))+
+     *        (1-fire_frac(min(1,d-1)))+
      *        (fuel_10hr_inc(pft,1,m))/month_length(m)+
      *        fuel_left_minus(pft,2)+
      *        dfuel_update_10hr(pft,1)/0.45
@@ -9259,7 +9283,7 @@ C    mortality subroutines.
 
             temp=fuel_100hr_left(pft,1)
             fuel_100hr_left(pft,1)=fuel_100hr_left(pft,1)*
-     *        (1-fire_frac(max(1,d-1)))+
+     *        (1-fire_frac(min(1,d-1)))+
      *        (fuel_100hr_inc(pft,1,m))/month_length(m)+
      *        fuel_left_minus(pft,3)+
      *        dfuel_update_100hr(pft,1)/0.45
@@ -9279,7 +9303,7 @@ C    mortality subroutines.
 
             temp=fuel_1000hr_left(pft,1)
             fuel_1000hr_left(pft,1)=fuel_1000hr_left(pft,1)*
-     *        (1-fire_frac(max(1,d-1)))+
+     *        (1-fire_frac(min(1,d-1)))+
      *        (fuel_1000hr_inc(pft,1,m))/month_length(m)+
      *        fuel_left_minus(pft,4)+
      *        dfuel_update_1000hr(pft,1)/0.45
