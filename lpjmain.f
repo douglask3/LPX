@@ -9238,7 +9238,7 @@ C    mortality subroutines.
             temp=fuel_1hr_left(pft,1)
 
             fuel_1hr_left(pft,1)=fuel_1hr_left(pft,1)*
-     *        (1-fire_frac(min(1,d-1)))+
+     *        (1-fire_frac(max(1,d-1)))+
      *        fuel_1hr_inc_pos(pft,1,m)/month_length(m)+
      *        fuel_1hr_inc_neg(pft,1,m)/month_length(m)+
      *        fuel_left_minus(pft,1)+dfuel_leaf(d,pft)+
@@ -9263,7 +9263,7 @@ C    mortality subroutines.
 
             temp=fuel_10hr_left(pft,1)
             fuel_10hr_left(pft,1)=fuel_10hr_left(pft,1)*
-     *        (1-fire_frac(min(1,d-1)))+
+     *        (1-fire_frac(max(1,d-1)))+
      *        (fuel_10hr_inc(pft,1,m))/month_length(m)+
      *        fuel_left_minus(pft,2)+
      *        dfuel_update_10hr(pft,1)/0.45
@@ -9283,7 +9283,7 @@ C    mortality subroutines.
 
             temp=fuel_100hr_left(pft,1)
             fuel_100hr_left(pft,1)=fuel_100hr_left(pft,1)*
-     *        (1-fire_frac(min(1,d-1)))+
+     *        (1-fire_frac(max(1,d-1)))+
      *        (fuel_100hr_inc(pft,1,m))/month_length(m)+
      *        fuel_left_minus(pft,3)+
      *        dfuel_update_100hr(pft,1)/0.45
@@ -9303,7 +9303,7 @@ C    mortality subroutines.
 
             temp=fuel_1000hr_left(pft,1)
             fuel_1000hr_left(pft,1)=fuel_1000hr_left(pft,1)*
-     *        (1-fire_frac(min(1,d-1)))+
+     *        (1-fire_frac(max(1,d-1)))+
      *        (fuel_1000hr_inc(pft,1,m))/month_length(m)+
      *        fuel_left_minus(pft,4)+
      *        dfuel_update_1000hr(pft,1)/0.45
