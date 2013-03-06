@@ -8119,16 +8119,52 @@ c           Increment C compartments
           endif
 
 c         Update LAI and FPC
+C		  Doug 12/12: Using Bern grass "fix" provided by Beni Stocker
+C		  			  In old version, indicidual grass lpf grew as if
+c                     without compeition from other grass. This fixes
+c                     that with scling by total grass cover.
+C---------------------------------------------------------------
+C                     OLD VERSION
+c          if (crownarea(pft).gt.0.0) then
+c            lai_ind(pft)=(lm_ind(pft,1)*sla(pft))/crownarea(pft)
+c          else
+c            lai_ind(pft)=0.0
+c          endif
+c 
+c          fpc_ind=(1.0-exp(-0.5*lai_ind(pft)))
+c          fpc_grid_old=fpc_grid(pft)
+c          fpc_grid(pft)=crownarea(pft)*nind(pft)*fpc_ind
+C---------------------------------------------------------------
+C                     NEW VERSION
+          lm_tot(pft)=0.0
 
-          if (crownarea(pft).gt.0.0) then
-            lai_ind(pft)=(lm_ind(pft,1)*sla(pft))/crownarea(pft)
-          else
+          IF (tree(pft)) THEN
+            lm_tot(pft)=lm_ind(pft,1)
+          ELSE ! Grass
+            DO ppft=1,npft
+              IF (.NOT.tree(ppft)) THEN
+                lm_tot(pft)=lm_tot(pft)+lm_ind(ppft,1)
+              END IF
+            END DO
+          END IF
+ 		  
+          IF (crownarea(pft).GT.0.0) THEN
+            lai_ind(pft)=(lm_tot(pft)*sla(pft))/crownarea(pft)
+          ELSE
             lai_ind(pft)=0.0
-          endif
- 
-          fpc_ind=(1.0-exp(-0.5*lai_ind(pft)))
+          END IF
+ 		  
+          fpc_ind=1.0-exp(-0.5*lai_ind(pft))		  
           fpc_grid_old=fpc_grid(pft)
           fpc_grid(pft)=crownarea(pft)*nind(pft)*fpc_ind
+ 		  
+          IF (lm_tot(pft).GT.0.0) THEN
+            fpc_grid(pft)=fpc_grid(pft)*lm_ind(pft,1)/lm_tot(pft)
+          ELSE
+            fpc_grid(pft)=0.0
+          END IF
+C---------------------------------------------------------------
+
  
           fpc_inc(pft)=max(0.0,fpc_grid(pft)-fpc_grid_old)
           if(fpc_grid(pft).eq.0.0) present(pft)=.false.
