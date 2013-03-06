@@ -1,5 +1,6 @@
 
 
+
 c
 c CODE VERSION OF JULY 12, 2000.
 c
@@ -468,7 +469,7 @@ c     PARAMETERS
       integer npft,npftpar,nsoilpar
         parameter (npft=9)             ! number of PFTs
 
-        parameter (npftpar=51)         ! number of PFT parameters
+        parameter (npftpar=54)         ! number of PFT parameters
       
         parameter (nsoilpar=7)         ! number of soil parameters
       integer nco2
@@ -562,7 +563,7 @@ c     LOCAL VARIABLES
                                          ! and for each pft when dphen (1st) changes.
                                          ! Stored as 0 if no change, +day of year for
                                          ! postaive change, -day for negative change
-      real dprec(1:365)                ! daily precipitation (mm)
+      REAL dprec(1:365),dprec_out(1:365)! daily precipitation (mm)
       real dsun(1:365)                 ! daily sunshine (% full sunshine)
       real dtemp(1:365)                ! daily temperature (deg C)
       real dtemp_soil(1:365)           ! daily soil temperature (deg C)
@@ -598,7 +599,11 @@ c     additions by Kirsten
       real k_slow_ave                  ! running average k_slow for subroutine
                                        ! littersom
       real lai_ind(1:npft)             ! individual leaf area index
-      real litter_ag(1:npft,1:nco2)    ! gridcell above-ground litter (gC/m2)
+      REAL litter_ag(1:npft,1:nco2)	   ! gridcell above-ground litter (gC/m2)
+									   ! Doug 11/12: split above-ground litter into grass and wood
+									   ! components to allow for different decomosition rates
+      REAL litter_ag_leaf(1:npft,1:nco2) !Doug 11/12: grass and leaf litter
+      REAL litter_ag_wood(1:npft,1:nco2) !Doug 11/12: wood litter
       real litter_bg(1:npft,1:nco2)    ! gridcell below-ground litter (gC/m2)
       real litter_decom_ave(1:nco2)    ! running average litter_decom for
                                        ! subroutine littersom
@@ -689,18 +694,24 @@ c     variables for fire simulation Kirsten
 c DM      real fire_length
       real afire_frac                  ! fraction of gridcell burnt this year
       REAL afire_frac_afap_old		   ! Doug 09/12: Correccting error. Lastyears fire_frac fed through each year
-	  real fuel_1hr(1:npft,1:nco2)     ! 1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
+      REAL fuel_1hr_leaf(1:npft,1:nco2)! 1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
+      REAL fuel_1hr_wood(1:npft,1:nco2)
       real fuel_10hr(1:npft,1:nco2)    ! 10hr dead fuel: large twigs
       real fuel_100hr(1:npft,1:nco2)   ! 100hr dead fuel: small branches
       real fuel_1000hr(1:npft,1:nco2)  ! 1000hr dead fuel: logs, bole, large branches
-
-      REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)	
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09 MFL: to record changes in each
+      REAL pfuel_limit				   ! Doug 12/12: proportion of days where fire is limited by fuel
+	  
+      REAL fuel_1hr_leaf_inc_pos(1:npft,1:nco2,1:12)	
+      REAL fuel_1hr_wood_inc_pos(1:npft,1:nco2,1:12)	
+      REAL fuel_1hr_leaf_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09 MFL: to record changes in each
+      REAL fuel_1hr_wood_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09 MFL: to record changes in each
       REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!hr fuel load for each month in the
       REAL fuel_100hr_inc(1:npft,1:nco2,1:12)	!yearly to allow monthly difference to
       REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)	!considered in fire subroutine
 
-      REAL mfuel_1hr_total(1:12)                !Doug 03/09: monthly fuel laof (output only)
+      REAL mfuel_1hr_total(1:12)                !Doug 03/09: monthly fuel load (output only)
+      REAL mfuel_1hr_leaf_total(1:12)           !Doug 11/12: monthly grass and leaf fuel load (output only)
+      REAL mfuel_1hr_wood_total(1:12)           !Doug 11/12: monthly wood fuel load (output only)
       REAL mfuel_10hr_total(1:12)
       REAL mfuel_100hr_total(1:12)
       REAL mfuel_1000hr_total(1:12)
@@ -877,6 +888,7 @@ c    if step1a or full run
 c     Obtain latitude and soil type for next gridcell from
 c     input/output module
       call getgrid(lat,lon,soilcode,mlightn,a_nd,dogridcell)
+
       do while (dogridcell)
 
 
@@ -890,15 +902,12 @@ c       Obtain soil parameters
 
 c       Obtain plant functional type parameters, define sapling and initial
 c       grass mass structure and calculate maximum crown area
-
         call pftparameters(pftpar,sla,tree,evergreen,summergreen,
      *    raingreen,needle,boreal,lm_sapl,sm_sapl,hm_sapl,rm_sapl,
      *    latosa,allom1,allom2,allom3,allom4,wooddens,reinickerp
-     *    ,co2
-     *    )
+     *    ,co2)
 
 c       Initialise year counter
-
 #if defined(LPJ_STEP_2) || defined (LPJ_STEP_1B)
 
 #ifdef LPJ_STEP_2 
@@ -912,8 +921,9 @@ c DM   mtemp has been saved, but is put back in mtemp_old, because
 c DM   year 1000 is now the previous year
 c DM   TODO : gdd has been added, but I am not sure it is needed
         call get_saved_data(year,k_fast_ave,k_slow_ave,
-     *    litter_decom_ave,present,litter_ag,
-     *    fuel_1hr,fuel_10hr,fuel_100hr,fuel_1000hr,
+     *    litter_decom_ave,present,litter_ag_leaf,
+     *    litter_ag_wood,
+     *    fuel_1hr_leaf,fuel_1hr_wood,fuel_10hr,fuel_100hr,fuel_1000hr,
      *    litter_bg,crownarea,w,w_t,dwscal365,
      *    lm_ind,sm_ind,hm_ind,rm_ind,fpc_grid,mnpp,anpp,
      *    leafondays,leafoffdays,leafon,snowpack,mtemp_old,
@@ -926,7 +936,6 @@ c DM   TODO : gdd has been added, but I am not sure it is needed
 
 c DM    Year spinup_years as been done
         year=year+1
-
         call getclimate(year,mtemp,mtemp_dmin,mtemp_dmax,mprec,mwet,
      *    msun,mwindsp,
      *    popden,
@@ -984,7 +993,8 @@ c       Gridcell initialisations
 
        ni_acc=0.0
         call initgrid(tree,k_fast_ave,k_slow_ave,litter_decom_ave,
-     *    present,litter_ag,fuel_1hr,fuel_10hr,fuel_100hr,
+     *    present,litter_ag,litter_ag_leaf,litter_ag_wood, !Doug 11/12: seperate out grass and wood litter
+     *    fuel_1hr_leaf,fuel_1hr_wood,fuel_10hr,fuel_100hr,
      *    fuel_1000hr,litter_bg,crownarea,mprec,w,w_t,
      *    dwscal365,lm_ind,sm_ind,hm_ind,rm_ind,fpc_grid,mnpp,anpp,
      *    leafondays,leafoffdays,leafon,snowpack,mtemp_old,mtemp,
@@ -1018,28 +1028,37 @@ c         for variables that do not depend on year
 c	  Doug 01/09: moved down so daily lightening strikes s dependant on wet days
 c
 c          call daily1(mlightn,dlightn_control)
-
-          fuel_1hr_del=fuel_1hr		!Doug MFL1
+          fuel_1hr_del(:,:)=0.0
+          fuel_10hr_del(:,:)=0.0
+          fuel_100hr_del(:,:)=0.0
+          fuel_1000hr_del(:,:)=0.0
+		  
+          fuel_1hr_del=fuel_1hr_leaf+fuel_1hr_wood		!Doug MFL1
           fuel_10hr_del=fuel_10hr
 
           fuel_100hr_del=fuel_100hr
 
           fuel_1000hr_del=fuel_1000hr
 
-c         Doug 03/09: MFL; set fuel incraments to zero
-          fuel_1hr_inc_pos=0.0
-          fuel_1hr_inc_neg=0.0
-          fuel_10hr_inc=0.0
-          fuel_100hr_inc=0.0
-          fuel_1000hr_inc=0.0
-		  afire_frac_afap_old=0.0
 
+          afire_frac_afap_old=0.0
+		  
+c         Doug 03/09: MFL; set fuel incraments to zero
+          fuel_1hr_leaf_inc_pos(:,:,:)=0.0
+          fuel_1hr_wood_inc_pos(:,:,:)=0.0
+          fuel_1hr_leaf_inc_neg(:,:,:)=0.0
+          fuel_1hr_wood_inc_neg(:,:,:)=0.0
+		  
         do while (doyear)
 c         --------------------------------------
 c         Start of LOOP THROUGH SIMULATION YEARS
 c         --------------------------------------
+		  
+          fuel_10hr_inc(:,:,:)=0.0
+          fuel_100hr_inc(:,:,:)=0.0
+          fuel_1000hr_inc(:,:,:)=0.0
+		  
 c         Interpolate monthly climate data to daily values
-
           call daily(mtemp,dtemp)
           call daily(mtemp_dmin,dtemp_min)
           call daily(mtemp_dmax,dtemp_max)
@@ -1054,7 +1073,6 @@ c Doug 07/09: Calculate a GDD for each grid cell. Used for ouput only.
           END DO
 
 
-
           call daily_lightning(lat,lon,mlightn,dprec,dlightn,cgf)
 						!Doug 01/09: functions
 							!distributed lighting
@@ -1064,7 +1082,11 @@ c Doug 07/09: Calculate a GDD for each grid cell. Used for ouput only.
 							!make more sense(itself function
 							!changed as well, see Doug 09/12
 							! comments below)
-          dlightn=dlightn 
+
+          call daily2(lat,lon,mlightn,dprec,dlightn)	!Doug 01/09: functions
+          cgf(:)=0.2
+						!distributed lighting 										!differently on days with & 
+						!without precipitation
 
           call daily(msun,dsun)
           call daily(mwindsp,dwindsp)
@@ -1093,37 +1115,33 @@ c         Adjust daily precipitation by snowmelt and accumulation in snowpack
           call snow(dtemp,dprec,snowpack,dmelt,msnowpack)
 
 c         Calculate permafrost
-
           call permafrost(soilcode,mtemp,mw1,mw2,mw1_t,mw2_t,
      *      msnowpack,dtemp,dthaw_depth,maxthaw_depth,perm_attr,
      *      year,maxthaw_old)
 
 
 c         Calculate summergreen phenology
-
           call summerphenology(pftpar,mtemp,dtemp,gdd,dphen_t,
      *      summergreen,tree)
 
 c         Calculation of 20-year average climate variables
-
           call climate20(mtemp,dtemp,gdd,mtemp_min_buf,mtemp_max_buf,
      *      gdd_buf,year,mtemp_min20,mtemp_max20,gdd20,mtemp_max,
      *      pftpar)
 
 c         Implement PFT bioclimatic limits
-
           call bioclim(pftpar,mtemp_min20,mtemp_max20,gdd,mtemp_max,
      *      survive,estab,year,present)
-
 
 c        Doug 05/09: agriculture routine, updates pools due to abandonment
 c        or clearance of grid cell 
 	  
-          call agriculture(clear,mtemp_min20,tree,agri_burn, 
-     *      lm_ind,sm_ind,hm_ind,rm_ind,nind,convflux,agri_litter_ag,
-     *      agri_litter_bg,litter_ag,litter_bg,abandon,prod10,prod100,
-     *      fpc_grid,present)
-
+C          call agriculture(clear,mtemp_min20,tree,agri_burn, 
+C     *      lm_ind,sm_ind,hm_ind,rm_ind,nind,convflux,agri_litter_ag,
+C     *      agri_litter_bg,
+C     *      litter_ag_leaf,litter_ag_wood, ! Doug 11/12: seperate out wood and grass litter
+C     *      litter_bg,abandon,prod10,prod100,
+C     *      fpc_grid,present)
 
 
 c         Calculation of GPP and soil water balance
@@ -1134,122 +1152,172 @@ c         Calculation of GPP and soil water balance
      *      dphen_change,wscal,mgpp,mlresp,mw1,dw1,aaet, !Doug 05/09: inc. dphen_change
      *      leafondays,leafoffdays,leafon,tree,raingreen,mpar,
      *      mapar,mphen,year,maet,littercpool_ag,mw2,maxthaw_depth,
-     *      dthaw_depth,uw1,uw2,fw,litter_ag,mcica,mauw1,mauw2,
+     *      dthaw_depth,uw1,uw2,fw,
+     *      litter_ag_leaf,litter_ag_wood,	!Seperate out grass and wood litter
+     *      mcica,mauw1,mauw2,
      *      lat,lon,w_ep,d_evap,maep,aaep,mintc,aintc,needle,boreal,
      *      dayl,mpet_grid,apet_grid,mpet2,apet,mpet,mmelt,
      *      mw1_t,mw2_t,meangc,mgp,deltaa,deltaa_fpc,
      *      deet,alpha_ws)    !Doug 07-08/09
 
-
 c         Calculation of mid-month soil temperatures
-
           call soiltemp(soilpar,mtemp,mtemp_old,mtemp_soil,mw1,mw1_t)
 
 c         Interpolate monthly soil temperature to daily values
           call daily(mtemp_soil,dtemp_soil)
           
 c         Calculation of autotrophic respiration and NPP
-
+C            IF (lat>-25) THEN 
+C              PRINT*,"*****"
+C              PRINT*, fuel_1hr_leaf(:,1)
+C            END IF
           call npp(pftpar,dtemp,dtemp_soil,tree,dphen,nind,
      *      lm_ind,sm_ind,rm_ind,mgpp,anpp,mnpp,bm_inc,present,
      * lresp,sresp,rresp,gresp,aresp,year,agpp,delt_c13_fpc,fpc_grid)
-      
+C            IF (lat>-25) THEN 
+C              PRINT*,"npp"
+C              PRINT*, fuel_1hr_leaf(:,1)
+C            END IF
 c         Allocation to reproduction
-
-
           call reproduction(bm_inc,lm_sapl,sm_sapl,hm_sapl,rm_sapl,
-     *        litter_ag,fuel_1hr,fuel_1hr_inc_pos,fuel_1hr_inc_neg,    !Doug 01/09: fuel_1hr_inc_i
+     *        litter_ag_leaf,    !Doug 11/12: seperate out grass and wood litter
+     *        fuel_1hr_leaf,
+     *        fuel_1hr_leaf_inc_pos,fuel_1hr_leaf_inc_neg,    !Doug 01/09: fuel_1hr_inc_i
      *        present,tree,co2)
-
-
+	 
 c         Calculation of leaf, sapwood, and fine-root turnover
 
+C            IF (lat>-25) THEN 
+C              PRINT*,"reproduction"
+C              PRINT*, fuel_1hr_leaf(:,1)
+C            END IF
           call turnover(pftpar,present,tree,lm_ind,sm_ind,hm_ind,
-     *      rm_ind,litter_ag,litter_bg,fuel_1hr,fuel_10hr,fuel_100hr,
-     *      fuel_1hr_inc_pos,fuel_1hr_inc_neg,
+     *      rm_ind,
+     *      litter_ag_leaf, !Doug 11/12: seperate out grass and wood litter
+     *      litter_bg,fuel_1hr_leaf,
+     *      fuel_10hr,fuel_100hr,
+     *      fuel_1hr_leaf_inc_pos,fuel_1hr_leaf_inc_neg,
      *      fuel_10hr_inc, fuel_100hr_inc,	!Doug 01/09: fuel_xhr_inc
      *      nind,turnover_ind)
 
-
+C            IF (lat>-25) THEN 
+C              PRINT*,"turnover"
+C              PRINT*, fuel_1hr_leaf(:,1)
+C            END IF
 c         Litter and soil decomposition calculations
 c         This is done before fire, so that fire probability is calculated
 c         on litter remaining after year's decomposition
+          !PRINT*, "******************"
+          !PRINT*, fuel_1hr_leaf(:,1)
 
-
-          call littersom(litter_ag,litter_bg,fuel_1hr,fuel_10hr,
+          call littersom(pftpar,litter_ag_leaf,litter_ag_wood, !Doug 11/12: seperate out grass and wood litter
+     *      litter_bg,fuel_1hr_leaf,fuel_1hr_wood,fuel_10hr,
      *      fuel_100hr,fuel_1000hr,
-     *      fuel_1hr_inc_pos, fuel_1hr_inc_neg, fuel_10hr_inc,
-     *      fuel_100hr_inc,fuel_1000hr_inc,       !Doug 01/09: fuel_xhr_inc
+     *      fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg,
+     *      fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg,
+     *      fuel_10hr_inc,fuel_100hr_inc,fuel_1000hr_inc,       !Doug 01/09: fuel_xhr_inc
      *      mw1,mw1_t, mtemp_soil,cpool_fast,cpool_slow,
      *      arh,mrh,year,k_fast_ave,k_slow_ave,litter_decom_ave,
      *      agri_litter_ag,agri_litter_bg,agri)		!Doug 05/09: agriculture varibles added for land use change stuff
-
-
+          !PRINT*, "------"
+          !PRINT*, fuel_1hr_leaf(:,1)
+C            IF (lat>-25) THEN 
+C              PRINT*,"littersom"
+C              PRINT*, fuel_1hr_leaf(:,1)
+C            END IF
 c         Removal of PFTs with negative C increment this year
 
-
           call kill_pft(bm_inc,present,tree,lm_ind,rm_ind,hm_ind,
-     *      sm_ind,nind,litter_ag,litter_bg,year,fuel_1hr,fuel_10hr,
-     *      fuel_100hr,fuel_1000hr,fuel_1hr_inc_pos, fuel_1hr_inc_neg,
+     *      sm_ind,nind,litter_ag_leaf,litter_ag_wood, !Doug 11/12: seperate out grass and wood litter
+     *      litter_bg,year,fuel_1hr_leaf,fuel_1hr_wood,fuel_10hr,
+     *      fuel_100hr,fuel_1000hr,
+     *      fuel_1hr_leaf_inc_pos,fuel_1hr_leaf_inc_neg,
+     *      fuel_1hr_wood_inc_pos,fuel_1hr_wood_inc_neg,
      *      fuel_10hr_inc, fuel_100hr_inc,fuel_1000hr_inc)              !Doug 01/09: fuel_xhr_inc
-
-
 
 c         Allocation of annual carbon increment to leaf, stem and fine root
 c         compartments
 
 
+C            IF (lat>-25) THEN 
+C              PRINT*,"kill_pft"
+C              PRINT*, fuel_1hr_leaf(:,1)
+C            END IF
 
           call allocation(pftpar,allom1,allom2,allom3,latosa,
      *      wooddens,reinickerp,tree,sla,wscal,nind,bm_inc,lm_ind,
      *      sm_ind,hm_ind,rm_ind,crownarea,fpc_grid,lai_ind,height,
-     *      height_class,dbh,tau_c,cl_t,litter_ag,litter_bg,fuel_1hr,
+     *      height_class,dbh,tau_c,cl_t,litter_ag_leaf,litter_ag_wood, !Doug 11/12: seperate out grass and wood litter
+     *      litter_bg,fuel_1hr_leaf,fuel_1hr_wood,
      *      fuel_10hr,fuel_100hr,fuel_1000hr,
-     *      fuel_1hr_inc_pos, fuel_1hr_inc_neg, fuel_10hr_inc,
-     *      fuel_100hr_inc,fuel_1000hr_inc,!Doug 01/09: fuel_xhr_inc
+     *      fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg,
+     *      fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg,
+     *      fuel_10hr_inc,fuel_100hr_inc,fuel_1000hr_inc,!Doug 01/09: fuel_xhr_inc
      *      fpc_inc,present,year, evergreen)
-
 
 c         Implement light competition between trees and grasses
 
 
+C            IF (lat>-25) THEN 
+C              PRINT*,"allocate"
+C              PRINT*, fuel_1hr_leaf(:,1)
+C            END IF
           call light(present,tree,lm_ind,sm_ind,hm_ind,rm_ind,
-     *      crownarea,fpc_grid,fpc_inc,nind,litter_ag,litter_bg,
-     *      fuel_1hr,fuel_10hr,fuel_100hr,fuel_1000hr,
-     *      fuel_1hr_inc_pos, fuel_1hr_inc_neg, fuel_10hr_inc,
-     *      fuel_100hr_inc,fuel_1000hr_inc,!Doug 01/09: fuel_xhr_inc
+     *      crownarea,fpc_grid,fpc_inc,nind,
+     *      litter_ag_leaf,litter_ag_wood, !Doug 11/12: seperate out grass and wood litter
+     *      litter_bg,
+     *      fuel_1hr_leaf,fuel_1hr_wood,
+     *      fuel_10hr,fuel_100hr,fuel_1000hr,
+     *      fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg, 
+     *      fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg, 
+     *      fuel_10hr_inc,fuel_100hr_inc,fuel_1000hr_inc,!Doug 01/09: fuel_xhr_inc
      *      sla,year)
 
-
+C            IF (lat>-25) THEN 
+C              PRINT*,"light"
+C              PRINT*, fuel_1hr_leaf(:,1)
+C            END IF
 c         Implement light competition and background mortality among tree PFTs
 c         (including heat damage and due to lower limit of npp for boreal trees)
           call mortality(pftpar,present,tree,boreal,bm_inc,
      *      turnover_ind,sla,lm_ind,sm_ind,hm_ind,rm_ind,nind,
-     *      litter_ag,litter_bg,fuel_1hr,fuel_10hr,fuel_100hr,
+     *      litter_ag_leaf,litter_ag_wood, !Doug 11/12: seperate out grass and wood litter
+     *      litter_bg,fuel_1hr_leaf,fuel_1hr_wood,fuel_10hr,fuel_100hr,
      *      fuel_1000hr,
-     *      fuel_1hr_inc_pos, fuel_1hr_inc_neg, fuel_10hr_inc,
-     *      fuel_100hr_inc,fuel_1000hr_inc,!Doug 01/09: fuel_xhr_inc
+     *      fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg,
+     *      fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg,
+     *      fuel_10hr_inc,fuel_100hr_inc,fuel_1000hr_inc,!Doug 01/09: fuel_xhr_inc
      *      dtemp,anpp,mtemp_max,year)
 
-
-
-
+C            IF (lat>-25) THEN 
+C              PRINT*,"mortaility"
+C              PRINT*, fuel_1hr_leaf(:,1)
+C            END IF
 c         Calculation of biomass destruction by fire disturbance
-        fuel_1hr_del=fuel_1hr_del-fuel_1hr		!Doug MFL1
+        fuel_1hr_del=fuel_1hr_del-fuel_1hr_leaf-fuel_1hr_wood		!Doug MFL1
         fuel_10hr_del=fuel_10hr_del-fuel_10hr
         fuel_100hr_del=fuel_100hr_del-fuel_100hr
         fuel_1000hr_del=fuel_1000hr_del-fuel_1000hr
+          !PRINT*, "------"
+          !PRINT*, fuel_1hr_leaf(:,1)
+		  
+         !IF (year==1103) lm_ind(3,:)=lm_ind(3,:)/4
 
          call fire(year,start_year,                                  !Doug 07/09: added start year
      *      pftpar,dtemp,dtemp_min,dtemp_max,dprec,
      *      dwindsp,dlightn,dphen,dphen_change,                      !Doug 06/09: dphen_change added for fire paradox experiments
-     *      litter_ag,litter_bg,fuel_1hr,
+     *      litter_ag_leaf,litter_ag_wood,							 !Doug 11/12: Doug 11/12: seperate out grass and wood litter
+     *      litter_bg,fuel_1hr_leaf,fuel_1hr_wood,
      *      fuel_10hr,fuel_100hr,fuel_1000hr,
-     *      fuel_1hr_inc_pos, fuel_1hr_inc_neg, fuel_10hr_inc,
-     *      fuel_100hr_inc, fuel_1000hr_inc,	                     !Doug 01/09 MFL: fuel_xhr_inc
+     *      pfuel_limit,
+     *      fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg,
+     *      fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg,
+     *      fuel_10hr_inc,fuel_100hr_inc, fuel_1000hr_inc,	                     !Doug 01/09 MFL: fuel_xhr_inc
      *      fuel_1hr_del, fuel_10hr_del, fuel_100hr_del, 
      *      fuel_1000hr_del,                                         !Doug 01/09 MFL1
-     *      mfuel_1hr_total, mfuel_10hr_total,                       !Doug 03/09: outputs for monthly fuel loads
+     *      mfuel_1hr_total,
+     *      mfuel_1hr_leaf_total,mfuel_1hr_wood_total,
+     *      mfuel_10hr_total,                       !Doug 03/09: outputs for monthly fuel loads
      *      mfuel_100hr_total, mfuel_1000hr_total, 
      *      mlivegrass,
      *      acflux_fire,mcflux_fire,
@@ -1270,7 +1338,16 @@ c         Calculation of biomass destruction by fire disturbance
      * fuel_100hr_total_0,fuel_1000hr_total_0,
      * mfire_frac,lon,crop,pas,fbdep,ni_acc,afire_frac_afap_old)
 
-          fuel_1hr_del=fuel_1hr		!Doug MFL1
+          !PRINT*, "------"
+          !PRINT*, fuel_1hr_leaf(:,1)
+          !PRINT*, "??????"
+          !PRINT*, mfuel_1hr_leaf_total
+
+C            IF (lat>-25) THEN 
+C              PRINT*,"fire"
+C              PRINT*, fuel_1hr_leaf(:,1)
+C            END IF
+          fuel_1hr_del=fuel_1hr_leaf+fuel_1hr_wood		!Doug MFL1
           fuel_10hr_del=fuel_10hr
 
           fuel_100hr_del=fuel_100hr
@@ -1278,8 +1355,10 @@ c         Calculation of biomass destruction by fire disturbance
           fuel_1000hr_del=fuel_1000hr
 
 c         Doug 03/09: MFL; set fuel incraments to zero
-          fuel_1hr_inc_pos=0.0
-          fuel_1hr_inc_neg=0.0
+          fuel_1hr_leaf_inc_pos=0.0
+          fuel_1hr_wood_inc_pos=0.0
+          fuel_1hr_leaf_inc_neg=0.0
+          fuel_1hr_wood_inc_neg=0.0
           fuel_10hr_inc=0.0
           fuel_100hr_inc=0.0
           fuel_1000hr_inc=0.0
@@ -1287,26 +1366,29 @@ c         Doug 03/09: MFL; set fuel incraments to zero
 c         Establishment of new individuals (saplings) of woody PFTs,
 c         grass establishment, removal of PFTs not adapted to current climate,
 c         update of individual structure and FPC.
-
-
-
           call establishment(pftpar,present,survive,estab,nind,	
      *      lm_ind,sm_ind,rm_ind,hm_ind,lm_sapl,sm_sapl,rm_sapl,
      *      hm_sapl,crownarea,fpc_grid,lai_ind,height,dbh,tau_c,
-     *      cl_t,sla,wooddens,latosa,mprec,reinickerp,litter_ag,
-     *      litter_bg,fuel_1hr,fuel_10hr,fuel_100hr,fuel_1000hr,
-     *      fuel_1hr_inc_pos,fuel_1hr_inc_neg,               !Doug 03/09
+     *      cl_t,sla,wooddens,latosa,mprec,reinickerp,
+     *      litter_ag_leaf,litter_ag_wood, ! Doug 11/12: seperate out grass and wood litter
+     *      litter_bg,fuel_1hr_leaf,fuel_1hr_wood,
+     *      fuel_10hr,fuel_100hr,fuel_1000hr,
+     *      fuel_1hr_leaf_inc_pos,fuel_1hr_leaf_inc_neg,               !Doug 03/09
+     *      fuel_1hr_wood_inc_pos,fuel_1hr_wood_inc_neg,               !Doug 03/09
      *      fuel_10hr_inc,fuel_100hr_inc,fuel_1000hr_inc,    !Doug 03/09
      *      pas,crop,                                             !Doug 06/09
      *      tree,allom1,allom2,allom3,acflux_estab,leafondays,
      *      leafoffdays,leafon,mnpp,anpp,mnpp_add,anpp_add,year)
 
-
+C            IF (lat>-25) THEN 
+C              PRINT*,"establishment"
+C              PRINT*, fuel_1hr_leaf(:,1)
+C            END IF
 c       Doug 05/09: agricultural production and product decomposition     
-
-          call agriprod(present,agri,anpp,cflux_prod_total,
-     *   prod10_total,prod100_total,prod1,anpp_agri,rap,x10,
-     *   x100,agri_litter_ag,agri_litter_bg,prod10,prod100)
+C
+C          call agriprod(present,agri,anpp,cflux_prod_total,
+C     *   prod10_total,prod100_total,prod1,anpp_agri,rap,x10,
+C     *   x100,agri_litter_ag,agri_litter_bg,prod10,prod100)
 
 
 
@@ -1314,11 +1396,16 @@ c       Doug 05/09: agricultural production and product decomposition
 c         radioactive decay of 14C
           
           call decay(present,lm_ind,sm_ind,hm_ind,rm_ind,
-     *      litter_ag,litter_bg,cpool_fast,cpool_slow,
-     *      fuel_1hr,fuel_10hr,fuel_100hr,fuel_1000hr)
+     *      litter_ag_leaf,litter_ag_wood, !Doug 11/12: seperate out grass and wood litter
+     *      litter_bg,cpool_fast,cpool_slow,
+     *      fuel_1hr_leaf,fuel_1hr_wood,
+     *      fuel_10hr,fuel_100hr,fuel_1000hr)
 
-
-
+C            IF (lat>-25) THEN 
+C              PRINT*,"DECAY"
+C              PRINT*, fuel_1hr_leaf(:,1)
+C              IF (year==1003) STOP
+C            END IF
 c KIRSTEN 25 July 2006: set pft array to zero, where pft not present before passing on to cpp driver.
 c Not very familiar with cpp, normally it should be done in the driver.
 
@@ -1331,6 +1418,8 @@ c Not very familiar with cpp, normally it should be done in the driver.
                 sm_ind(pft,nc)=0.0
                 hm_ind(pft,nc)=0.0
                 litter_ag(pft,nc)=0.0
+                litter_ag_leaf(pft,nc)=0.0
+                litter_ag_wood(pft,nc)=0.0
                 litter_bg(pft,nc)=0.0
                 anpp(pft,nc)=0.0
               enddo
@@ -1362,10 +1451,24 @@ c  anpp(pft)
 c  arf(1)
          arh_grid=arh(1)
 c  acflux_fire(1)
-         acflux_fire_grid=acflux_fire(1)
 
+C	Doug 11/12: Model changed to seperate out grass/leaf and wood above ground litter.
+C				So litter_ag is summed again for output
+         acflux_fire_grid=acflux_fire(1)
+          DO pft=1,npft
+          litter_ag(pft,1)=litter_ag_leaf(pft,1)+litter_ag_wood(pft,1)
+            DO nc=2,nco2
+              litter_ag(pft,nc)=((litter_ag_leaf(pft,nc)*
+     *          litter_ag_leaf(pft,1))+(litter_ag_wood(pft,nc)*
+     *          litter_ag_wood(pft,1)))/(litter_ag_wood(pft,1)+
+     *          litter_ag_leaf(pft,1))
+	        END DO
+          END DO
+          dprec_out=dprec
          call outannual(year,present,nind,lm_ind,rm_ind,sm_ind,
-     *      hm_ind,fpc_grid,anpp,acflux_estab,litter_ag,litter_bg,
+     *      hm_ind,fpc_grid,anpp,acflux_estab,
+     *      litter_ag,litter_ag_leaf,litter_ag_wood, !Doug 11/12: Output seperate ggrass and wood litter
+     *      litter_bg,
      *      cpool_fast,cpool_slow,arh,afire_frac,acflux_fire,
      *      mcflux_fire,arunoff,sla,mpar,mapar,mphen,anpp_add,mnpp,
      *      mnpp_grid,    !Doug 06/09: monthly npp for entire cell
@@ -1385,17 +1488,18 @@ c  acflux_fire(1)
      *      livegrass_0,dead_fuel_0,dead_fuel_all_0,
      *      fuel_all_0,fuel_1hr_total_0,fuel_10hr_total_0,
      *      fuel_100hr_total_0,fuel_1000hr_total_0,
-     *      mfuel_1hr_total, mfuel_10hr_total, mfuel_100hr_total, !Doug 04/09
+     *      mfuel_1hr_total,
+     *      mfuel_1hr_leaf_total,mfuel_1hr_wood_total,
+     *      mfuel_10hr_total, mfuel_100hr_total, !Doug 04/09
      *      mfuel_1000hr_total,mlivegrass,                        !Doug 04/09
      *      deltaa,deltaa_fpc,delt_c13_fpc,
      *      mfire_frac,
      *      fbdep,litter_decom_ave,turnover_ind,
      *      crop,pas,	!Doug 05/09: just checking crops and pasture are implimented properly
      *      anpp_grid,arh_grid,acflux_fire_grid,                  !Doug 07/09: cheating future run ouputs without deltaC's
-     *      gdd_grid,alpha_ws,cgf)                                    !Doug 07/09: biocliamtic variables for heat and water stress
+     *      gdd_grid,alpha_ws,pfuel_limit,dprec_out)                                    !Doug 07/09: biocliamtic variables for heat and water stress
 cccc note: you can alternatively use mpet2 and apet to get PET*1.32
 cccc       instead of mpet_grid and apet_grid, respectively
-
 
 #ifdef LPJ_STEP_1A
           if (year.eq.spinup_years) then
@@ -1403,7 +1507,9 @@ c DM      Saved variables are the ones initialized in initgrid plus
 c DM      thoses that have been found necessary to get right results
             call put_saved_data(year,k_fast_ave,k_slow_ave,
      *        litter_decom_ave,present,
-     *        litter_ag,fuel_1hr,fuel_10hr,fuel_100hr,fuel_1000hr,
+     *        litter_ag_leaf,litter_ag_wood,   !Doug 11/12: seperate out grass and wood litter
+     *        fuel_1hr_leaf,fuel_1hr_wood,
+     *        fuel_10hr,fuel_100hr,fuel_1000hr,
      *        litter_bg,crownarea,w,w_t,dwscal365,
      *        lm_ind,sm_ind,hm_ind,rm_ind,fpc_grid,mnpp,anpp,
      *        leafondays,leafoffdays,leafon,snowpack,mtemp,
@@ -1422,7 +1528,9 @@ c DM      Saved variables are the ones initialized in initgrid plus
 c DM      thoses that have been found necessary to get right results
             CALL put_saved_data(year,k_fast_ave,k_slow_ave,
      *        litter_decom_ave,present,
-     *        litter_ag,fuel_1hr,fuel_10hr,fuel_100hr,fuel_1000hr,
+     *        litter_ag_leaf,litter_ag_wood, !Doug 11/12: Fill:
+     *        fuel_1hr_leaf,fuel_1hr_wood,
+     *        fuel_10hr,fuel_100hr,fuel_1000hr,
      *        litter_bg,crownarea,w,w_t,dwscal365,
      *        lm_ind,sm_ind,hm_ind,rm_ind,fpc_grid,mnpp,anpp,
      *        leafondays,leafoffdays,leafon,snowpack,mtemp,
@@ -1536,6 +1644,130 @@ c#endif
 c -----------------------------------------------------------------------------
 c                                SUBROUTINES
 c -----------------------------------------------------------------------------
+c//////////////////////////////////////////////////////////////////////////////
+c******************************************************************************
+c     SUBROUTINE DAILY2
+c     Doug 01/09: For calculating lightning strikes. Based on linear
+c	interpolation, but with grouping around rain events
+c
+c	Completed in two steps. Step 1 calculates the daily spread of lighning if 
+c	lighning was constant, with more ligtning on days with rainfall then days 
+c	without. Step2 to multiplys by linearly interpolated lighting strkes, and 
+c	scales so total lighting remains the same.  
+
+	SUBROUTINE daily2(lat,lon,mval,dval1,dval2)
+
+	IMPLICIT NONE
+
+	INTEGER	nmonths			! number of months in a year
+		PARAMETER (nmonths=12)
+	INTEGER	ndayyear		! number of days in a year
+		PARAMETER (ndayyear=365)
+	INTEGER	ndaymonth(1:nmonths)	!number of days in each month
+	INTEGER	m
+        	DATA (ndaymonth(m),m=1,12)
+     *    / 31,28,31,30,31,30,31,31,30,31,30,31 /
+
+
+C	LOCAL VARAIBLES:
+	INTEGER	month,mday, day	!month and day of month and day of year
+
+c     I/O:
+      	REAL mval(nmonths),dval1(ndayyear), dval2(ndayyear)
+
+c	For step 1:
+	REAL	fdal(365)		!the value of the function that 
+					!redistributes lighting for each day
+	REAL	nwd, pwd		!number and proption of wet days in the month
+	REAL	gceo			!coeffiant used to calculate proportion of
+					!lighting strikes on wet days
+		PARAMETER (gceo=0.00001)
+
+c	For step 2:
+	REAL	lmval(2)		!for calculating scaling of rediustributed
+					!lightning
+
+	REAL	lat,lon
+
+
+
+
+c       --------------------------------------------------------------------------
+c       Step 1
+
+        day=0
+
+        DO month=1,nmonths	!Month of year
+          nwd=0
+
+
+
+          DO mday=1,ndaymonth(month)	!day of month
+            day=day+1
+            IF(dval1(day)>0) nwd=nwd+1
+          END DO	!day of month
+
+          pwd=nwd/ndaymonth(month) !pwd= fraction of wet days in month 
+            day=day-ndaymonth(month)
+            DO mday=1,ndaymonth(month)	!day of month
+              day=day+1    !Seaperates days and calcualates lighting for days with and 
+                           !without rain
+
+              IF(dval1(day)>0) THEN
+                fdal(day)=(pwd**gceo)/nwd
+              ELSE
+                fdal(day)=(1-pwd**gceo)/(ndaymonth(month)-nwd)
+              END IF
+
+            END DO
+          END DO	!Month of year
+	
+c-------------------------------------------------------------------------------
+c Step 2
+
+	
+	CALL	daily1(mval,dval2)		!dval2=lighting for a simple
+                                                !linear interpolation between
+                                                !montrhly lighting values
+
+
+	day=0
+        lmval(:)=0.0
+
+	DO month=1,nmonths !month of year
+
+		
+          DO mday=1,ndaymonth(month)	!day of month
+            day=day+1
+            lmval(1)=lmval(1)+dval2(day)
+            dval2(day)=dval2(day)*fdal(day)
+            lmval(2)=lmval(2)+dval2(day)
+
+          END DO 	!day of month
+	
+          DO mday=day+1-ndaymonth(month),day
+            IF (lmval(1)==0.AND.lmval(2)==0) THEN
+              dval2(mday)=0
+            ELSE IF(lmval(2)==0.AND.lmval(1)/=0)	THEN
+              PRINT*, "error:redistrbuting lighting around"
+              PRINT*, "wet days in daily2 subroutine"
+              STOP
+            END IF
+
+            dval2(mday)=dval2(mday)*lmval(1)/lmval(2)
+              IF (dval1(mday)>0) dval2(mday)=0	!removes all lightin
+                                                !on wet days
+
+         END DO
+
+
+	END DO !month of year
+
+
+
+
+	return
+	END !SUBROUTINE	!Daily2
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     SUBROUTINE DAILY_LIGHTNING
@@ -1741,8 +1973,8 @@ c	END DO !month of year
 
 
 
-	return
-	END !SUBROUTINE	!Daily2
+      return
+      END !SUBROUTINE	!Daily2
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     SUBROUTINE DAILY1
@@ -2116,7 +2348,7 @@ c     Calculation of maximum crown area for woody PFTs
 
 c     PARAMETERS:
       integer npft,npftpar,nsoilpar
-        parameter (npft=9,npftpar=51,nsoilpar=7)
+        parameter (npft=9,npftpar=54,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
       real pi
@@ -2214,6 +2446,9 @@ c     47 param1 for bark thickness
 c     48 param2 for bark thickness
 c     49 r(ck) crown damage: postfire mortality
 c     50 p   crown damage: postfire mortality
+c	  52 Doug 11/12: decomposition rate of leaf at 10 degrees  (kleaf10)
+c	  53 Doug 11/12: decomposition rate of wood at 10 degrees  (kwood10)
+c     54 Doug 11/12: Q10 for wood decomposition
 
 
 c NOTE ON THE INTRODUCTION OF THE LARCH PFT:
@@ -2351,19 +2586,37 @@ c----------------------------------------------------------------------------
       data ((table(pft,n),n=46,npftpar),pft=1,npft) /
 
 c     -------------------------------------------------
-c         46       47      48     49   50     51   PFT
+c         46       47      48     49   50     51   52    53     54     PFT
 c     -------------------------------------------------
-     *    0.630, 0.0301, 0.0281, 0.95, 3.00,  0.26,  !  1
-     *    0.460, 0.1085, 0.2120, 0.05, 3.00,  0.25,  !  2
-     *    0.667, 0.0670, 0.5590, 0.95, 3.75,  0.03,  !  3
-     *    0.560, 0.0451, 0.1412, 0.95, 3.00,  0.03,  !  4
-     *    0.667, 0.0347, 0.1086, 0.95, 3.00,  0.03,  !  5
-     *    0.667, 0.0292, 0.2632, 0.95, 3.00,  0.58,  !  6
+     *    0.630, 0.0301, 0.0281, 0.95, 3.00, 0.26, .93, 0.039, 2.75,  !  1
+     *    0.460, 0.1085, 0.2120, 0.05, 3.00, 0.25, 1.17, 0.039, 2.75,  !  2
+     *    0.667, 0.0670, 0.5590, 0.95, 3.75, 0.03, .70, 0.041, 1.97,  !  3
+     *    0.560, 0.0451, 0.1412, 0.95, 3.00, 0.03, .86, 0.104, 1.37,  !  4
+     *    0.667, 0.0347, 0.1086, 0.95, 3.00, 0.03, .95, 0.104, 1.37,  !  5
+     *    0.667, 0.0292, 0.2632, 0.95, 3.00, 0.58, .776, 0.041, 1.97,  !  6
 c     *     2.0,   43.0,       5.0,  0.06,   !  7
-     *    0.667, 0.0347, 0.1086, 0.95, 3.00,  0.18,  !  8
-     *    0.0,      0.0,    0.0, 0.00, 0.00,  0.05,  !  9
-     *    0.0,      0.0,    0.0, 0.00, 0.00,  0.06/  ! 10
+     *    0.667, 0.0347, 0.1086, 0.95, 3.00, 0.18, .94, 0.104, 1.37,  !  8
+     *    0.0,      0.0,    0.0, 0.00, 0.00, 0.05, 1.20, 0.0  , 0.0 ,  !  9
+     *    0.0,      0.0,    0.0, 0.00, 0.00, 0.06, .97, 0.0  , 0.0 /  ! 10
 c----------------------------------------------------------------------------
+
+c      data ((table(pft,n),n=46,npftpar),pft=1,npft) /
+c 
+cc     -------------------------------------------------
+cc         46       47      48     49   50     51   52    53     54     PFT
+cc     -------------------------------------------------
+c     *    0.630, 4.703, 0.03232, 0.95, 3.00, 0.26, .93, 0.039, 2.75,  !  1
+c     *    0.460, 8.998, 0.03720, 0.05, 3.00, 0.25, 1.17, 0.039, 2.75,  !  2
+c     *    0.667, 18.27, 0.02899, 0.95, 3.75, 0.03, .70, 0.041, 1.97,  !  3
+c     *    0.560, 2.140, 0.08060, 0.95, 3.00, 0.03, .86, 0.104, 1.37,  !  4
+c     *    0.667, 6.703, 0.03438, 0.95, 3.00, 0.03, .95, 0.104, 1.37,  !  5
+c     *    0.667, 1.964, 0.03438, 0.95, 3.00, 0.58, .776, 0.041, 1.97,  !  6
+cc     *     2.0,   43.0,       5.0,  0.06,   !  7
+c     *    0.667, 6.703, 0.03438, 0.95, 3.00, 0.18, .94, 0.104, 1.37,  !  8
+c     *    0.0,      0.0,    0.0, 0.00, 0.00, 0.05, 1.20, 0.0  , 0.0 ,  !  9
+c     *    0.0,      0.0,    0.0, 0.00, 0.00, 0.06, .97, 0.0  , 0.0 /  ! 10
+cc----------------------------------------------------------------------------
+
 
       do pft=1,npft
 
@@ -2458,7 +2711,7 @@ c         (14) leafmass = [ lai * allom1 * x**reinickerp *
 c              (4*sla/pi/latosa)**(reinickerp*0.5) / sla ]**(2/(2-reinickerp))
 
           x=pftpar(pft,22)
-
+	 
           lm_sapl(pft,1)=(lai_sapl*allom1*x**reinickerp*
      *      (4.0*sla(pft)/pi/latosa)**(reinickerp*0.5) / sla(pft))**
      *      (2.0/(2.0-reinickerp))  !eqn 14
@@ -2501,7 +2754,7 @@ c         (22) (heartwood mass) = (x-1) * (sapwood mass)
           hm_sapl(pft,3)=sm_sapl(pft,3)
 
         else ! grass PFT
-
+c     * lm_sapl(pft,1),lai_sapl,sla(pft)
           lm_sapl(pft,1)=lai_sapl/sla(pft)
 
 c         Set initial 13C values for saplings, grass
@@ -2541,7 +2794,9 @@ c     SUBROUTINE INITGRID
 c     Initialise state variables (as required) for current grid cell
 
       subroutine initgrid(tree,k_fast_ave,k_slow_ave,
-     *  litter_decom_ave,present,litter_ag,fuel_1hr,fuel_10hr,
+     *  litter_decom_ave,present,litter_ag,
+     *  litter_ag_leaf,litter_ag_wood,
+     *  fuel_1hr_leaf,fuel_1hr_wood,fuel_10hr,
      *  fuel_100hr,fuel_1000hr,litter_bg,crownarea,mprec,w,w_t,
      *  dwscal365,lm_ind,sm_ind,hm_ind,rm_ind,fpc_grid,mnpp,anpp,
      *  leafondays,leafoffdays,leafon,snowpack,mtemp_old,mtemp,
@@ -2553,7 +2808,7 @@ c     Initialise state variables (as required) for current grid cell
 
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
-        parameter (npft=9,npftpar=51,nsoilpar=7)
+        parameter (npft=9,npftpar=54,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
       real rainscalar
@@ -2567,8 +2822,12 @@ c     ARGUMENTS
       real k_fast_ave,k_slow_ave
       real litter_decom_ave(1:nco2)
       logical present(1:npft)
-      real litter_ag(1:npft,1:nco2)
-      real fuel_1hr(1:npft,1:nco2),fuel_10hr(1:npft,1:nco2)
+      REAL litter_ag(1:npft,1:nco2)
+      REAL litter_ag_leaf(1:npft,1:nco2) !Doug 11/12:
+      REAL litter_ag_wood(1:npft,1:nco2)
+      real fuel_1hr_leaf(1:npft,1:nco2)
+      REAL fuel_1hr_wood(1:npft,1:nco2)
+      REAL fuel_10hr(1:npft,1:nco2)
       real fuel_100hr(1:npft,1:nco2)
       real fuel_1000hr(1:npft,1:nco2)
       real litter_bg(1:npft,1:nco2)
@@ -2632,8 +2891,11 @@ c     LOCAL VARIABLES
         present(pft)=.false.
         do nc=1,nco2
           litter_ag(pft,nc)=0.0
+          litter_ag_leaf(pft,nc)=0.0 ! Doug 11/12
+          litter_ag_wood(pft,nc)=0.0 ! Doug 11/12
           litter_bg(pft,nc)=0.0
-          fuel_1hr(pft,nc)=0.0
+          fuel_1hr_leaf(pft,nc)=0.0
+          fuel_1hr_wood(pft,nc)=0.0
           fuel_10hr(pft,nc)=0.0
           fuel_100hr(pft,nc)=0.0
           fuel_1000hr(pft,nc)=0.0
@@ -2756,7 +3018,7 @@ c#endif
 
 c     PARAMETERS:
       integer npft,npftpar,nsoilpar
-        parameter (npft=9,npftpar=51,nsoilpar=7)
+        parameter (npft=9,npftpar=54,nsoilpar=7)
       real pi
         parameter (pi=3.14159265)
       real a,b                          !empirical constants (Eqn 18)
@@ -3502,7 +3764,7 @@ c     Temperature-based phenology for summergreen PFTs
 
 c     PARAMETERS
       integer npft,npftpar
-        parameter (npft=9,npftpar=51)
+        parameter (npft=9,npftpar=54)
 
 c     ARGUMENTS
       real pftpar(1:npft,1:npftpar)
@@ -3663,7 +3925,7 @@ c     growing degree days
 
 c     PARAMETERS
       integer npft,npftpar,climbuf
-        parameter (npft=9,npftpar=51,climbuf=20)
+        parameter (npft=9,npftpar=54,climbuf=20)
                                 !NB must be same values as in main program
 
 c     ARGUMENTS
@@ -3781,7 +4043,7 @@ c     Apply bioclimatic limits on PFT survival and establishment
 
 c     PARAMETERS
       integer npft,npftpar
-      parameter (npft=9,npftpar=51)
+      parameter (npft=9,npftpar=54)
 
 c     ARGUMENTS
       real pftpar(1:npft,1:npftpar)
@@ -3863,7 +4125,9 @@ c     timestep:
      *  wscal,mgpp,mlresp,mw1,dw1,aaet,
      *  leafondays,leafoffdays,leafon,tree,raingreen,mpar,mapar,mphen,
      *  year,maet,littercpool_ag,mw2,maxthaw_depth,dthaw_depth,
-     *  uw1,uw2,fw,litter_ag,mcica,mauw1,mauw2,lat,lon,w_ep,
+     *  uw1,uw2,fw,
+     *  litter_ag_leaf,litter_ag_wood,   !Doug 11/12
+     *  mcica,mauw1,mauw2,lat,lon,w_ep,
      *  d_evap,maep,aaep,mintc,aintc,needle,boreal,dayl,mpet_grid,
      *  apet_grid,mpet2,apet,mpet,mmelt,mw1_t,mw2_t,meangc,mgp,
      *  deltaa,deltaa_fpc,deet,alpha_ws)    !Doug 07/09, added alpha_ws
@@ -3872,7 +4136,7 @@ c     timestep:
 
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
-        parameter (npft=9,npftpar=51,nsoilpar=7)
+        parameter (npft=9,npftpar=54,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
 
@@ -3920,7 +4184,8 @@ c     mphen=monthly average pheno-state (sum_d(m) of dphen(d,pft)/ndays(m))
       real maxthaw_depth,dthaw_depth(1:365)
       real uw1,uw2,fw(1:2)
 c DM      real delta_thawday
-      real litter_ag(1:npft,1:nco2)          !gridcell above-ground litter (gC/m2)
+      real litter_ag_leaf(1:npft,1:nco2)          !gridcell above-ground litter (gC/m2)
+      real litter_ag_wood(1:npft,1:nco2)		  ! Doug 11/12
       real mcica(1:12,1:npft)
       real mauw1(1:12)
       real mauw2(1:12)
@@ -4075,7 +4340,8 @@ c DM  the two steps version.
 
       littercpool_ag=0.0
       do pft=1,npft
-         littercpool_ag=littercpool_ag+litter_ag(pft,1)
+         littercpool_ag=littercpool_ag+  !Doug 11/12
+     *     litter_ag_leaf(pft,1)+litter_ag_wood(pft,1)
       enddo
 
       do pft=1,npft
@@ -4249,9 +4515,6 @@ c    Doug 05/09: Finds day of (1st) change in dephen in the month, and records i
             IF (d>1.AND.dphen(d,pft)/=dphen(d-1,pft)) THEN
 
               IF(dphen_change(m,pft)==0) THEN !Doug 05/09: see if change in dphen has already occured this month for this pft
-             !PRINT*, "-----"
-             !PRINT*, d, pft
-             !PRINT*, dphen(d,pft), dphen(d-1,pft)
                 IF(dphen(d,pft)-dphen(d-1,pft)>0) THEN
                   dphen_change(m,pft)=d  !Doug 05/09: if change is posative, day number is recorded as posative
                 ELSE
@@ -4331,6 +4594,10 @@ c             phenology
 
               meanfpc(m,pft)=meanfpc(m,pft)+
      *          fpc_grid(pft)*dphen(d,pft)/real(ndaymonth(m))
+	 
+	 
+
+	 
               meangc(m,pft)=meangc(m,pft)+
      *          dgc(d,pft)/real(ndaymonth(m))
               meangmin(m,pft)=meangmin(m,pft)+
@@ -4370,7 +4637,6 @@ c       bracketed by f(0.02)<0 and f(lambdam+0.05)>0.
 
 c           Convert canopy conductance assoc with photosynthesis
 c           (actual minus minimum gc) (gpd) from mm/sec to mm/day
-
             gpd=tsecs(m)*(meangc(m,pft)-meangmin(m,pft))
             fpar=meanfpc(m,pft)  !cover including phenology
 
@@ -4385,7 +4651,7 @@ c             Implement numerical solution
 
               b=0  !number of tries towards solution
               fmid=epsilon+1.0
-
+			  
               do while (abs(fmid).gt.epsilon.and.b.le.10)
 
 c               Abort search if >10 iterations needed to fnind solution
@@ -4434,7 +4700,6 @@ c               a solution (fmid=0) between x1 and x2
 c           Estimate monthly gross photosynthesis and monthly leaf
 c           respiration from mid-month daily values
 c           Agd = And + Rd (Eqn 2 Haxeltine & Prentice 1996)
-
             mgpp(m,pft,1)=real(ndaymonth(m))*agd
             agpp(pft,1)=agpp(pft,1)+mgpp(m,pft,1)
 
@@ -4874,7 +5139,7 @@ c     conductance and PFT daily water stress factor
 
 c     PARAMETERS:
       integer npft,npftpar,nsoilpar
-        parameter (npft=9,npftpar=51,nsoilpar=7)
+        parameter (npft=9,npftpar=54,nsoilpar=7)
       real alpham,gm,pt          ! ,emax
 c        parameter (emax=5.0)    ! maximum daily transpiration rate (mm/day)
         parameter (gm=3.26)      ! empirical parameter in demand function
@@ -5009,6 +5274,7 @@ c      f1=the remainder in the top layer
           endif
 
           wr=w(1)*f1*v(1)+w(2)*f2*v(2)
+
           supply=emax(pft)*wr*dphen(d,pft)*fpc_grid(pft)
 c          if(wr.le.0.7) then
 c            supply=dpet(d)*pt*wr*dphen(d,pft)*fpc_grid(pft)
@@ -5655,14 +5921,14 @@ c     Calculation of maintenance and growth respiration and NPP
 
       subroutine npp(pftpar,dtemp,dtemp_soil,tree,dphen,nind,
      *  lm_ind,sm_ind,rm_ind,mgpp,anpp,mnpp,bm_inc,present,
-     *lresp,sresp,rresp,gresp,aresp,year,agpp,delt_c13_fpc,fpc_grid)
+     *  lresp,sresp,rresp,gresp,aresp,year,agpp,delt_c13_fpc,fpc_grid)
 
       implicit none
 
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
 !        parameter (npft=9,npftpar=50,nsoilpar=7)
-        parameter (npft=9,npftpar=51,nsoilpar=7)
+        parameter (npft=9,npftpar=54,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
       real k
@@ -5798,7 +6064,6 @@ c     Initializations (see comment at the beginning of allocation)
 
       do pft=1,npft
         if (present(pft)) then
-
           l_cton=pftpar(pft,13)
           s_cton=pftpar(pft,14)
           r_cton=pftpar(pft,15)
@@ -5842,7 +6107,6 @@ c     Initializations (see comment at the beginning of allocation)
                 gtemp_soil=0.0
 
               endif
-
 c             Calculate tissue maintenance respiration values today [Eqn (7)]
 c             incorporating daily phenology
               if (tree(pft)) then
@@ -5906,7 +6170,6 @@ c           (GPP - maintenance respiration) in monthly NPP calculation
             endif
 
 c           Increment annual NPP
-
             temp=anpp(pft,1)
             anpp(pft,1)=anpp(pft,1)+mnpp(m,pft,1)
             if (mnpp(m,pft,1).gt.0.0) then
@@ -5923,8 +6186,7 @@ c           Increment annual NPP
             endif
             
 c           Copy NPP to bm_inc, which will store running total of
-c           C production remaining for growth
-            
+c           C production remaining for growth            
             do nc=1,nco2
               lresp(m,pft,nc)=lresp_m(nc)
               sresp(m,pft,nc)=sresp_m(nc)
@@ -5961,7 +6223,6 @@ c         don't allow negative anpp. set to zero
              enddo  ! month
           endif 
 
-
         if(.not.tree(pft))then
 !!      delt_C13_pft=delt_C13_pft+anpp(pft,2)*fpc_grid(pft)*anpp(pft,1)
           delt_C13_fpc=delt_C13_fpc+anpp(pft,2)*fpc_grid(pft)
@@ -5993,7 +6254,9 @@ c
 c     Doug 01/09: addition of fuel_1hr_inc as I/O
 
       subroutine reproduction(bm_inc,lm_sapl,sm_sapl,hm_sapl,rm_sapl,
-     *     litter_ag,fuel_1hr,fuel_1hr_inc_pos, fuel_1hr_inc_neg,
+     *     litter_ag_leaf, !Doug 11/12
+     *     fuel_1hr_leaf,
+     *     fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg,
      *     present, tree, co2)
 
       implicit none
@@ -6001,7 +6264,7 @@ c     Doug 01/09: addition of fuel_1hr_inc as I/O
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
 !      parameter (npft=9,npftpar=50,nsoilpar=7)
-      parameter (npft=9,npftpar=51,nsoilpar=7)
+      parameter (npft=9,npftpar=54,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
       real reprod_cost              !proportion of NPP lost to reproduction
@@ -6009,10 +6272,10 @@ c     PARAMETERS
 
 c     ARGUMENTS
       real bm_inc(1:npft,1:nco2)
-      real litter_ag(1:npft,1:nco2)
-      real fuel_1hr(1:npft,1:nco2)
-      REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL litter_ag_leaf(1:npft,1:nco2) !Doug 11/12
+      real fuel_1hr_leaf(1:npft,1:nco2)
+      REAL fuel_1hr_leaf_inc_pos(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_leaf_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
       REAL temp_fuel(1:nco2)		        !in fuel for each month (for FIRE)
       logical present(1:npft)
       real lm_sapl(1:npft,1:nco2),sm_sapl(1:npft,1:nco2)
@@ -6033,7 +6296,7 @@ c     LOCAL VARIABLES
       
       do pft=1,npft	!pft
 
-        temp_fuel=fuel_1hr(pft,:)	!Doug 01/09: MFL
+        temp_fuel=fuel_1hr_leaf(pft,:)	!Doug 01/09: MFL
 
         if (present(pft)) then
 
@@ -6048,23 +6311,23 @@ c         Reproduction costs taken simply as a constant fraction of annual NPP
 c         assume the costs go to reproductive structures which will
 c         eventually enter the litter pool
 
-          temp=litter_ag(pft,1)
-          litter_ag(pft,1)=litter_ag(pft,1)+reprod
+          temp=litter_ag_leaf(pft,1) !Doug 11/12: litter_ag -> litter_ag_leaf. rerpod goes into grass and leaf litter
+          litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)+reprod
           if (reprod.gt.0.0) then
              do nc=2,nco2
-                litter_ag(pft,nc)=(litter_ag(pft,nc)*temp+
-     *               bm_inc(pft,nc)*reprod)/(litter_ag(pft,1))
+                litter_ag_leaf(pft,nc)=(litter_ag_leaf(pft,nc)*temp+
+     *               bm_inc(pft,nc)*reprod)/(litter_ag_leaf(pft,1))
              enddo
           endif
 
  
-          fuel_1hr(pft,1)=fuel_1hr(pft,1)+reprod
+          fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)+reprod
 
           if (reprod.gt.0.0) then
              do nc=2,nco2
-		temp=fuel_1hr(pft,nc)
-                fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp+
-     *               bm_inc(pft,nc)*reprod)/(fuel_1hr(pft,1))
+          temp=fuel_1hr_leaf(pft,nc)
+                fuel_1hr_leaf(pft,nc)=(fuel_1hr_leaf(pft,nc)*temp+
+     *               bm_inc(pft,nc)*reprod)/(fuel_1hr_leaf(pft,1))
              enddo
           endif
      
@@ -6113,12 +6376,14 @@ c         Reduce biomass increment by reproductive cost
 
         endif
         DO nc=1,nco2
-          IF (fuel_1hr(pft,1)-temp_fuel(1)>0) THEN                                    !Doug 01/09: MFL
-            fuel_1hr_inc_pos(pft,nc,:)=fuel_1hr_inc_pos(pft,nc,:)+
-     *        (fuel_1hr(pft,nc)-temp_fuel(nc))/12
+          IF (fuel_1hr_leaf(pft,1)-temp_fuel(1)>0) THEN                                    !Doug 01/09: MFL
+            fuel_1hr_leaf_inc_pos(pft,nc,:)=
+     *        fuel_1hr_leaf_inc_pos(pft,nc,:)+
+     *        (fuel_1hr_leaf(pft,nc)-temp_fuel(nc))/12
           ELSE
-            fuel_1hr_inc_neg(pft,nc,:)=fuel_1hr_inc_neg(pft,nc,:)+
-     *        (fuel_1hr(pft,nc)-temp_fuel(nc))/12
+            fuel_1hr_leaf_inc_neg(pft,nc,:)=
+     *        fuel_1hr_leaf_inc_neg(pft,nc,:)+
+     *        (fuel_1hr_leaf(pft,nc)-temp_fuel(nc))/12
           END IF
         ENDDO                                                          !Doug 01/09: MFL 
 
@@ -6139,9 +6404,12 @@ c     Leaf and root C transferred to litter, sapwood C to heartwood
 c
 c     Doug 01/09: addition of fuel_ihr_inc as I/O
 
-      subroutine turnover(pftpar,present,tree,lm_ind,sm_ind,
-     *  hm_ind,rm_ind,litter_ag,litter_bg,fuel_1hr,fuel_10hr,fuel_100hr,
-     *  fuel_1hr_inc_pos, fuel_1hr_inc_neg, fuel_10hr_inc,
+      subroutine turnover(pftpar,present,tree,lm_ind,sm_ind, 
+     *  hm_ind,rm_ind,
+     *  litter_ag_leaf,litter_bg,fuel_1hr_leaf,
+     *  fuel_10hr,fuel_100hr,
+     *  fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg,
+     *  fuel_10hr_inc,
      *  fuel_100hr_inc, nind, turnover_ind)
 
       implicit none
@@ -6149,7 +6417,7 @@ c     Doug 01/09: addition of fuel_ihr_inc as I/O
 c     PARAMETERS:
       integer npft,npftpar,nsoilpar
 !        parameter (npft=9,npftpar=50,nsoilpar=7)
-        parameter (npft=9,npftpar=51,nsoilpar=7)
+        parameter (npft=9,npftpar=54,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
 
@@ -6160,12 +6428,13 @@ c     ARGUMENTS:
       real sm_ind(1:npft,1:nco2)
       real hm_ind(1:npft,1:nco2)
       real rm_ind(1:npft,1:nco2)
-      real litter_ag(1:npft,1:nco2)
+      REAL litter_ag_leaf(1:npft,1:nco2) !Doug 11/12
       real litter_bg(1:npft,1:nco2)
-      real fuel_1hr(1:npft,1:nco2),fuel_10hr(1:npft,1:nco2)
+      REAL fuel_1hr_leaf(1:npft,1:nco2)
+      REAL fuel_10hr(1:npft,1:nco2)
       real fuel_100hr(1:npft,1:nco2)
-      REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: MFL; records variations
+      REAL fuel_1hr_leaf_inc_pos(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_leaf_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: MFL; records variations
       REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!in fuel for each month (for FIRE)
       REAL fuel_100hr_inc(1:npft,1:nco2,1:12)
       REAL temp_fuel(1:nco2,1:3)
@@ -6211,7 +6480,7 @@ c     ALLAN
 
       do pft=1,npft
 
-        temp_fuel(:,1)=fuel_1hr(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,1)=fuel_1hr_leaf(pft,:)		!Doug 01/09: MFL
         temp_fuel(:,2)=fuel_10hr(pft,:)		!Doug 01/09: MFL
         temp_fuel(:,3)=fuel_100hr(pft,:)	!Doug 01/09: MFL
 
@@ -6272,13 +6541,13 @@ c       hm_ind(pft)=hm_ind(pft)-hm_turn_drop
 
 c         Transfer to litter pools
 
-       temp=litter_ag(pft,1)
-       litter_ag(pft,1)=litter_ag(pft,1)+lm_turn*nind(pft)
-       if (litter_ag(pft,1).gt.0.0) then
+       temp=litter_ag_leaf(pft,1)
+       litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)+lm_turn*nind(pft)
+       if (litter_ag_leaf(pft,1).gt.0.0) then
           do nc=2,nco2
-             litter_ag(pft,nc)=(litter_ag(pft,nc)*temp
+             litter_ag_leaf(pft,nc)=(litter_ag_leaf(pft,nc)*temp
      *            +lm_ind(pft,nc)*lm_turn*nind(pft))/
-     *            litter_ag(pft,1)
+     *            litter_ag_leaf(pft,1)
           enddo
        endif
           
@@ -6298,13 +6567,13 @@ c       litter_ag(pft)=litter_ag(pft)+hm_turn_drop*nind(pft)
 
 c         KIRSTEN: fuel classes
 
-       temp=fuel_1hr(pft,1)
-       fuel_1hr(pft,1)=fuel_1hr(pft,1)+lm_turn*nind(pft)
-       if (fuel_1hr(pft,1).gt.0.0) then
+       temp=fuel_1hr_leaf(pft,1)
+       fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)+lm_turn*nind(pft)
+       if (fuel_1hr_leaf(pft,1).gt.0.0) then
           do nc=2,nco2
-             fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
+             fuel_1hr_leaf(pft,nc)=(fuel_1hr_leaf(pft,nc)*temp
      *            +lm_ind(pft,nc)*lm_turn*nind(pft))/
-     *            fuel_1hr(pft,1)
+     *            fuel_1hr_leaf(pft,1)
           enddo
        endif
 
@@ -6331,14 +6600,16 @@ c       turnover_ind(pft)=turnover_ind(pft)+sm_turn_drop+hm_turn_drop
         endif
 
         DO nc=1,nco2
-          IF (fuel_1hr(pft,1)-temp_fuel(1,1)>0) THEN						!Doug 01/09: MFL
-            fuel_1hr_inc_pos(pft,nc,:)=fuel_1hr_inc_pos(pft,nc,:)+
-     *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
+          IF (fuel_1hr_leaf(pft,1)-temp_fuel(1,1)>0) THEN						!Doug 01/09: MFL
+            fuel_1hr_leaf_inc_pos(pft,nc,:)=
+     *         fuel_1hr_leaf_inc_pos(pft,nc,:)+
+     *        (fuel_1hr_leaf(pft,nc)-temp_fuel(nc,1))/12
           ELSE
-            fuel_1hr_inc_neg(pft,nc,:)=fuel_1hr_inc_neg(pft,nc,:)+
-     *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
+            fuel_1hr_leaf_inc_neg(pft,nc,:)=
+     *         fuel_1hr_leaf_inc_neg(pft,nc,:)+
+     *        (fuel_1hr_leaf(pft,nc)-temp_fuel(nc,1))/12
           END IF
-	  fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
+          fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
      *      (fuel_10hr(pft,nc)-temp_fuel(nc,2))/12
           fuel_100hr_inc(pft,nc,:)=fuel_100hr_inc(pft,nc,:)+
      *      (fuel_100hr(pft,nc)-temp_fuel(nc,3))/12
@@ -6347,7 +6618,7 @@ c       turnover_ind(pft)=turnover_ind(pft)+sm_turn_drop+hm_turn_drop
       enddo  !pft
 
       return
-      end
+      end 
 
 
 
@@ -6361,9 +6632,12 @@ c     fluxes due to soil respiration.
 c
 c     Doug 01/09: addition of fuel_1hr_inc as I/O
 
-      subroutine littersom(litter_ag,litter_bg,fuel_1hr,fuel_10hr,
+      subroutine littersom(pftpar,litter_ag_leaf,litter_ag_wood, !Doug 11/12
+     *  litter_bg,fuel_1hr_leaf,fuel_1hr_wood,fuel_10hr,
      *  fuel_100hr,fuel_1000hr,
-     *  fuel_1hr_inc_pos, fuel_1hr_inc_neg, fuel_10hr_inc,
+     *  fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg,
+     *  fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg,
+     *  fuel_10hr_inc,
      *  fuel_100hr_inc, fuel_1000hr_inc,
      *  mw1,mw1_t,mtemp_soil,cpool_fast,
      *  cpool_slow,arh,mrh,year,k_fast_ave,k_slow_ave,litter_decom_ave,
@@ -6374,7 +6648,7 @@ c     Doug 01/09: addition of fuel_1hr_inc as I/O
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
 !      parameter (npft=9,npftpar=50,nsoilpar=7)
-      parameter (npft=9,npftpar=51,nsoilpar=7)
+      parameter (npft=9,npftpar=54,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
 c     DOug 12/09: No longer need the equlibium fix. Infact, the fix was a little bit rubbish.
@@ -6395,17 +6669,23 @@ c     k_litter10 changed from 0.5 on 6/2000
         PARAMETER (nmonth=12)
 
 c     ARGUMENTS
-      real litter_ag(1:npft,1:nco2)
+      REAL pftpar(1:npft,1:npftpar)      ! Doug 11/12
+      REAL litter_ag_leaf(1:npft,1:nco2) !Doug 11/12
+      REAL litter_ag_wood(1:npft,1:nco2)
       real litter_bg(1:npft,1:nco2)
-      real fuel_1hr(1:npft,1:nco2),fuel_10hr(1:npft,1:nco2)
+      REAL fuel_1hr_leaf(1:npft,1:nco2)
+      REAL fuel_1hr_wood(1:npft,1:nco2)
+      REAL fuel_10hr(1:npft,1:nco2)
       real fuel_100hr(1:npft,1:nco2)
       real fuel_1000hr(1:npft,1:nco2)
-      REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_1hr_leaf_inc_pos(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_leaf_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_1hr_wood_inc_pos(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_wood_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
       REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!in fuel for each month (for FIRE)
       REAL fuel_100hr_inc(1:npft,1:nco2,1:12)
       REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)
-      REAL temp_fuel(1:npft,1:nco2,1:4)
+      REAL temp_fuel(1:npft,1:nco2,1:5)
       real mw1(1:12),mw1_t(1:12)
       real mtemp_soil(1:12)
       real cpool_fast(1:nco2)
@@ -6424,18 +6704,23 @@ c    Doug 05/09: landuse change variables
 c     LOCAL VARIABLES
       integer pft,m
       integer nc       ! nc is added for nco2
-      real k_litter            !monthly litter decomposition rate (/month)
+      REAL k_litter_bg         !monthly litter decomposition rate (/month) !Doug 11/12: changed to below ground only
+      REAL k_litter_leaf(1:npft)!Doug 11/12: monthly litter decomposition rate (/month) !Doug 11/12: changed to below ground only
+      REAL k_litter_wood(1:npft)!Doug 11/12: monthly litter decomposition rate (/month) !Doug 11/12: changed to below ground only
       real k_fast(1:12)        !monthly fast pool decomposition rate (/month)
       real k_slow(1:12)        !monthly slow pool decomposition rate (/month)
       real temp_resp           !monthly temperature response of decomposition
       real moist_resp          !monthly moisture response of decomposition
+      REAL leaf_repsonse, wood_response  !Doug 11/12
       real cflux_litter_soil   !litter decomposition flux to soil
       real cflux_litter_atmos  !litter decomposition flux to atmosphere
       real cflux_fast_atmos    !soil fast pool decomposition flux to atmosphere
       real cflux_slow_atmos    !soil slow pool decomposition flux to atmosphere
       real litter_decom(1:12,1:nco2)  !monthly litter decomposition
-      real litter_decom_ag     !above-ground component of litter decomposition
-      real fuel_decom_1hr(1:npft)   !fuel decomposition, parallel to litter_decom_ag
+      REAL litter_decom_ag_leaf     !above-ground component of litter decomposition
+      REAL litter_decom_ag_wood     !above-ground component of litter decomposition
+      REAL fuel_decom_1hr_leaf(1:npft)   !fuel decomposition, parallel to litter_decom_ag
+      REAL fuel_decom_1hr_wood(1:npft)   !fuel decomposition, parallel to litter_decom_ag
       real fuel_decom_10hr(1:npft)
       real fuel_decom_100hr(1:npft)
       real fuel_decom_1000hr(1:npft)
@@ -6455,7 +6740,9 @@ c    Doug 05/09: landuse ones:
       pft=0
       m=0
       nc=0
-      k_litter=0.0
+      k_litter_bg=0.0
+      k_litter_leaf(:)=0.0
+      k_litter_wood(:)=0.0
       k_fast(:)=0.0
       k_slow(:)=0.0
       temp_resp=0.0
@@ -6465,8 +6752,10 @@ c    Doug 05/09: landuse ones:
       cflux_fast_atmos=0.0
       cflux_slow_atmos=0.0
       litter_decom(:,:)=0.0
-      litter_decom_ag=0.0
-      fuel_decom_1hr(:)=0.0
+      litter_decom_ag_leaf=0.0
+      litter_decom_ag_wood=0.0
+      fuel_decom_1hr_leaf(:)=0.0
+      fuel_decom_1hr_wood(:)=0.0
       fuel_decom_10hr(:)=0.0
       fuel_decom_100hr(:)=0.0
       fuel_decom_1000hr(:)=0.0
@@ -6484,10 +6773,11 @@ c DM   arh seemed to be never initialised, I think it is the right place
 
       do m=1,12
 
-        temp_fuel(:,:,1)=fuel_1hr	!Doug 01/09: MFL
-        temp_fuel(:,:,2)=fuel_10hr	!Doug 01/09: MFL
-        temp_fuel(:,:,3)=fuel_100hr	!Doug 01/09: MFL
-        temp_fuel(:,:,4)=fuel_1000hr	!Doug 01/09: MFL
+        temp_fuel(:,:,1)=fuel_1hr_leaf	!Doug 01/09: MFL
+        temp_fuel(:,:,2)=fuel_1hr_wood	!Doug 01/09: MFL
+        temp_fuel(:,:,3)=fuel_10hr		!Doug 01/09: MFL
+        temp_fuel(:,:,4)=fuel_100hr		!Doug 01/09: MFL
+        temp_fuel(:,:,5)=fuel_1000hr	!Doug 01/09: MFL
 
 
 
@@ -6511,8 +6801,18 @@ c       Calculate monthly decomposition rates (k, /month) as a function of
 c       temperature and moisture
 
 c       k = k_10 * temp_resp * moist_resp
-
-        k_litter=(k_litter10*temp_resp*moist_resp)/12.0
+C		Doug 11/12: seperate out litter and wood responses to temperature using Q10 parameters (pftpar 54)
+        leaf_repsonse=temp_resp*moist_resp !Doug 11/12
+        IF (mtemp_soil(m)>-40.) THEN
+          wood_response=exp(log(pftpar(pft,54)*(mtemp_soil(m)-10.)/10.))
+        ELSE
+          wood_response=0.
+        END IF
+        DO pft=1,npft
+           k_litter_leaf(pft)=(pftpar(pft,52)*leaf_repsonse)/12.0
+           k_litter_wood(pft)=(pftpar(pft,53)*wood_response)/12.0
+        END DO
+        k_litter_bg=(k_litter10*temp_resp*moist_resp)/12.0
         k_fast(m)=(k_soil_fast10*temp_resp*moist_resp)/12.0
         k_slow(m)=(k_soil_slow10*temp_resp*moist_resp)/12.0
 
@@ -6531,22 +6831,27 @@ C Doug 05/09: initialise landuse variables
         agri_decom(m)=0.0
         
         do pft=1,npft
-          fuel_decom_1hr(pft)=0.0
+          fuel_decom_1hr_leaf(pft)=0.0
+          fuel_decom_1hr_wood(pft)=0.0
           fuel_decom_10hr(pft)=0.0
           fuel_decom_100hr(pft)=0.0
           fuel_decom_1000hr(pft)=0.0
           
-          litter_decom_ag=litter_ag(pft,1)*(1.0-exp(-k_litter))  !eqn 4
-          litter_decom_bg=litter_bg(pft,1)*(1.0-exp(-k_litter))
+          litter_decom_ag_leaf=litter_ag_leaf(pft,1)*
+     *       (1.0-exp(-k_litter_leaf(pft)))  !eqn 4
+	      litter_decom_ag_wood=litter_ag_wood(pft,1)*
+     *       (1.0-exp(-k_litter_wood(pft)))  !eqn 4
+          litter_decom_bg=litter_bg(pft,1)*(1.0-exp(-k_litter_bg))
 
 c   Doug 05/09: natural decomposion
-          nat_decom(m,1)=nat_decom(m,1)+litter_decom_ag+
-     *      litter_decom_bg
+          nat_decom(m,1)=nat_decom(m,1)+litter_decom_ag_leaf+
+     *      litter_decom_ag_wood+litter_decom_bg
 
-          do nc=2,nco2
-             nat_decom(m,nc)=nat_decom(m,nc)+litter_ag(pft,nc)
-     *         *litter_decom_ag+litter_bg(pft,nc)*litter_decom_bg  
-          enddo
+          DO nc=2,nco2
+             nat_decom(m,nc)=nat_decom(m,nc)+litter_ag_leaf(pft,nc)
+     *         *litter_decom_ag_leaf+litter_ag_wood(pft,nc)
+     *         *litter_decom_ag_wood+litter_bg(pft,nc)*litter_decom_bg  
+          END DO !StopC
 
 c          litter_decom(m,1)=litter_decom(m,1)+litter_decom_ag+
 c     *      litter_decom_bg
@@ -6558,22 +6863,41 @@ c          enddo
 
 c         Update the litter pools
 
-          litter_ag(pft,1)=litter_ag(pft,1)-litter_decom_ag
+          litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)-
+     *      litter_decom_ag_leaf
+          litter_ag_wood(pft,1)=litter_ag_wood(pft,1)-
+     *      litter_decom_ag_wood
+C          litter_ag(pft,1)=litter_ag(pft,1)-litter_decom_ag
           litter_bg(pft,1)=litter_bg(pft,1)-litter_decom_bg
 
 c       KIRSTEN: calculate decomposition for 1hr fuel class, parallel to litter_decom_ag
 c       no influence on carbon balance/fluxes
 
-          fuel_decom_1hr(pft)=fuel_1hr(pft,1)*(1.0-exp(-k_litter))
-          fuel_1hr(pft,1)=fuel_1hr(pft,1)-fuel_decom_1hr(pft)
 
-          fuel_decom_10hr(pft)=fuel_10hr(pft,1)*(1.0-exp(-k_litter))
+          fuel_decom_1hr_leaf(pft)=fuel_1hr_leaf(pft,1)*
+     *      (1.0-exp(-k_litter_leaf(pft)))
+          fuel_decom_1hr_wood(pft)=fuel_1hr_wood(pft,1)*
+     *      (1.0-exp(-k_litter_leaf(pft)))			!Doug 01/13: Leaf or wood rate?
+
+          fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)
+     *      -fuel_decom_1hr_leaf(pft)
+	 
+          fuel_1hr_wood(pft,1)=fuel_1hr_wood(pft,1)
+     *      -fuel_decom_1hr_wood(pft)
+
+          fuel_decom_10hr(pft)=fuel_10hr(pft,1)*
+     *      (1.0-exp(-k_litter_wood(pft)))
           fuel_10hr(pft,1)=fuel_10hr(pft,1)-fuel_decom_10hr(pft)
+		  
+c          fuel_decom_1hr(pft)=fuel_1hr(pft,1)*(1.0-exp(-k_litter))
+
+C          fuel_1hr(pft,1)=fuel_1hr(pft,1)-fuel_decom_1hr(pft)
 
 c          fuel_1hr(pft)=fuel_1hr(pft)+0.02*fuel_10hr(pft) !A
 c          fuel_10hr(pft)=fuel_10hr(pft)-0.02*fuel_10hr(pft) !A
 
-          fuel_decom_100hr(pft)=fuel_100hr(pft,1)*(1.0-exp(-k_litter))
+          fuel_decom_100hr(pft)=fuel_100hr(pft,1)*
+     *      (1.0-exp(-k_litter_wood(pft)))
           fuel_100hr(pft,1)=fuel_100hr(pft,1)-fuel_decom_100hr(pft)
 
 c          fuel_1hr(pft)=fuel_1hr(pft)+0.02*fuel_100hr(pft)  !A
@@ -6582,7 +6906,8 @@ c          fuel_100hr(pft)=fuel_100hr(pft)-0.02*fuel_100hr(pft) !A
 
 c      ACHTUNG: Aren't boles decomposed mechanistically first, i.e. enter other
 c               fuel classes rather than a decomposed to SOM directly?
-          fuel_decom_1000hr(pft)=fuel_1000hr(pft,1)*(1.0-exp(-k_litter))
+          fuel_decom_1000hr(pft)=fuel_1000hr(pft,1)*
+     *      (1.0-exp(-k_litter_wood(pft)))
           fuel_1000hr(pft,1)=fuel_1000hr(pft,1)-fuel_decom_1000hr(pft)
 
 c          fuel_1hr(pft)=fuel_1hr(pft) +0.02*fuel_1000hr(pft) !A
@@ -6595,10 +6920,10 @@ c          fuel_1000hr(pft)=fuel_1000hr(pft)-0.02*fuel_1000hr(pft) !A
            litter_decom(m,3)=litter_decom(m,3)/litter_decom(m,1)
         endif
 
-
+		IF (1==0) THEN !Doug 11/12: lets turn agriculate off while we're not using it
 c       Doug 05/09: agri: calculate the decomposition from the agricultural litter pools 
-        agri_decom_ag=agri_litter_ag*(1.0-exp(-k_litter)) 
-        agri_decom_bg=agri_litter_bg*(1.0-exp(-k_litter))  
+        agri_decom_ag=agri_litter_ag*(1.0-exp(-k_litter_bg)) 
+        agri_decom_bg=agri_litter_bg*(1.0-exp(-k_litter_bg))  
         agri_decom(m)=agri_decom_ag+agri_decom_bg   
 
 c       Doug 06/09 Update the litter pools   
@@ -6616,6 +6941,8 @@ c       Doug 06/09: pass forward either agricultural decomposition or natural
            litter_decom(m,2:nco2)=nat_decom(m,2:nco2)
 
         endif
+		
+        END IF !(0==1) 
 
 c       Calculate carbon flux to atmosphere and soil
         cflux_litter_atmos=atmfrac*litter_decom(m,1)
@@ -6684,20 +7011,41 @@ c       Empty soil pools below a minimum threshold
         DO nc=1,nco2						!Doug 01/09: MFL
           DO pft=1,npft
 
-            IF (fuel_1hr(pft,1)-temp_fuel(pft,1,1)>0) THEN
-              fuel_1hr_inc_pos(pft,nc,m)=fuel_1hr_inc_pos(pft,nc,m)+
-     *          fuel_1hr(pft,nc)-temp_fuel(pft,nc,1)
+            IF (fuel_1hr_leaf(pft,1)-temp_fuel(pft,1,1)>0) THEN
+              fuel_1hr_leaf_inc_pos(pft,nc,m)=
+     *          fuel_1hr_leaf_inc_pos(pft,nc,m)+
+     *          fuel_1hr_leaf(pft,nc)-temp_fuel(pft,nc,1)
             ELSE
-              fuel_1hr_inc_neg(pft,nc,m)=fuel_1hr_inc_neg(pft,nc,m)+
-     *          fuel_1hr(pft,nc)-temp_fuel(pft,nc,1)
+              fuel_1hr_leaf_inc_neg(pft,nc,m)=
+     *          fuel_1hr_leaf_inc_neg(pft,nc,m)+
+     *          fuel_1hr_leaf(pft,nc)-temp_fuel(pft,nc,1)
             END IF
+			
+            IF (fuel_1hr_wood(pft,1)-temp_fuel(pft,1,2)>0) THEN
+              fuel_1hr_wood_inc_pos(pft,nc,m)=
+     *          fuel_1hr_wood_inc_pos(pft,nc,m)+
+     *          fuel_1hr_wood(pft,nc)-temp_fuel(pft,nc,2)
+            ELSE
+              fuel_1hr_wood_inc_neg(pft,nc,m)=
+     *          fuel_1hr_wood_inc_neg(pft,nc,m)+
+     *          fuel_1hr_wood(pft,nc)-temp_fuel(pft,nc,2)
+            END IF
+			
+c            IF (fuel_1hr(pft,1)-temp_fuel(pft,1,1)>0) THEN
+c              fuel_1hr_inc_pos(pft,nc,m)=fuel_1hr_inc_pos(pft,nc,m)+
+c     *          fuel_1hr(pft,nc)-temp_fuel(pft,nc,1)
+c            ELSE
+c              fuel_1hr_inc_neg(pft,nc,m)=fuel_1hr_inc_neg(pft,nc,m)+
+c     *          fuel_1hr(pft,nc)-temp_fuel(pft,nc,1)
+c            END IF
+			
           END DO
-	  fuel_10hr_inc(:,nc,m)=fuel_10hr_inc(:,nc,m)+
-     *      fuel_10hr(:,nc)-temp_fuel(:,nc,2)
+	      fuel_10hr_inc(:,nc,m)=fuel_10hr_inc(:,nc,m)+
+     *      fuel_10hr(:,nc)-temp_fuel(:,nc,3)
           fuel_100hr_inc(:,nc,m)=fuel_100hr_inc(:,nc,m)+
-     *      fuel_100hr(:,nc)-temp_fuel(:,nc,3)
+     *      fuel_100hr(:,nc)-temp_fuel(:,nc,4)
           fuel_1000hr_inc(:,nc,m)=fuel_1000hr_inc(:,nc,m)+
-     *      fuel_1000hr(:,nc)-temp_fuel(:,nc,4)
+     *      fuel_1000hr(:,nc)-temp_fuel(:,nc,5)
         END DO							!Doug 01/09: MFL
 
       enddo   !month
@@ -6747,10 +7095,12 @@ c
 c     Doug 01/09: addition of fuel_1hr_inc as I/O
 
       subroutine kill_pft(bm_inc,present,tree,lm_ind,rm_ind,hm_ind,
-     *  sm_ind,nind,litter_ag,litter_bg,year,fuel_1hr,fuel_10hr,
+     *  sm_ind,nind,litter_ag_leaf,litter_ag_wood, !Doug 11/12
+     *  litter_bg,year,fuel_1hr_leaf,fuel_1hr_wood,fuel_10hr,
      *  fuel_100hr,fuel_1000hr,
-     *  fuel_1hr_inc_pos, fuel_1hr_inc_neg, fuel_10hr_inc,
-     *  fuel_100hr_inc, fuel_1000hr_inc)
+     *  fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg, 
+     *  fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg, 
+     *  fuel_10hr_inc, fuel_100hr_inc, fuel_1000hr_inc)
 
       implicit none
 
@@ -6765,22 +7115,29 @@ c     ARGUMENTS
       real rm_ind(1:npft,1:nco2),hm_ind(1:npft,1:nco2)
       real sm_ind(1:npft,1:nco2)
       real nind(1:npft)
-      real litter_ag(1:npft,1:nco2),litter_bg(1:npft,1:nco2)
-      real fuel_1hr(1:npft,1:nco2),fuel_10hr(1:npft,1:nco2)
+      REAL litter_ag_leaf(1:npft,1:nco2) !Doug 11/12
+      REAL litter_ag_wood(1:npft,1:nco2) !Doug 11/12
+      REAL litter_bg(1:npft,1:nco2)
+      REAL fuel_1hr_leaf(1:npft,1:nco2)
+      REAL fuel_1hr_wood(1:npft,1:nco2)
+      REAL fuel_10hr(1:npft,1:nco2)
       real fuel_100hr(1:npft,1:nco2)
       real fuel_1000hr(1:npft,1:nco2)
-      REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_1hr_leaf_inc_pos(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_leaf_inc_neg(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_wood_inc_pos(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_wood_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
       REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!in fuel for each month (for FIRE)
       REAL fuel_100hr_inc(1:npft,1:nco2,1:12)
       REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)
-      REAL temp_fuel(1:nco2,1:4)
+      REAL temp_fuel(1:nco2,1:5)
       logical present(1:npft),tree(1:npft)
       integer year
 
 c     LOCAL VARIABLES
       integer pft
       integer nc
+      INTEGER m
 c      real kill_frac
 c      real nind_kill
       real temp, litter_inc
@@ -6789,16 +7146,15 @@ c      real nind_kill
       nc=0
       temp=0.0
       litter_inc=0.0
-
       do pft=1,npft
 
-        temp_fuel(:,1)=fuel_1hr(pft,:)		!Doug 01/09: MFL
-        temp_fuel(:,2)=fuel_10hr(pft,:)		!Doug 01/09: MFL
-        temp_fuel(:,3)=fuel_100hr(pft,:)	!Doug 01/09: MFL
-        temp_fuel(:,4)=fuel_1000hr(pft,:)	!Doug 01/09: MFL
+        temp_fuel(:,1)=fuel_1hr_leaf(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,2)=fuel_1hr_wood(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,3)=fuel_10hr(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,4)=fuel_100hr(pft,:)	!Doug 01/09: MFL
+        temp_fuel(:,5)=fuel_1000hr(pft,:)	!Doug 01/09: MFL
 
         if (present(pft)) then
-
           if (bm_inc(pft,1).lt.0.0) then  !negative C increment this year
 
             present(pft)=.false.   !remove PFT
@@ -6806,32 +7162,81 @@ c      real nind_kill
 c           Transfer killed biomass to litter
 
             if (tree(pft)) then
-               temp=litter_ag(pft,1)
-               litter_ag(pft,1)=litter_ag(pft,1)+(lm_ind(pft,1)+
-     *              sm_ind(pft,1)+ hm_ind(pft,1))*nind(pft)
-               if (litter_ag(pft,1) .gt. 0.0) then
-               do nc=2,nco2
-                  litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)+sm_ind(pft,1)
+               temp=litter_ag_leaf(pft,1) !Doug 11/12
+			   temp=litter_ag_wood(pft,1) !Doug 11/12
+			   
+			   litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)+
+     *           lm_ind(pft,1)*nind(pft)
+	 
+               IF (litter_ag_leaf(pft,1) .gt. 0.0) THEN
+                 DO nc=2,nco2
+                  litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
+                  litter_ag_leaf(pft,nc)=(litter_ag_leaf(pft,nc)*temp
+     *                 +litter_inc*nind(pft))/litter_ag_leaf(pft,1)
+                 END DO
+               END IF
+	 
+	           litter_ag_wood(pft,1)=litter_ag_wood(pft,1)+
+     *           (sm_ind(pft,1)+ hm_ind(pft,1))*nind(pft)
+	 
+               IF (litter_ag_wood(pft,1) .gt. 0.0) THEN
+                 DO nc=2,nco2
+                  litter_inc=sm_ind(pft,1)
      *                 *sm_ind(pft,nc)+hm_ind(pft,1)*hm_ind(pft,nc)
-                  litter_ag(pft,nc)=(litter_ag(pft,nc)*temp
-     *                 +litter_inc*nind(pft))/litter_ag(pft,1)
-               enddo
-               endif
+                  litter_ag_wood(pft,nc)=(litter_ag_wood(pft,nc)*temp
+     *                 +litter_inc*nind(pft))/litter_ag_wood(pft,1)
+                 END DO
+               END IF
+			   
+c               temp=litter_ag(pft,1)
+c               litter_ag(pft,1)=litter_ag(pft,1)+(lm_ind(pft,1)+
+c     *              sm_ind(pft,1)+ hm_ind(pft,1))*nind(pft)
+C               if (litter_ag(pft,1) .gt. 0.0) then
+C               do nc=2,nco2
+C                  litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)+sm_ind(pft,1)
+C     *                 *sm_ind(pft,nc)+hm_ind(pft,1)*hm_ind(pft,nc)
+C                  litter_ag(pft,nc)=(litter_ag(pft,nc)*temp
+C     *                 +litter_inc*nind(pft))/litter_ag(pft,1)
+C               enddo
+C               endif
 
 c            KIRSTEN: fuel classes
 
-               temp=fuel_1hr(pft,1)
-               fuel_1hr(pft,1)=fuel_1hr(pft,1)+(lm_ind(pft,1)+
-     *              0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
-               if (fuel_1hr(pft,1) .gt. 0.0) then
-               do nc=2,nco2
+               temp=fuel_1hr_leaf(pft,1)
+               fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)+lm_ind(pft,1)*
+     *            nind(pft)
+               IF (fuel_1hr_leaf(pft,1) .gt. 0.0) THEN
+                 DO nc=2,nco2
                   litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
-     *                 +sm_ind(pft,1)*sm_ind(pft,nc)*0.045
+                  fuel_1hr_leaf(pft,nc)=(fuel_1hr_leaf(pft,nc)*temp
+     *                 +litter_inc*nind(pft))/fuel_1hr_leaf(pft,1)
+                 END DO
+               END IF
+			   
+               temp=fuel_1hr_wood(pft,1)
+               fuel_1hr_wood(pft,1)=fuel_1hr_wood(pft,1)+
+     *              (0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
+               IF (fuel_1hr_wood(pft,1) .gt. 0.0) THEN
+                 DO nc=2,nco2
+                  litter_inc=sm_ind(pft,1)*sm_ind(pft,nc)*0.045
      *                 +hm_ind(pft,1)*hm_ind(pft,nc)+0.045
-                  fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
-     *                 +litter_inc*nind(pft))/fuel_1hr(pft,1)
-               enddo
-               endif
+                  fuel_1hr_wood(pft,nc)=(fuel_1hr_wood(pft,nc)*temp
+     *                 +litter_inc*nind(pft))/fuel_1hr_wood(pft,1)
+                 END DO
+               END IF
+
+c               temp=fuel_1hr(pft,1)
+c               fuel_1hr(pft,1)=fuel_1hr(pft,1)+(lm_ind(pft,1)+
+c     *              0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
+c               if (fuel_1hr(pft,1) .gt. 0.0) then
+c               do nc=2,nco2
+c                  litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
+c     *                 +sm_ind(pft,1)*sm_ind(pft,nc)*0.045
+c     *                 +hm_ind(pft,1)*hm_ind(pft,nc)+0.045
+c                  fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
+c     *                 +litter_inc*nind(pft))/fuel_1hr(pft,1)
+c               enddo
+c               endif
 
                temp=fuel_10hr(pft,1)
                fuel_10hr(pft,1)=fuel_10hr(pft,1)+((0.075*sm_ind(pft,1)
@@ -6871,26 +7276,26 @@ c            KIRSTEN: fuel classes
                endif
 
             else  !grasses
-               temp=litter_ag(pft,1)
-               litter_ag(pft,1)=litter_ag(pft,1)+lm_ind(pft,1)
+               temp=litter_ag_leaf(pft,1) !Doug 11/12
+               litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)+lm_ind(pft,1)
      *              *nind(pft)
-               if (litter_ag(pft,1) .gt. 0.0) then
+               if (litter_ag_leaf(pft,1) .gt. 0.0) then
                do nc=2,nco2
                   litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
-                  litter_ag(pft,nc)=(litter_ag(pft,nc)*temp
-     *                 +litter_inc*nind(pft))/litter_ag(pft,1)
+                  litter_ag_leaf(pft,nc)=(litter_ag_leaf(pft,nc)*temp
+     *                 +litter_inc*nind(pft))/litter_ag_leaf(pft,1)
                enddo
                endif
 
 c            KIRSTEN: fuel classes
-               temp=fuel_1hr(pft,1)
-               fuel_1hr(pft,1)=fuel_1hr(pft,1)+lm_ind(pft,1)
+               temp=fuel_1hr_leaf(pft,1)
+               fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)+lm_ind(pft,1)
      *              *nind(pft)
-               if (fuel_1hr(pft,1) .gt. 0.0) then
+               if (fuel_1hr_leaf(pft,1) .gt. 0.0) then
                do nc=2,nco2
                   litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
-                  fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
-     *                 +litter_inc*nind(pft))/fuel_1hr(pft,1)
+                  fuel_1hr_leaf(pft,nc)=(fuel_1hr_leaf(pft,nc)*temp
+     *                 +litter_inc*nind(pft))/fuel_1hr_leaf(pft,1)
                enddo
                endif
 
@@ -6908,23 +7313,38 @@ c            KIRSTEN: fuel classes
           endif
 
         endif
-        DO nc=1,nco2						!Doug 01/09: MFL
-          IF (fuel_1hr(pft,1)-temp_fuel(1,1)>0) THEN
-            fuel_1hr_inc_pos(pft,nc,:)=fuel_1hr_inc_pos(pft,nc,:)+
-     *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
-          ELSE
-            fuel_1hr_inc_neg(pft,nc,:)=fuel_1hr_inc_neg(pft,nc,:)+
-     *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
-          END IF
+		
+        
+        DO nc=1,nco2
+          DO m=1,12						!Doug 01/09: MFL !StopC
+            IF (fuel_1hr_leaf(pft,1)-temp_fuel(1,1)>0) THEN
+              fuel_1hr_leaf_inc_pos(pft,nc,m)=
+     *          fuel_1hr_leaf_inc_pos(pft,nc,m)+
+     *          (fuel_1hr_leaf(pft,nc)-temp_fuel(nc,1))/12
+            ELSE
+              fuel_1hr_leaf_inc_neg(pft,nc,m)=
+     *          fuel_1hr_leaf_inc_neg(pft,nc,m)+
+     *          (fuel_1hr_leaf(pft,nc)-temp_fuel(nc,1))/12
+            END IF
+		  
+            IF (fuel_1hr_wood(pft,1)-temp_fuel(1,2)>0) THEN
+              fuel_1hr_wood_inc_pos(pft,nc,m)=
+     *          fuel_1hr_wood_inc_pos(pft,nc,m)+
+     *          (fuel_1hr_wood(pft,nc)-temp_fuel(nc,2))/12
+            ELSE
+              fuel_1hr_wood_inc_neg(pft,nc,m)=
+     *          fuel_1hr_wood_inc_neg(pft,nc,m)+
+     *          (fuel_1hr_wood(pft,nc)-temp_fuel(nc,2))/12
+            END IF
 
-	  fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
-     *      (fuel_10hr(pft,nc)-temp_fuel(nc,2))/12
-          fuel_100hr_inc(pft,nc,:)=fuel_100hr_inc(pft,nc,:)+
-     *      (fuel_100hr(pft,nc)-temp_fuel(nc,3))/12
-          fuel_1000hr_inc(pft,nc,:)=fuel_1000hr_inc(pft,nc,:)+
-     *      (fuel_1000hr(pft,nc)-temp_fuel(nc,4))/12
-        END DO							!Doug 01/09: MFL
-
+            fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,m)+
+     *        (fuel_10hr(pft,nc)-temp_fuel(nc,3))/12
+            fuel_100hr_inc(pft,nc,:)=fuel_100hr_inc(pft,nc,m)+
+     *        (fuel_100hr(pft,nc)-temp_fuel(nc,4))/12
+            fuel_1000hr_inc(pft,nc,:)=fuel_1000hr_inc(pft,nc,m)+
+     *        (fuel_1000hr(pft,nc)-temp_fuel(nc,5))/12
+          END DO							!Doug 01/09: MFL
+        END DO
 
       enddo	!pft
 
@@ -6989,8 +7409,12 @@ c     Doug 01/09: addition of fuel_1hr_inc as I/O
       subroutine allocation(pftpar,allom1,allom2,allom3,latosa,wooddens,
      * reinickerp,tree,sla,wscal,nind,bm_inc,lm_ind,sm_ind,hm_ind,rm_ind
      * ,crownarea,fpc_grid,lai_ind,height,height_class,dbh,tau_c,cl_t,
-     * litter_ag,litter_bg,fuel_1hr,fuel_10hr,fuel_100hr,fuel_1000hr,
-     * fuel_1hr_inc_pos, fuel_1hr_inc_neg, fuel_10hr_inc,
+     * litter_ag_leaf,litter_ag_wood, ! Doug 11/12
+     * litter_bg,fuel_1hr_leaf,fuel_1hr_wood,
+     * fuel_10hr,fuel_100hr,fuel_1000hr,
+     * fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg,
+     * fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg,
+     * fuel_10hr_inc,
      * fuel_100hr_inc, fuel_1000hr_inc, fpc_inc, present, year,
      * evergreen)
 
@@ -6998,7 +7422,7 @@ c     Doug 01/09: addition of fuel_1hr_inc as I/O
 
 c     PARAMETERS
       integer npft,npftpar
-      parameter (npft=9,npftpar=51)
+      parameter (npft=9,npftpar=54)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
       real pi,xacc,yacc
@@ -7026,16 +7450,22 @@ c     ARGUMENTS
       real height(1:npft)
       real height_class(0:4,1:npft)      
       real dbh(1:npft),tau_c(0:4,1:npft),cl_t(0:4,1:npft)
-      real litter_ag(1:npft,1:nco2),litter_bg(1:npft,1:nco2)
-      real fuel_1hr(1:npft,1:nco2),fuel_10hr(1:npft,1:nco2)
+      REAL litter_ag_leaf(1:npft,1:nco2) ! Doug 11/12
+      REAL litter_ag_wood(1:npft,1:nco2) ! Doug 11/12
+      REAL litter_bg(1:npft,1:nco2)
+      REAL fuel_1hr_leaf(1:npft,1:nco2)
+      REAL fuel_1hr_wood(1:npft,1:nco2)
+      REAL fuel_10hr(1:npft,1:nco2)
       real fuel_100hr(1:npft,1:nco2)
       real fuel_1000hr(1:npft,1:nco2)
-      REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_1hr_leaf_inc_pos(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_leaf_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_1hr_wood_inc_pos(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_wood_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
       REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!in fuel for each month (for FIRE)
       REAL fuel_100hr_inc(1:npft,1:nco2,1:12)
       REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)
-      REAL temp_fuel(1:nco2,4)
+      REAL temp_fuel(1:nco2,5)
       real fpc_inc(1:npft)
       logical present(1:npft)
       integer year
@@ -7044,7 +7474,7 @@ c     ARGUMENTS
 
 c     LOCAL VARIABLES
       real param1(1:npft),param2(1:npft)
-      integer pft
+      integer pft,ppft
       integer nc
       real lminc_ind ! individual leafmass increment this year
       real sminc_ind ! individual sapmass increment this year
@@ -7067,6 +7497,7 @@ c  Kirsten
       real dbh_class(0:4,1:npft)   
       real temp,lm_temp,rm_temp,sm_temp
       logical normal
+      REAL lm_tot(1:npft)
 
 c DM  One very nasty bug was really hard to find because rm_temp was not initialized.
 c DM  So, local variables should be initialized everywhere.
@@ -7116,10 +7547,11 @@ c#endif
 
       do pft=1,npft
 
-        temp_fuel(:,1)=fuel_1hr(pft,:)		!Doug 01/09: MFL
-        temp_fuel(:,2)=fuel_10hr(pft,:)		!Doug 01/09: MFL
-        temp_fuel(:,3)=fuel_100hr(pft,:)	!Doug 01/09: MFL
-        temp_fuel(:,4)=fuel_1000hr(pft,:)	!Doug 01/09: MFL
+        temp_fuel(:,1)=fuel_1hr_leaf(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,2)=fuel_1hr_wood(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,3)=fuel_10hr(pft,:)			!Doug 01/09: MFL
+        temp_fuel(:,4)=fuel_100hr(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,5)=fuel_1000hr(pft,:)		!Doug 01/09: MFL
 
         temp=0.0
         lm_temp=0.0
@@ -7438,25 +7870,25 @@ c               Negative allocation to leaf mass
 
 c               Add killed leaves to litter
 
-                temp=litter_ag(pft,1)
-                litter_ag(pft,1)=litter_ag(pft,1)
+                temp=litter_ag_leaf(pft,1)   !Doug 11/12
+                litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)
      *               +(-lminc_ind)*nind(pft)
-                if (litter_ag(pft,1) .gt. 0.0) then
+                if (litter_ag_leaf(pft,1) .gt. 0.0) then
                 do nc=2,nco2
-                   litter_ag(pft,nc)=(litter_ag(pft,nc)*temp
+                   litter_ag_leaf(pft,nc)=(litter_ag_leaf(pft,nc)*temp
      *                  +(-lminc_ind)*lm_ind(pft,nc)*nind(pft))
-     *                  /litter_ag(pft,1) 
+     *                  /litter_ag_leaf(pft,1) 
                 enddo
                 endif
 c            KIRSTEN: fuel classes
-                temp=fuel_1hr(pft,1)
-                fuel_1hr(pft,1)=fuel_1hr(pft,1)
+                temp=fuel_1hr_leaf(pft,1)
+                fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)
      *               +(-lminc_ind)*nind(pft)
-                if (fuel_1hr(pft,1) .gt.0.0) then
+                if (fuel_1hr_leaf(pft,1) .gt.0.0) then
                 do nc=2,nco2
-                   fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
+                   fuel_1hr_leaf(pft,nc)=(fuel_1hr_leaf(pft,nc)*temp
      *                  +(-lminc_ind)*lm_ind(pft,nc)*nind(pft))
-     *                  /fuel_1hr(pft,1) 
+     *                  /fuel_1hr_leaf(pft,1) 
                 enddo
                 endif
               endif
@@ -7527,39 +7959,39 @@ c           Increment C compartments
             if (lm_ind(pft,1).lt.0.0.or.rm_ind(pft,1).lt.0.0
      *         .or.sm_ind(pft,1).lt.0.0) then
 
-               temp=litter_ag(pft,1)
-               litter_ag(pft,1)=litter_ag(pft,1)+(lm_ind(pft,1)
-     *            *nind(pft))
+               temp=litter_ag_leaf(pft,1) !Doug 11/12
+               litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)+lm_ind(pft,1)
+     *            *nind(pft)
                if (lm_ind(pft,1).gt.0) then
                   do nc=2,nco2
-                     litter_ag(pft,nc)=(litter_ag(pft,nc)*temp
+                     litter_ag_leaf(pft,nc)=(litter_ag_leaf(pft,nc)*temp
      *                    +lm_ind(pft,nc)*lm_ind(pft,1)*nind(pft))
-     *                    /litter_ag(pft,1)
+     *                    /litter_ag_leaf(pft,1)
                   enddo
                endif
                lm_ind(pft,1)=0.0
                lm_ind(pft,2)=0.0
                lm_ind(pft,3)=0.0
 
-               temp=litter_ag(pft,1)
-               litter_ag(pft,1)=litter_ag(pft,1)+(sm_ind(pft,1)
-     *            *nind(pft))
+               temp=litter_ag_wood(pft,1) !Doug 11/12
+               litter_ag_wood(pft,1)=litter_ag_wood(pft,1)+sm_ind(pft,1)
+     *            *nind(pft)
                if (sm_ind(pft,1).gt.0) then
                   do nc=2,nco2
-                     litter_ag(pft,nc)=(litter_ag(pft,nc)*temp
+                     litter_ag_wood(pft,nc)=(litter_ag_wood(pft,nc)*temp
      *                    +sm_ind(pft,nc)*sm_ind(pft,1)*nind(pft))
-     *                    /litter_ag(pft,1)
+     *                    /litter_ag_wood(pft,1)
                   enddo
                endif
 
-               temp=litter_ag(pft,1)
-               litter_ag(pft,1)=litter_ag(pft,1)+((hm_ind(pft,1)+
-     *            bm_inc_ind)*nind(pft))
-               if (litter_ag(pft,1) .gt. 0.0) then
+               temp=litter_ag_wood(pft,1)
+               litter_ag_wood(pft,1)=litter_ag_wood(pft,1)+ !Doug 11/12
+     *           ((hm_ind(pft,1)+bm_inc_ind)*nind(pft))
+               if (litter_ag_wood(pft,1) .gt. 0.0) then
                do nc=2,nco2
-                  litter_ag(pft,nc)=(litter_ag(pft,nc)*temp
+                  litter_ag_wood(pft,nc)=(litter_ag_wood(pft,nc)*temp
      *                 +(hm_ind(pft,nc)*hm_ind(pft,1)+bm_inc_ind*
-     *                 bm_inc(pft,nc))*nind(pft))/litter_ag(pft,1)
+     *                 bm_inc(pft,nc))*nind(pft))/litter_ag_wood(pft,1)
                enddo
                endif
 
@@ -7639,27 +8071,27 @@ c             Negative allocation to leaf mass
 
 c             Add killed leaves to litter
 
-              temp=litter_ag(pft,1)
-              litter_ag(pft,1)=litter_ag(pft,1)
+              temp=litter_ag_leaf(pft,1) ! Doug 11/12
+              litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)
      *             +(-lminc_ind)*nind(pft)
-              if (litter_ag(pft,1) .gt. 0.0) then
+              if (litter_ag_leaf(pft,1) .gt. 0.0) then
               do nc=2,nco2
-                 litter_ag(pft,nc)=(litter_ag(pft,nc)*temp
+                 litter_ag_leaf(pft,nc)=(litter_ag_leaf(pft,nc)*temp
      *                +(-lminc_ind)*lm_ind(pft,nc)*nind(pft))
-     *                /litter_ag(pft,1)
+     *                /litter_ag_leaf(pft,1)
               enddo
               endif
 
 c            KIRSTEN: fuel classes
              
-              temp=fuel_1hr(pft,1)
-              fuel_1hr(pft,1)=fuel_1hr(pft,1)
+              temp=fuel_1hr_leaf(pft,1)
+              fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)
      *             +(-lminc_ind)*nind(pft)
-              if (fuel_1hr(pft,1) .gt. 0.) then
+              if (fuel_1hr_leaf(pft,1) .gt. 0.) then
               do nc=2,nco2
-                 fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
+                 fuel_1hr_leaf(pft,nc)=(fuel_1hr_leaf(pft,nc)*temp
      *                +(-lminc_ind)*lm_ind(pft,nc)*nind(pft))
-     *                /fuel_1hr(pft,1)
+     *                /fuel_1hr_leaf(pft,1)
               enddo
               endif
 
@@ -7693,35 +8125,48 @@ c         Update LAI and FPC
           else
             lai_ind(pft)=0.0
           endif
-
+ 
           fpc_ind=(1.0-exp(-0.5*lai_ind(pft)))
           fpc_grid_old=fpc_grid(pft)
           fpc_grid(pft)=crownarea(pft)*nind(pft)*fpc_ind
+ 
           fpc_inc(pft)=max(0.0,fpc_grid(pft)-fpc_grid_old)
           if(fpc_grid(pft).eq.0.0) present(pft)=.false.
         endif
         DO nc=1,nco2						!Doug 01/09: MFL
-          IF (fuel_1hr(pft,1)-temp_fuel(1,1)>0) THEN
-            fuel_1hr_inc_pos(pft,nc,:)=fuel_1hr_inc_pos(pft,nc,:)+
-     *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
+          IF (fuel_1hr_leaf(pft,1)-temp_fuel(1,1)>0) THEN
+            fuel_1hr_leaf_inc_pos(pft,nc,:)=
+     *         fuel_1hr_leaf_inc_pos(pft,nc,:)+
+     *        (fuel_1hr_leaf(pft,nc)-temp_fuel(nc,1))/12
           ELSE
-            fuel_1hr_inc_neg(pft,nc,:)=fuel_1hr_inc_neg(pft,nc,:)+
-     *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
+            fuel_1hr_leaf_inc_neg(pft,nc,:)=
+     *         fuel_1hr_leaf_inc_neg(pft,nc,:)+
+     *        (fuel_1hr_leaf(pft,nc)-temp_fuel(nc,1))/12
+          END IF
+		  
+          IF (fuel_1hr_wood(pft,1)-temp_fuel(1,2)>0) THEN
+            fuel_1hr_wood_inc_pos(pft,nc,:)=
+     *         fuel_1hr_wood_inc_pos(pft,nc,:)+
+     *        (fuel_1hr_wood(pft,nc)-temp_fuel(nc,2))/12
+          ELSE
+            fuel_1hr_wood_inc_neg(pft,nc,:)=
+     *         fuel_1hr_wood_inc_neg(pft,nc,:)+
+     *        (fuel_1hr_wood(pft,nc)-temp_fuel(nc,2))/12
           END IF
 
-	  fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
-     *      (fuel_10hr(pft,nc)-temp_fuel(nc,2))/12
+          fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
+     *      (fuel_10hr(pft,nc)-temp_fuel(nc,3))/12
           fuel_100hr_inc(pft,nc,:)=fuel_100hr_inc(pft,nc,:)+
-     *      (fuel_100hr(pft,nc)-temp_fuel(nc,3))/12
+     *      (fuel_100hr(pft,nc)-temp_fuel(nc,4))/12
           fuel_1000hr_inc(pft,nc,:)=fuel_1000hr_inc(pft,nc,:)+
-     *      (fuel_1000hr(pft,nc)-temp_fuel(nc,4))/12
+     *      (fuel_1000hr(pft,nc)-temp_fuel(nc,5))/12
         END DO							!Doug 01/09: MFL
 
 
       enddo 	!pft
 
       return
-      end	!allocatiob
+      end	!allocation
 
 
 
@@ -7733,16 +8178,18 @@ c
 c     Doug 01/09: addition of fuel_1hr_inc as I/O
 
       subroutine light(present,tree,lm_ind,sm_ind,hm_ind,rm_ind,
-     *  crownarea,fpc_grid,fpc_inc,nind,litter_ag,litter_bg,fuel_1hr,
+     *  crownarea,fpc_grid,fpc_inc,nind,litter_ag_leaf,litter_ag_wood,
+     *  litter_bg,fuel_1hr_leaf,fuel_1hr_wood,
      *  fuel_10hr,fuel_100hr,fuel_1000hr,
-     *  fuel_1hr_inc_pos,fuel_1hr_inc_neg, fuel_10hr_inc,
-     *  fuel_100hr_inc, fuel_1000hr_inc, sla, year)
+     *  fuel_1hr_leaf_inc_pos,fuel_1hr_leaf_inc_neg, 
+     *  fuel_1hr_wood_inc_pos,fuel_1hr_wood_inc_neg, 
+     *  fuel_10hr_inc, fuel_100hr_inc, fuel_1000hr_inc, sla, year)
 
       implicit none
 
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
-        parameter (npft=9,npftpar=51,nsoilpar=7)
+        parameter (npft=9,npftpar=54,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
       real fpc_tree_max
@@ -7757,17 +8204,22 @@ c     ARGUMENTS
       real fpc_grid(1:npft)
       real fpc_inc(1:npft)
       real nind(1:npft)
-      real litter_ag(1:npft,1:nco2)
+      REAL litter_ag_leaf(1:npft,1:nco2)	!Doug 11/12
+      REAL litter_ag_wood(1:npft,1:nco2)
       real litter_bg(1:npft,1:nco2)
-      real fuel_1hr(1:npft,1:nco2),fuel_10hr(1:npft,1:nco2)
+      REAL fuel_1hr_leaf(1:npft,1:nco2)
+      REAL fuel_1hr_wood(1:npft,1:nco2)
+      REAL fuel_10hr(1:npft,1:nco2)
       real fuel_100hr(1:npft,1:nco2)
       real fuel_1000hr(1:npft,1:nco2)
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)
-      REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_1hr_leaf_inc_neg(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_leaf_inc_pos(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_1hr_wood_inc_neg(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_wood_inc_pos(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
       REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!in fuel for each month (for FIRE)
       REAL fuel_100hr_inc(1:npft,1:nco2,1:12)
       REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)
-      REAL temp_fuel(1:nco2,1:4)
+      REAL temp_fuel(1:nco2,1:5)
       real sla(1:npft)
       integer year
 
@@ -7831,10 +8283,11 @@ c     Calculate total woody FPC, FPC increment and grass cover (= crown area)
 c     LIGHT COMPETITION
       do pft=1,npft
 
-        temp_fuel(:,1)=fuel_1hr(pft,:)		!Doug 01/09: MFL
-        temp_fuel(:,2)=fuel_10hr(pft,:)		!Doug 01/09: MFL
-        temp_fuel(:,3)=fuel_100hr(pft,:)	!Doug 01/09: MFL
-        temp_fuel(:,4)=fuel_1000hr(pft,:)	!Doug 01/09: MFL
+        temp_fuel(:,1)=fuel_1hr_leaf(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,2)=fuel_1hr_wood(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,3)=fuel_10hr(pft,:)			!Doug 01/09: MFL
+        temp_fuel(:,4)=fuel_100hr(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,5)=fuel_1000hr(pft,:)		!Doug 01/09: MFL
 
         if (present(pft)) then
 
@@ -7857,35 +8310,83 @@ c  so that total tree FPC reduced to 'fpc_tree_max'
                    nind(pft)=nind(pft)-nind_kill
 
 c                 Transfer lost biomass to litter
-
-                  temp=litter_ag(pft,1)
-                  litter_ag(pft,1)=litter_ag(pft,1)+nind_kill*
-     *                 (lm_ind(pft,1)+sm_ind(pft,1)+hm_ind(pft,1))
-                  if (litter_ag(pft,1).gt.0.0) then
-                     do nc=2,nco2
-                        litter_inc=(sm_ind(pft,1)*sm_ind(pft,nc)+
-     *                       hm_ind(pft,1)*hm_ind(pft,nc)+
-     *                       lm_ind(pft,1)*lm_ind(pft,nc))
-                        litter_ag(pft,nc)=(litter_ag(pft,nc)*
+C 	Doug 11/12
+                  temp=litter_ag_leaf(pft,1)
+                  litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)+nind_kill*
+     *                 lm_ind(pft,1)
+                  IF (litter_ag_leaf(pft,1).gt.0.0) THEN
+                     DO nc=2,nco2
+                        litter_inc=(lm_ind(pft,1)*lm_ind(pft,nc))
+                        litter_ag_leaf(pft,nc)=(litter_ag_leaf(pft,nc)*
      *                       temp+litter_inc*nind_kill)/
-     *                       litter_ag(pft,1)
-                     enddo
-                  endif
+     *                       litter_ag_leaf(pft,1)
+                     END DO
+                  END IF
+				  
+				  temp=litter_ag_wood(pft,1)
+                  litter_ag_wood(pft,1)=litter_ag_wood(pft,1)+nind_kill*
+     *                 (sm_ind(pft,1)+hm_ind(pft,1))
+                  IF (litter_ag_wood(pft,1).gt.0.0) THEN
+                     DO nc=2,nco2
+                        litter_inc=(sm_ind(pft,1)*sm_ind(pft,nc)+
+     *                       hm_ind(pft,1)*hm_ind(pft,nc))
+                        litter_ag_wood(pft,nc)=(litter_ag_wood(pft,nc)*
+     *                       temp+litter_inc*nind_kill)/
+     *                       litter_ag_wood(pft,1)
+                     END DO
+                  END IF
+				  
+c                  temp=litter_ag(pft,1)
+c                  litter_ag(pft,1)=litter_ag(pft,1)+nind_kill*
+c     *                 (lm_ind(pft,1)+sm_ind(pft,1)+hm_ind(pft,1))
+c                  if (litter_ag(pft,1).gt.0.0) then
+c                     do nc=2,nco2
+c                        litter_inc=(sm_ind(pft,1)*sm_ind(pft,nc)+
+c     *                       hm_ind(pft,1)*hm_ind(pft,nc)+
+c     *                       lm_ind(pft,1)*lm_ind(pft,nc))
+c                        litter_ag(pft,nc)=(litter_ag(pft,nc)*
+c     *                       temp+litter_inc*nind_kill)/
+c     *                       litter_ag(pft,1)
+c                     enddo
+c                  endif
 
 c                 KIRSTEN: fuel classes	
 
-                  temp=fuel_1hr(pft,1)
-                  fuel_1hr(pft,1)=fuel_1hr(pft,1)+(lm_ind(pft,1)+
-     *              0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
-                  if (fuel_1hr(pft,1) .gt. 0.0) then
-                  do nc=2,nco2
-                     litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
-     *                    +sm_ind(pft,1)*sm_ind(pft,nc)*0.045
+                  temp=fuel_1hr_leaf(pft,1)
+                  fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)+
+     *              lm_ind(pft,1)*nind(pft)
+                  IF (fuel_1hr_leaf(pft,1) .gt. 0.0) THEN
+                    DO nc=2,nco2
+                      litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
+                      fuel_1hr_leaf(pft,nc)=(fuel_1hr_leaf(pft,nc)*temp
+     *                 +litter_inc*nind(pft))/fuel_1hr_leaf(pft,1)
+                    END DO
+                  END IF	
+
+                  temp=fuel_1hr_wood(pft,1)
+                  fuel_1hr_wood(pft,1)=fuel_1hr_wood(pft,1)+
+     *              (0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
+                  IF (fuel_1hr_wood(pft,1) .gt. 0.0) THEN
+                    DO nc=2,nco2
+                      litter_inc=sm_ind(pft,1)*sm_ind(pft,nc)*0.045
      *                    +hm_ind(pft,1)*hm_ind(pft,nc)+0.045
-                     fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
-     *                 +litter_inc*nind(pft))/fuel_1hr(pft,1)
-                  enddo
-                  endif
+                      fuel_1hr_wood(pft,nc)=(fuel_1hr_wood(pft,nc)*temp
+     *                 +litter_inc*nind(pft))/fuel_1hr_wood(pft,1)
+                    END DO
+                  END IF
+				  
+c                  temp=fuel_1hr(pft,1)
+c                  fuel_1hr(pft,1)=fuel_1hr(pft,1)+(lm_ind(pft,1)+
+c     *              0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
+c                  if (fuel_1hr(pft,1) .gt. 0.0) then
+c                  do nc=2,nco2
+c                     litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
+c     *                    +sm_ind(pft,1)*sm_ind(pft,nc)*0.045
+c     *                    +hm_ind(pft,1)*hm_ind(pft,nc)+0.045
+c                     fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
+c     *                 +litter_inc*nind(pft))/fuel_1hr(pft,1)
+c                  enddo
+c                  endif
                   
                   temp=fuel_10hr(pft,1)
                   fuel_10hr(pft,1)=fuel_10hr(pft,1)+((0.075*
@@ -7954,23 +8455,24 @@ c
 
 c               Transfer lost biomass to litter
 
-                    temp=litter_ag(pft,1)
-                    litter_ag(pft,1)=litter_ag(pft,1)+lm_kill
-                    if (litter_ag(pft,1) .gt. 0.0) then
-                    do nc=2,nco2
-                       litter_ag(pft,nc)=(litter_ag(pft,nc)*temp
-     *                     +lm_ind(pft,nc)*lm_kill)/litter_ag(pft,1)
-                    enddo
-                    endif
+                    temp=litter_ag_leaf(pft,1)
+                    litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)+lm_kill
+                    IF (litter_ag_leaf(pft,1) .gt. 0.0) THEN
+                      DO nc=2,nco2
+                       litter_ag_leaf(pft,nc)=(litter_ag_leaf(pft,nc)
+     *                     *temp+lm_ind(pft,nc)*lm_kill)/
+     *                     litter_ag_leaf(pft,1)
+                      END DO
+                    END IF
 
 c             KIRSTEN: 1hr fuel
 
-                    temp=fuel_1hr(pft,1)
-                    fuel_1hr(pft,1)=fuel_1hr(pft,1)+lm_kill
-                    if (fuel_1hr(pft,1) .gt. 0.0) then
+                    temp=fuel_1hr_leaf(pft,1)
+                    fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)+lm_kill
+                    if (fuel_1hr_leaf(pft,1) .gt. 0.0) then
                     do nc=2,nco2
-                       fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
-     *                     +lm_ind(pft,nc)*lm_kill)/fuel_1hr(pft,1)
+                       fuel_1hr_leaf(pft,nc)=(fuel_1hr_leaf(pft,nc)*temp
+     *                     +lm_ind(pft,nc)*lm_kill)/fuel_1hr_leaf(pft,1)
                     enddo
                     endif
 
@@ -7994,26 +8496,39 @@ c
           else
             lai_ind=0.0
           endif
-
           fpc_ind=(1.0-exp(-0.5*lai_ind))
+		  
           fpc_grid(pft)=crownarea(pft)*nind(pft)*fpc_ind
           if(fpc_grid(pft).eq.0.0) present(pft)=.false.
         endif    ! present
 
         DO nc=1,nco2						!Doug 01/09: MFL
-          IF (fuel_1hr(pft,1)-temp_fuel(1,1)>0) THEN
-            fuel_1hr_inc_pos(pft,nc,:)=fuel_1hr_inc_pos(pft,nc,:)+
-     *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
+          IF (fuel_1hr_leaf(pft,1)-temp_fuel(1,1)>0) THEN
+            fuel_1hr_leaf_inc_pos(pft,nc,:)=
+     *         fuel_1hr_leaf_inc_pos(pft,nc,:)+
+     *        (fuel_1hr_leaf(pft,nc)-temp_fuel(nc,1))/12
           ELSE
-            fuel_1hr_inc_neg(pft,nc,:)=fuel_1hr_inc_neg(pft,nc,:)+
-     *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
+            fuel_1hr_leaf_inc_neg(pft,nc,:)=
+     *         fuel_1hr_leaf_inc_neg(pft,nc,:)+
+     *        (fuel_1hr_leaf(pft,nc)-temp_fuel(nc,1))/12
           END IF
-	  fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
-     *      (fuel_10hr(pft,nc)-temp_fuel(nc,2))/12
+		  
+          IF (fuel_1hr_wood(pft,1)-temp_fuel(1,2)>0) THEN
+            fuel_1hr_wood_inc_pos(pft,nc,:)=
+     *         fuel_1hr_wood_inc_pos(pft,nc,:)+
+     *        (fuel_1hr_wood(pft,nc)-temp_fuel(nc,2))/12
+          ELSE
+            fuel_1hr_wood_inc_neg(pft,nc,:)=
+     *         fuel_1hr_wood_inc_neg(pft,nc,:)+
+     *        (fuel_1hr_wood(pft,nc)-temp_fuel(nc,2))/12
+          END IF
+		  
+          fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
+     *      (fuel_10hr(pft,nc)-temp_fuel(nc,3))/12
           fuel_100hr_inc(pft,nc,:)=fuel_100hr_inc(pft,nc,:)+
-     *      (fuel_100hr(pft,nc)-temp_fuel(nc,3))/12
+     *      (fuel_100hr(pft,nc)-temp_fuel(nc,4))/12
           fuel_1000hr_inc(pft,nc,:)=fuel_1000hr_inc(pft,nc,:)+
-     *      (fuel_1000hr(pft,nc)-temp_fuel(nc,4))/12
+     *      (fuel_1000hr(pft,nc)-temp_fuel(nc,5))/12
         END DO							!Doug 01/09: MFL
 
 
@@ -8034,8 +8549,12 @@ c     Doug 01/09: addition of fuel_1hr_inc as I/O
 
       subroutine mortality(pftpar,present,tree,boreal,bm_inc,
      *  turnover_ind,sla,lm_ind,sm_ind,hm_ind,rm_ind,nind,
-     *  litter_ag,litter_bg,fuel_1hr,fuel_10hr,fuel_100hr,fuel_1000hr,
-     *  fuel_1hr_inc_pos, fuel_1hr_inc_neg, fuel_10hr_inc,
+     *  litter_ag_leaf,litter_ag_wood,
+     *  litter_bg,fuel_1hr_leaf,fuel_1hr_wood,
+     *  fuel_10hr,fuel_100hr,fuel_1000hr,
+     *  fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg,
+     *  fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg,
+     *  fuel_10hr_inc,
      *  fuel_100hr_inc, fuel_1000hr_inc,
      *  dtemp,anpp,mtemp_max,year)
 
@@ -8043,7 +8562,7 @@ c     Doug 01/09: addition of fuel_1hr_inc as I/O
 
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
-      parameter (npft=9,npftpar=51,nsoilpar=7)
+      parameter (npft=9,npftpar=54,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
       real mort_max
@@ -8064,17 +8583,22 @@ c     ARGUMENTS
       real lm_ind(1:npft,1:nco2),sm_ind(1:npft,1:nco2)
       real hm_ind(1:npft,1:nco2),rm_ind(1:npft,1:nco2)
       real nind(1:npft)
-      real litter_ag(1:npft,1:nco2)
+      REAL litter_ag_leaf(1:npft,1:nco2) !Doug 11/12
+      REAL litter_ag_wood(1:npft,1:nco2)
       real litter_bg(1:npft,1:nco2)
-      real fuel_1hr(1:npft,1:nco2),fuel_10hr(1:npft,1:nco2)
+      REAL fuel_1hr_leaf(1:npft,1:nco2)
+      REAL fuel_1hr_wood(1:npft,1:nco2)
+      REAL fuel_10hr(1:npft,1:nco2)
       real fuel_100hr(1:npft,1:nco2)
       real fuel_1000hr(1:npft,1:nco2)
-      REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_1hr_leaf_inc_pos(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_leaf_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_1hr_wood_inc_pos(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_wood_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
       REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!in fuel for each month (for FIRE)
       REAL fuel_100hr_inc(1:npft,1:nco2,1:12)
       REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)
-      REAL temp_fuel(1:nco2,4)
+      REAL temp_fuel(1:nco2,5)
       real dtemp(1:365)
       real anpp(1:npft,1:nco2)
       real mtemp_max
@@ -8109,10 +8633,11 @@ c     LOCAL VARIABLES
       litter_inc=0.0
 
       do pft=1,npft
-        temp_fuel(:,1)=fuel_1hr(pft,:)		!Doug 01/09: MFL
-        temp_fuel(:,2)=fuel_10hr(pft,:)		!Doug 01/09: MFL
-        temp_fuel(:,3)=fuel_100hr(pft,:)	!Doug 01/09: MFL
-        temp_fuel(:,4)=fuel_1000hr(pft,:)	!Doug 01/09: MFL
+        temp_fuel(:,1)=fuel_1hr_leaf(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,2)=fuel_1hr_wood(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,3)=fuel_10hr(pft,:)			!Doug 01/09: MFL
+        temp_fuel(:,4)=fuel_100hr(pft,:)		!Doug 01/09: MFL
+        temp_fuel(:,5)=fuel_1000hr(pft,:)		!Doug 01/09: MFL
 
 c     initialisation
         heatstress(pft)=0.0
@@ -8154,45 +8679,98 @@ c         mortality rate
 
 c         Transfer lost biomass to litter
 
-          temp=litter_ag(pft,1)
-          litter_ag(pft,1)=litter_ag(pft,1)+nind_kill
-     *         *(sm_ind(pft,1)+hm_ind(pft,1)+lm_ind(pft,1))
-          if (litter_ag(pft,1) .gt. 0.0) then
-          do nc=2,nco2
-             litter_inc=(sm_ind(pft,1)*sm_ind(pft,nc)+hm_ind(pft,1)
-     *            *hm_ind(pft,nc)+lm_ind(pft,1)*lm_ind(pft,nc))
-             litter_ag(pft,nc)=(litter_ag(pft,nc)*temp
-     *            +litter_inc*nind_kill)/litter_ag(pft,1)
-          enddo
-          endif
+          temp=litter_ag_leaf(pft,1)
+          litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)+nind_kill
+     *         *lm_ind(pft,1)
+          IF (litter_ag_leaf(pft,1) .gt. 0.0) THEN
+            DO nc=2,nco2
+             litter_inc=(lm_ind(pft,1)*lm_ind(pft,nc))
+             litter_ag_leaf(pft,nc)=(litter_ag_leaf(pft,nc)*temp
+     *            +litter_inc*nind_kill)/litter_ag_leaf(pft,1)
+            END DO
+          END IF
+		  
+          temp=litter_ag_wood(pft,1)
+          litter_ag_wood(pft,1)=litter_ag_wood(pft,1)+nind_kill
+     *         *(sm_ind(pft,1)+hm_ind(pft,1))
+          IF (litter_ag_wood(pft,1) .gt. 0.0) THEN
+            DO nc=2,nco2
+             litter_inc=(sm_ind(pft,1)*sm_ind(pft,nc)
+     *            +hm_ind(pft,1)*hm_ind(pft,nc))
+             litter_ag_wood(pft,nc)=(litter_ag_wood(pft,nc)*temp
+     *            +litter_inc*nind_kill)/litter_ag_wood(pft,1)
+            END DO
+          END IF
+		  
+		  
+c          temp=litter_ag(pft,1)
+c          litter_ag(pft,1)=litter_ag(pft,1)+nind_kill
+c     *         *(sm_ind(pft,1)+hm_ind(pft,1)+lm_ind(pft,1))
+c          if (litter_ag(pft,1) .gt. 0.0) then
+c          do nc=2,nco2
+c             litter_inc=(sm_ind(pft,1)*sm_ind(pft,nc)+hm_ind(pft,1)
+c     *            *hm_ind(pft,nc)+lm_ind(pft,1)*lm_ind(pft,nc))
+c             litter_ag(pft,nc)=(litter_ag(pft,nc)*temp
+c     *            +litter_inc*nind_kill)/litter_ag(pft,1)
+c          enddo
+c          endif
 
 c         KIRSTEN: fuel classes
 
-          temp=fuel_1hr(pft,1)
+c		  Doug 11/12: See commented code below for 2007 changes to isotope code
+          temp=fuel_1hr_leaf(pft,1)
+
+          fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)+
+     *      lm_ind(pft,1)*nind_kill
+
+          IF (fuel_1hr_leaf(pft,1) .gt. 0.0) THEN
+            DO nc=2,nco2
+              litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
+              fuel_1hr_leaf(pft,nc)=(fuel_1hr_leaf(pft,nc)*temp
+     *            +litter_inc*nind_kill)/fuel_1hr_leaf(pft,1)
+            END DO
+          END IF
+		  
+          temp=fuel_1hr_wood(pft,1)
+
+          fuel_1hr_wood(pft,1)=fuel_1hr_wood(pft,1)+
+     *         (0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind_kill
+
+          IF (fuel_1hr_wood(pft,1) .gt. 0.0) THEN
+            DO nc=2,nco2
+              litter_inc=
+     *            +sm_ind(pft,1)*sm_ind(pft,nc)*0.045
+     *            +hm_ind(pft,1)*hm_ind(pft,nc)+0.045
+              fuel_1hr_wood(pft,nc)=(fuel_1hr_wood(pft,nc)*temp
+     *            +litter_inc*nind_kill)/fuel_1hr_wood(pft,1)
+            END DO
+          END IF
+
+c          temp=fuel_1hr(pft,1)
 c DM  CHANGE to same as CO2_NO_ISOTOPE on 08 JULY 2007
 c          fuel_1hr(pft,1)=fuel_1hr(pft,1)+(lm_ind(pft,1)+
 c     *         0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
-
-          fuel_1hr(pft,1)=fuel_1hr(pft,1)+(lm_ind(pft,1)+
-     *         0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind_kill
+c
+c          fuel_1hr(pft,1)=fuel_1hr(pft,1)+(lm_ind(pft,1)+
+c     *         0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind_kill
 c DM  END CHANGE
-
-          if (fuel_1hr(pft,1) .gt. 0.0) then
-          do nc=2,nco2
+c
+c          if (fuel_1hr(pft,1) .gt. 0.0) then
+c          do nc=2,nco2
 c DM  CHANGE to same (?) as CO2_NO_ISOTOPE on 08 JULY 2007
 c             litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
 c     *            +sm_ind(pft,1)*sm_ind(pft,nc)*0.045
 c     *            +hm_ind(pft,1)*hm_ind(pft,nc)+0.045
 c             fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
 c     *            +litter_inc*nind(pft))/fuel_1hr(pft,1)
-             litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
-     *            +sm_ind(pft,1)*sm_ind(pft,nc)*0.045
-     *            +hm_ind(pft,1)*hm_ind(pft,nc)+0.045
-             fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
-     *            +litter_inc*nind_kill)/fuel_1hr(pft,1)
+c             litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
+c     *            +sm_ind(pft,1)*sm_ind(pft,nc)*0.045
+c     *            +hm_ind(pft,1)*hm_ind(pft,nc)+0.045
+c             fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
+c     *            +litter_inc*nind_kill)/fuel_1hr(pft,1)
 c DM  END CHANGE
-          enddo
-          endif       
+c          enddo
+c          endif       
 
           temp=fuel_10hr(pft,1)
 c DM  CHANGE to same as CO2_NO_ISOTOPE on 08 JULY 2007
@@ -8268,19 +8846,30 @@ c DM  END CHANGE
         if (nind(pft).eq.0.) present(pft)=.false.
 
         DO nc=1,nco2                                            !Doug 01/09: MFL
-          IF (fuel_1hr(pft,1)-temp_fuel(1,1)>0) THEN
-            fuel_1hr_inc_pos(pft,nc,:)=fuel_1hr_inc_pos(pft,nc,:)+
-     *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
+          IF (fuel_1hr_leaf(pft,1)-temp_fuel(1,1)>0) THEN
+            fuel_1hr_leaf_inc_pos(pft,nc,:)=
+     *         fuel_1hr_leaf_inc_pos(pft,nc,:)+
+     *        (fuel_1hr_leaf(pft,nc)-temp_fuel(nc,1))/12
           ELSE
-            fuel_1hr_inc_neg(pft,nc,:)=fuel_1hr_inc_neg(pft,nc,:)+
-     *        (fuel_1hr(pft,nc)-temp_fuel(nc,1))/12
+            fuel_1hr_leaf_inc_neg(pft,nc,:)=
+     *         fuel_1hr_leaf_inc_neg(pft,nc,:)+
+     *        (fuel_1hr_leaf(pft,nc)-temp_fuel(nc,1))/12
+          END IF
+          IF (fuel_1hr_wood(pft,1)-temp_fuel(1,2)>0) THEN
+            fuel_1hr_wood_inc_pos(pft,nc,:)=
+     *         fuel_1hr_wood_inc_pos(pft,nc,:)+
+     *        (fuel_1hr_wood(pft,nc)-temp_fuel(nc,2))/12
+          ELSE
+            fuel_1hr_wood_inc_neg(pft,nc,:)=
+     *         fuel_1hr_wood_inc_neg(pft,nc,:)+
+     *        (fuel_1hr_wood(pft,nc)-temp_fuel(nc,2))/12
           END IF
 	  fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
-     *      (fuel_10hr(pft,nc)-temp_fuel(nc,2))/12
+     *      (fuel_10hr(pft,nc)-temp_fuel(nc,3))/12
           fuel_100hr_inc(pft,nc,:)=fuel_100hr_inc(pft,nc,:)+
-     *      (fuel_100hr(pft,nc)-temp_fuel(nc,3))/12
+     *      (fuel_100hr(pft,nc)-temp_fuel(nc,4))/12
           fuel_1000hr_inc(pft,nc,:)=fuel_1000hr_inc(pft,nc,:)+
-     *      (fuel_1000hr(pft,nc)-temp_fuel(nc,4))/12
+     *      (fuel_1000hr(pft,nc)-temp_fuel(nc,5))/12
         END DO							!Doug 01/09: MFL
 
 
@@ -8288,6 +8877,7 @@ c DM  END CHANGE
 
       return
       end	!mortality
+	  
 
 
 
@@ -8298,12 +8888,18 @@ c     Biomass destruction through disturbance by fire
 
       subroutine fire(year,start_year,                                       !Doug 07/09: add start_year
      *  pftpar,dtemp,dtemp_min,dtemp_max,dprec,
-     *  dwindsp,dlightn,dphen,dphen_change,litter_ag,litter_bg,fuel_1hr,    !Doug 06/09: dphen_change added for fire paradox experiments		
+     *  dwindsp,dlightn,dphen,dphen_change,
+     *  litter_ag_leaf,litter_ag_wood,
+     *  litter_bg,fuel_1hr_leaf,fuel_1hr_wood,    !Doug 06/09: dphen_change added for fire paradox experiments		
      *  fuel_10hr, fuel_100hr,fuel_1000hr,
-     *  fuel_1hr_inc_pos, fuel_1hr_inc_neg, fuel_10hr_inc,
-     *  fuel_100hr_inc, fuel_1000hr_inc,
+     *  pfuel_limit, !Doug 12/12
+     *  fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg, 
+     *  fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg, 
+     *  fuel_10hr_inc,fuel_100hr_inc, fuel_1000hr_inc,
      *  fuel_1hr_del,fuel_10hr_del,fuel_100hr_del,fuel_1000hr_del,
-     *  mfuel_1hr_total, mfuel_10hr_total, mfuel_100hr_total,           !Doug 03/09: outputs for monthly fuel loads
+     *  mfuel_1hr_total,
+     *  mfuel_1hr_leaf_total,mfuel_1hr_wood_total,
+     *	mfuel_10hr_total, mfuel_100hr_total,           !Doug 03/09: outputs for monthly fuel loads
      *  mfuel_1000hr_total, mlivegrass,                                  !Doug 05/09: mlivegrass added
      *  acflux_fire,mcflux_fire,afire_frac,lm_ind,rm_ind,
      *  sm_ind,hm_ind,nind,dw1,present,tree,lat,mw1,fpc_grid, popden,
@@ -8325,7 +8921,7 @@ c     Biomass destruction through disturbance by fire
 
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
-         parameter (npft=9,npftpar=51,nsoilpar=7)
+         parameter (npft=9,npftpar=54,nsoilpar=7)
       real p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12
          parameter (p1=0.17,p2=0.10,p3=0.04,p4=0.01,p5=0.01
      *              ,p6=0.01,p7=0.03,p8=0.04,p9=0.09,p10=0.12,
@@ -8406,13 +9002,20 @@ c     ARGUMENTS
       real dphen(1:365,1:npft)
       REAL dphen_change(1:12,1:npft)     !Doug 06/09: for fire paradox experiments
       LOGICAL test_growing_start !Doug 06/09: Tests to see if the start of the growing season has happened yet
-      real litter_ag(1:npft,1:nco2),litter_bg(1:npft,1:nco2)
-      real fuel_1hr(1:npft,1:nco2),fuel_10hr(1:npft,1:nco2)
+      REAL litter_ag_leaf(1:npft,1:nco2)
+      REAL litter_ag_wood(1:npft,1:nco2)
+      REAL litter_bg(1:npft,1:nco2)
+      REAL fuel_1hr_leaf(1:npft,1:nco2)
+      REAL fuel_1hr_wood(1:npft,1:nco2)
+      REAL f1hr_leaf_frac(1:npft)	!Doug 11/12: fraction of 1hr fuel that is grass and leaf
+      REAL fuel_10hr(1:npft,1:nco2)
       real fuel_100hr(1:npft,1:nco2)			
       real fuel_1000hr(1:npft,1:nco2)
 
-      REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_1hr_leaf_inc_pos(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_leaf_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
+      REAL fuel_1hr_wood_inc_pos(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_wood_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09: records variations
       REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!in fuel for each month (for FIRE)
       REAL fuel_100hr_inc(1:npft,1:nco2,1:12)
       REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)
@@ -8429,7 +9032,8 @@ c     ARGUMENTS
       REAL fuel_100hr_del(1:npft,1:nco2)
       REAL fuel_1000hr_del(1:npft,1:nco2)
                                                
-      REAL dfuel_update_1hr(1:npft,1:nco2)             !Doug 03/09: store the daily update of xhr fuel.
+      REAL dfuel_update_1hr_leaf(1:npft,1:nco2)             !Doug 03/09: store the daily update of xhr fuel.
+      REAL dfuel_update_1hr_wood(1:npft,1:nco2)
       REAL dfuel_update_10hr(1:npft,1:nco2)            !Doug 05/09
       REAL dfuel_update_100hr(1:npft,1:nco2)           !Doug 05/09
       REAL dfuel_update_1000hr(1:npft,1:nco2)          !Doug 05/09
@@ -8493,13 +9097,19 @@ c     Reg_FIRM
       integer pft,d,n,i,x,count
       integer count_int,count_fdi,count_yr,n_pft
       real disturb_flux(1:nco2)
-      real fuel_1hr_total,fuel_10hr_total
+      REAL fuel_1hr_total	  
+      REAL fuel_1hr_leaf_total
+      REAL fuel_1hr_wood_total
+      REAL fuel_10hr_total
       real fuel_100hr_total
       real fuel_1000hr_total
-      REAL fuel_left_minus(1:npft,1:4)          !Doug 01/09 MFL
+      REAL pfuel_limit							!Doug 12/12: proportion of days of fuel limitation
+      REAL fuel_left_minus(1:npft,1:5)          !Doug 01/09 MFL
 
 
       REAL mfuel_1hr_total(1:12)                !Doug 03/09: stores monthly average
+      REAL mfuel_1hr_leaf_total(1:12)
+      REAL mfuel_1hr_wood_total(1:12)
       REAL mfuel_10hr_total(1:12)               !values of fuel for output
       REAL mfuel_100hr_total(1:12)              !Doug 03/09
       REAL mfuel_1000hr_total(1:12)             !Doug 03/09
@@ -8530,7 +9140,9 @@ c      real dtemp_min,dtemp_max
       real pot_fc_lg(1:npft,1:nco2)
       real ratio_lg_reduc
       real fc_1hr_total,fc_10hr_total,fc_100hr_total,fc_lg_total
-      real fc_1hr(1:npft,1:nco2),fc_10hr(1:npft,1:nco2)
+      REAL fc_1hr_leaf(1:npft,1:nco2)
+      REAL fc_1hr_wood(1:npft,1:nco2)
+      REAL fc_10hr(1:npft,1:nco2)
       real fc_100hr(1:npft,1:nco2)
       real fc_lg(1:npft,1:nco2),fc_1000hr(1:npft,1:nco2)
       real sh(1:npft),f(1:npft),g(1:npft) !scorch height
@@ -8570,7 +9182,8 @@ c       real fbd_C3_livegrass
        real nind_fa(1:npft) !# trees affected by fire
        real nind_nkill(1:npft) !# trees not killed by fire
        real ag_non_leaf_ind(1:npft,1:nco2) ! sm_ind + hm_ind
-       real fuel_update_1hr(1:npft,1:nco2)
+       REAL fuel_update_1hr_leaf(1:npft,1:nco2)
+       REAL fuel_update_1hr_wood(1:npft,1:nco2)
        real fuel_update_10hr(1:npft,1:nco2)
        real fuel_update_100hr(1:npft,1:nco2)
        real fuel_update_1000hr(1:npft,1:nco2) ! used to tidy up book-keeping of fuel classes
@@ -8596,9 +9209,13 @@ C Yan
        real m_i_surface_human(12),m_i_surface_lightn(12) 
        real an_i_surface_human,an_i_surface_lightn
        real area_burnt_human(12),area_burnt_lightn(12)
-       real fuel_1hr_0(1:npft,1:nco2),fuel_10hr_0(1:npft,1:nco2)
+       REAL fuel_1hr_leaf_0(1:npft,1:nco2)
+       REAL fuel_1hr_wood_0(1:npft,1:nco2)
+       REAL fuel_10hr_0(1:npft,1:nco2)
        real fuel_100hr_0(1:npft,1:nco2),fuel_1000hr_0(1:npft,1:nco2)
-       real fuel_1hr_left(1:npft,1:nco2),fuel_10hr_left(1:npft,1:nco2)
+       REAL fuel_1hr_leaf_left(1:npft,1:nco2)
+       REAL fuel_1hr_wood_left(1:npft,1:nco2)
+       REAL fuel_10hr_left(1:npft,1:nco2)
        real fuel_100hr_left(1:npft,1:nco2)
        real fuel_1000hr_left(1:npft,1:nco2)
        real livegrass_left(1:npft,1:nco2)
@@ -8708,9 +9325,12 @@ c     Initialise
       n_pft=0
       disturb_flux(:)=0.0
       fuel_1hr_total=0.0
+      fuel_1hr_leaf_total=0.0
+      fuel_1hr_wood_total=0.0
       fuel_10hr_total=0.0
       fuel_100hr_total=0.0
       fuel_1000hr_total=0.0
+      pfuel_limit=0.0
       ef_trace(:,:)=0.0
       acflux_fire_pft(:,:)=0.0
       dcflux_fire_pft(:,:,:)=0.0
@@ -8754,7 +9374,8 @@ c     Initialise
       fc_10hr_total=0.0
       fc_100hr_total=0.0
       fc_lg_total=0.0
-      fc_1hr(:,:)=0.0
+      fc_1hr_leaf(:,:)=0.0
+      fc_1hr_wood(:,:)=0.0
       fc_10hr(:,:)=0.0
       fc_100hr(:,:)=0.0
       fc_lg(:,:)=0.0
@@ -8799,7 +9420,8 @@ c     Initialise
        nind_fa(:)=0.0
        nind_nkill(:)=0.0
        ag_non_leaf_ind(:,:)=0.0
-       fuel_update_1hr(:,:)=0.0
+       fuel_update_1hr_leaf(:,:)=0.0
+       fuel_update_1hr_wood(:,:)=0.0
        fuel_update_10hr(:,:)=0.0
        fuel_update_100hr(:,:)=0.0
        fuel_update_1000hr(:,:)=0.0
@@ -8835,7 +9457,7 @@ c       ni_acc=0.0
           dlightn_lcc(:)=0
           m_lightn(:)=0
            counter_fire=0
-           afire_frac_afap_old=0
+	afire_frac_afap_old=0.0
 
 
 c     Assign a minimum fire fraction (for presentational purposes)
@@ -8848,9 +9470,13 @@ c    ASSIGN PFT PARAMETER FOR Glob-FIRM AND Reg-FIRM
 
 c          Calculate total above-ground litter
 
-      do pft=1,npft
-        litter_ag_total=litter_ag_total+litter_ag(pft,1)
-      enddo
+      DO pft=1,npft
+        litter_ag_total=litter_ag_total+litter_ag_leaf(pft,1)
+     *    +litter_ag_wood(pft,1)
+		  
+      END DO
+      f1hr_leaf_frac(pft)=fuel_1hr_leaf(pft,1)/
+     *  (fuel_1hr_leaf(pft,1)+fuel_1hr_wood(pft,1))
 
 c        Calculate litter moisture weighting factor (moisture of extinction me)
 
@@ -8900,7 +9526,7 @@ c     Calculate annual fire index
 c     Calculate the available fuel (above-ground litter) to carry the fire
 
       do pft=1,npft
-        fuel=fuel+litter_ag(pft,1)
+        fuel=fuel+litter_ag_leaf(pft,1)+litter_ag_wood(pft,1)
       enddo
       fire_term=fire_index-1.0
       afire_frac=fire_index*EXP(fire_term/(0.45*fire_term**3
@@ -8959,10 +9585,12 @@ c         Update the individual density
 c       Add combusted litter to carbon flux to atmosphere term
 
         temp=acflux_fire(1)
-        acflux_fire(1)=acflux_fire(1)+(afire_frac*litter_ag(pft,1))
+        acflux_fire(1)=acflux_fire(1)+(afire_frac*
+     *    (litter_ag_leaf(pft,1)+litter_ag_leaf(pft,1)))
         if (acflux_fire(1).gt.0.) then
            do nc=2,nco2
-              litter_inc=litter_ag(pft,nc)*litter_ag(pft,1)
+              litter_inc=litter_ag_leaf(pft,nc)*litter_ag_leaf(pft,1)+
+     *          litter_ag_wood(pft,nc)*litter_ag_wood(pft,1)
               acflux_fire(nc)=(acflux_fire(nc)*temp+
      *             afire_frac*litter_inc)/acflux_fire(1)
            enddo
@@ -8975,10 +9603,11 @@ c       Add combusted litter to carbon flux to atmosphere term
 
         temp=acflux_fire_pft(pft,1)
         acflux_fire_pft(pft,1)=acflux_fire_pft(pft,1)+(afire_frac
-     *       *(litter_ag(pft,1)))
+     *       *(litter_ag_leaf(pft,1)+litter_ag_wood(pft,1)))
         if (acflux_fire_pft(pft,1).gt.0.) then
            do nc=2,nco2
-              litter_inc=litter_ag(pft,nc)*litter_ag(pft,1)
+              litter_inc=litter_ag_leaf(pft,nc)*litter_ag_leaf(pft,1)+
+     *          litter_ag_wood(pft,nc)*litter_ag_wood(pft,1)
               acflux_fire_pft(pft,nc)=(acflux_fire_pft(pft,nc)*temp+
      *             afire_frac*litter_inc)/acflux_fire_pft(pft,1)
            enddo
@@ -9003,11 +9632,14 @@ c         Calculate trace gas emissions (gSpecies/m?²)
 
 c       Update the above ground litter term
 
-        litter_ag(pft,1)=(1.0-afire_frac)*litter_ag(pft,1)
-
+C        litter_ag(pft,1)=(1.0-afire_frac)*litter_ag(pft,1)
+        litter_ag_leaf(pft,1)=(1.0-afire_frac)*litter_ag_leaf(pft,1)
+        litter_ag_wood(pft,1)=(1.0-afire_frac)*litter_ag_wood(pft,1)
+		
 c       fuel classes
-
-          fuel_1hr(pft,1)=(1.0-afire_frac)*fuel_1hr(pft,1)
+		  
+          fuel_1hr_leaf(pft,1)=(1.0-afire_frac)*fuel_1hr_leaf(pft,1)
+          fuel_1hr_wood(pft,1)=(1.0-afire_frac)*fuel_1hr_wood(pft,1)
 
           fuel_10hr(pft,1)=(1.0-afire_frac)*fuel_10hr(pft,1)
           fuel_100hr(pft,1)=(1.0-afire_frac)*fuel_100hr(pft,1)
@@ -9088,55 +9720,72 @@ c---------------------------------------
 	   
         dead_fuel=0.0
         fuel_1hr_total=0.0
+        fuel_1hr_leaf_total=0.0
+        fuel_1hr_wood_total=0.0
         fuel_10hr_total=0.0
         fuel_100hr_total=0.0
         fuel_1000hr_total=0.0
-		dens_fuel_ave=0.0
+        dens_fuel_ave=0.0
         livegrass=0.0
 
 
-	dfuel_leaf=0.0    !Doug 03/09
+         dfuel_leaf=0.0    !Doug 03/09
         test_growing_start=.TRUE.    !Doug 06/09 fire paradox experiments
 
 
         fuel_load_subtraction(:,:)=0.0
-      do pft=1,npft
-       if(fuel_1hr(pft,1).lt.0.0)fuel_1hr(pft,1)=0.0
-       if(fuel_10hr(pft,1).lt.0.0)fuel_10hr(pft,1)=0.0
-       if(fuel_100hr(pft,1).lt.0.0)fuel_100hr(pft,1)=0.0
-       if(fuel_1000hr(pft,1).lt.0.0)fuel_1000hr(pft,1)=0.0
-      end do
-
-
-
+      DO pft=1,npft
+       IF(fuel_1hr_leaf(pft,1).lt.0.0)fuel_1hr_leaf(pft,1)=0.0
+       IF(fuel_1hr_wood(pft,1).lt.0.0)fuel_1hr_wood(pft,1)=0.0
+       IF(fuel_10hr(pft,1).lt.0.0)fuel_10hr(pft,1)=0.0
+       IF(fuel_100hr(pft,1).lt.0.0)fuel_100hr(pft,1)=0.0
+       IF(fuel_1000hr(pft,1).lt.0.0)fuel_1000hr(pft,1)=0.0
+      END DO
+	  
+      DO pft=1,npft
+        litter_ag_total=litter_ag_total+litter_ag_leaf(pft,1)
+     *    +litter_ag_wood(pft,1)
+		  
+      END DO
+      f1hr_leaf_frac(pft)=fuel_1hr_leaf(pft,1)/
+     *  (fuel_1hr_leaf(pft,1)+fuel_1hr_wood(pft,1))
+	  
         do pft=1,npft
         do co2=1,nco2
-          fuel_1hr_0(pft,co2)=fuel_1hr(pft,co2)
+       fuel_1hr_leaf_0(pft,co2)=fuel_1hr_leaf(pft,co2)
+       fuel_1hr_wood_0(pft,co2)=fuel_1hr_wood(pft,co2)
        fuel_10hr_0(pft,co2)=fuel_10hr(pft,co2)
        fuel_100hr_0(pft,co2)=fuel_100hr(pft,co2)  
        fuel_1000hr_0(pft,co2)=fuel_1000hr(pft,co2)
-       fuel_1hr_left(pft,co2)=fuel_1hr(pft,co2)/0.45  
+       fuel_1hr_leaf_left(pft,co2)=fuel_1hr_leaf(pft,co2)/0.45  	   
+       fuel_1hr_wood_left(pft,co2)=fuel_1hr_wood(pft,co2)/0.45  
        fuel_10hr_left(pft,co2)=fuel_10hr(pft,co2)/0.45  
        fuel_100hr_left(pft,co2)=fuel_100hr(pft,co2)/0.45  
        fuel_1000hr_left(pft,co2)=fuel_1000hr(pft,co2)/0.45  
-	   lm_ind_0(pft,co2)=lm_ind(pft,co2)
-	   end do
-	   nind_0(pft)=nind(pft)
+       lm_ind_0(pft,co2)=lm_ind(pft,co2)
+       end do
+       nind_0(pft)=nind(pft)
        end do
 
 		  
         do pft=1,npft
           if (present(pft)) then
 
-
-            fuel_1hr_total=fuel_1hr_total+fuel_1hr(pft,1)/0.45
+            fuel_1hr_total=fuel_1hr_total+(fuel_1hr_leaf(pft,1)+
+     *        fuel_1hr_wood(pft,1))/0.45
+	 
+            fuel_1hr_leaf_total=fuel_1hr_leaf_total+
+     *        fuel_1hr_leaf(pft,1)/0.45
+            fuel_1hr_wood_total=fuel_1hr_wood_total+
+     *        fuel_1hr_wood(pft,1)/0.45
 
             if (tree(pft)) then
 
               fuel_10hr_total=fuel_10hr_total+fuel_10hr(pft,1)/0.45
               fuel_100hr_total=fuel_100hr_total+fuel_100hr(pft,1)/0.45
 
-              fuel_1000hr_total=fuel_1000hr_total+fuel_1000hr(pft,1)/0.45
+              fuel_1000hr_total=fuel_1000hr_total+
+     *          fuel_1000hr(pft,1)/0.45
 
             else !grass
 c   KIRSTEN:  take proportion of grass leafmass, when green grass leaves are on
@@ -9146,7 +9795,7 @@ c         todays amount of green grass leaves: [gC/m2],influence on ROS only thr
               livegrass=livegrass+
      *          (lm_ind(pft,1)/0.45*nind(pft))*dphen(d,pft) 
 c     *                        (lm_ind(pft)/0.45*nind(pft))  
-
+				
 c              used in fire effects section only
 c               pot_fc_lg(pft)=(lm_ind(pft)/0.45*nind(pft))   
             end do	!day
@@ -9170,12 +9819,20 @@ c               pot_fc_lg(pft)=(lm_ind(pft)/0.45*nind(pft))
          fuel_1000hr_total_0=fuel_1000hr_total*0.45
          fuel_all_0=dead_fuel_all_0+livegrass_0       ! [gC/m2]
 
-        if(dead_fuel.le.0.0)goto 200
+        IF (dead_fuel.le.0.0) THEN
+          pfuel_limit=1;   !Doug 12/12: propotion of days with fuel limitation
+                           != 1 as not enough fuel this year for any fire
+          GOTO 200
+        END IF
 c       net fuel load
         if (dead_fuel.gt.0.0)
      *    net_fuel=(1.0-MINER_TOT)*(dead_fuel/1000.0)  ! in kg biomass
 
-        if(net_fuel.le.0.0)goto 200
+        if (net_fuel.le.0.0) THEN
+          pfuel_limit=1;   !Doug 12/12: propotion of days with fuel limitation
+                           != 1 as not enough fuel this year for any fire
+          GOTO 200
+        END IF
 		
 c  TODO : remove if not inside if ...
 
@@ -9184,8 +9841,10 @@ C  littersum (dcay), kill_pft, allocaton, light & mortality subroutines did thei
 
 
 
-       fuel_1hr_inc_pos=fuel_1hr_inc_pos/.45
-       fuel_1hr_inc_neg=fuel_1hr_inc_neg/.45
+       fuel_1hr_leaf_inc_pos=fuel_1hr_leaf_inc_pos/.45
+       fuel_1hr_leaf_inc_neg=fuel_1hr_leaf_inc_neg/.45
+       fuel_1hr_wood_inc_pos=fuel_1hr_wood_inc_pos/.45
+       fuel_1hr_wood_inc_neg=fuel_1hr_wood_inc_neg/.45
        fuel_10hr_inc=fuel_10hr_inc/.45
        fuel_100hr_inc=fuel_100hr_inc/.45
        fuel_1000hr_inc=fuel_1000hr_inc/.45
@@ -9198,15 +9857,20 @@ C  littersum (dcay), kill_pft, allocaton, light & mortality subroutines did thei
          leaf_decayc(pft)=-1/pftpar(pft,10)
        END DO
 
-       CALL fuel_1hr_redist(dfuel_leaf,fuel_1hr_inc_pos,
-     *        fuel_1hr_inc_neg,leaf_decayc,dphen,present,tree,npft,
+       CALL fuel_1hr_redist(dfuel_leaf,
+     *        fuel_1hr_leaf_inc_pos,fuel_1hr_leaf_inc_neg,
+     *        fuel_1hr_wood_inc_pos,fuel_1hr_wood_inc_neg,
+     *        leaf_decayc,dphen,present,tree,npft,
      *        nco2)
 
       DO pft=1,npft
-        fuel_1hr_left(pft,1)=fuel_1hr_left(pft,1)
-     *    -SUM(fuel_1hr_inc_pos(pft,1,:))
-     *    -SUM(fuel_1hr_inc_neg(pft,1,:))-SUM(dfuel_leaf(:,pft))
-
+        fuel_1hr_leaf_left(pft,1)=fuel_1hr_leaf_left(pft,1)
+     *    -SUM(fuel_1hr_leaf_inc_pos(pft,1,:))
+     *    -SUM(fuel_1hr_leaf_inc_neg(pft,1,:))-SUM(dfuel_leaf(:,pft))
+	 
+        fuel_1hr_wood_left(pft,1)=fuel_1hr_wood_left(pft,1)
+     *    -SUM(fuel_1hr_wood_inc_pos(pft,1,:))
+     *    -SUM(fuel_1hr_wood_inc_neg(pft,1,:))
 
         fuel_10hr_left(pft,1)=fuel_10hr_left(pft,1)-
      *    SUM(fuel_10hr_inc(pft,1,:))
@@ -9226,6 +9890,8 @@ C  littersum (dcay), kill_pft, allocaton, light & mortality subroutines did thei
       fuel_left_minus(:,:)=0.0        !Doug 01/09 MFL
 
       mfuel_1hr_total(:)=0.0
+      mfuel_1hr_leaf_total(:)=0.0
+      mfuel_1hr_wood_total(:)=0.0
       mfuel_10hr_total(:)=0.0
       mfuel_100hr_total(:)=0.0
       mfuel_1000hr_total(:)=0.0
@@ -9250,7 +9916,8 @@ c        deadgrass=0.0  !not used
         do pft=1,npft
         do nc=1,nco2 
           fc_lg(pft,nc)=0.0
-          fc_1hr(pft,nc)=0.0
+          fc_1hr_leaf(pft,nc)=0.0
+          fc_1hr_wood(pft,nc)=0.0
           fc_10hr(pft,nc)=0.0
           fc_100hr(pft,nc)=0.0
           fc_1000hr(pft,nc)=0.0
@@ -9277,40 +9944,101 @@ C    Doug 01/09 MFL: update fuel loads based on the increment of change to the f
 C    by this years reproducton, turnover, littersum (dcay), kill_pft, allocaton, light &
 C    mortality subroutines.
 
+       dfuel_update_1hr_leaf(:,:)=0.0
+       dfuel_update_1hr_wood(:,:)=0.0
 
        DO pft=1,npft
           IF (present(pft)) THEN
-            temp=fuel_1hr_left(pft,1)
-
-            fuel_1hr_left(pft,1)=fuel_1hr_left(pft,1)*
-     *        (1-fire_frac(MAX(1,d-1)))+
-     *        fuel_1hr_inc_pos(pft,1,m)/month_length(m)+
-     *        fuel_1hr_inc_neg(pft,1,m)/month_length(m)+
+		    !PRINT*, "yayandwow"
+			!PRINT*, d, pft
+		    !PRINT*, fuel_1hr_leaf_left(:,1)
+			!PRINT*, fire_frac(min(1,d-1))
+			!PRINT*, fuel_1hr_leaf_inc_pos(pft,1,m)
+			!PRINT*, fuel_1hr_leaf_inc_neg(pft,1,m)
+			!PRINT*, fuel_left_minus(pft,1)
+			!PRINT*, dfuel_leaf(d,pft)
+			!PRINT*, dfuel_update_1hr_leaf(pft,1)
+			!STOP
+            temp=fuel_1hr_leaf_left(pft,1)
+            fuel_1hr_leaf_left(pft,1)=fuel_1hr_leaf_left(pft,1)*
+     *        (1-fire_frac(max(1,d-1)))+
+     *        fuel_1hr_leaf_inc_pos(pft,1,m)/month_length(m)+
+     *        fuel_1hr_leaf_inc_neg(pft,1,m)/month_length(m)+
      *        fuel_left_minus(pft,1)+dfuel_leaf(d,pft)+
-     *        dfuel_update_1hr(pft,1)/0.45	!stopc
-
-            IF (fuel_1hr(pft,1)>0.0) THEN
+     *        dfuel_update_1hr_leaf(pft,1)/0.45	!stopc
+	 
+            IF (fuel_1hr_leaf_left(pft,1)>0.0) THEN
               DO nc=2,nco2
-                fuel_1hr_left(pft,nc)=(fuel_1hr_left(pft,nc)
-     *            *temp+(fuel_1hr_inc_pos(pft,1,m)*
-     *            fuel_1hr_inc_pos(pft,nc,m)+
-     *            fuel_1hr_inc_neg(pft,1,m)*
-     *            fuel_1hr_inc_neg(pft,nc,m))/
+                fuel_1hr_leaf_left(pft,nc)=(fuel_1hr_leaf_left(pft,nc)
+     *            *temp+(fuel_1hr_leaf_inc_pos(pft,1,m)*
+     *            fuel_1hr_leaf_inc_pos(pft,nc,m)+
+     *            fuel_1hr_leaf_inc_neg(pft,1,m)*
+     *            fuel_1hr_leaf_inc_neg(pft,nc,m))/
      *            month_length(m)+
      *            fuel_left_minus(pft,1)*
-     *            fuel_1hr_left(pft,nc)+dfuel_leaf(d,pft)*
-     *            fuel_1hr(pft,nc)+dfuel_update_1hr(pft,1)*
-     *            dfuel_update_1hr(pft,nc)/0.45)/
-     *            fuel_1hr_left(pft,1)
+     *            fuel_1hr_leaf_left(pft,nc)+dfuel_leaf(d,pft)*
+     *            fuel_1hr_leaf(pft,nc)+dfuel_update_1hr_leaf(pft,1)*
+     *            dfuel_update_1hr_leaf(pft,nc)/0.45)/
+     *            fuel_1hr_leaf_left(pft,1)
+              END DO
+            END IF	 
+	 
+            temp=fuel_1hr_wood_left(pft,1)
+
+	        fuel_1hr_wood_left(pft,1)=fuel_1hr_wood_left(pft,1)*
+     *        (1-fire_frac(max(1,d-1)))+
+     *        fuel_1hr_wood_inc_pos(pft,1,m)/month_length(m)+
+     *        fuel_1hr_wood_inc_neg(pft,1,m)/month_length(m)+
+     *        fuel_left_minus(pft,2)+
+     *        dfuel_update_1hr_wood(pft,1)/0.45	!stopc
+
+            IF (fuel_1hr_wood_left(pft,1)>0.0) THEN
+              DO nc=2,nco2
+                fuel_1hr_wood_left(pft,nc)=(fuel_1hr_wood_left(pft,nc)
+     *            *temp+(fuel_1hr_wood_inc_pos(pft,1,m)*
+     *            fuel_1hr_wood_inc_pos(pft,nc,m)+
+     *            fuel_1hr_wood_inc_neg(pft,1,m)*
+     *            fuel_1hr_wood_inc_neg(pft,nc,m))/
+     *            month_length(m)+
+     *            fuel_left_minus(pft,2)*
+     *            fuel_1hr_wood_left(pft,nc)+
+     *            dfuel_update_1hr_wood(pft,1)*
+     *            dfuel_update_1hr_wood(pft,nc)/0.45)/
+     *            fuel_1hr_wood_left(pft,1)
               END DO
             END IF
+	 
+C            temp=fuel_1hr_left(pft,1)
+C
+C            fuel_1hr_left(pft,1)=fuel_1hr_left(pft,1)*
+C     *        (1-fire_frac(min(1,d-1)))+
+C     *        fuel_1hr_inc_pos(pft,1,m)/month_length(m)+
+C     *        fuel_1hr_inc_neg(pft,1,m)/month_length(m)+
+C     *        fuel_left_minus(pft,1)+dfuel_leaf(d,pft)+
+C     *        dfuel_update_1hr(pft,1)/0.45	!stopc
+
+C            IF (fuel_1hr(pft,1)>0.0) THEN
+C              DO nc=2,nco2
+C                fuel_1hr_left(pft,nc)=(fuel_1hr_left(pft,nc)
+C     *            *temp+(fuel_1hr_inc_pos(pft,1,m)*
+C     *            fuel_1hr_inc_pos(pft,nc,m)+
+C     *            fuel_1hr_inc_neg(pft,1,m)*
+C     *            fuel_1hr_inc_neg(pft,nc,m))/
+C     *            month_length(m)+
+C     *            fuel_left_minus(pft,1)*
+C     *            fuel_1hr_left(pft,nc)+dfuel_leaf(d,pft)*
+C     *            fuel_1hr(pft,nc)+dfuel_update_1hr(pft,1)*
+C     *            dfuel_update_1hr(pft,nc)/0.45)/
+C     *            fuel_1hr_left(pft,1)
+C              END DO
+C            END IF
 
 
             temp=fuel_10hr_left(pft,1)
             fuel_10hr_left(pft,1)=fuel_10hr_left(pft,1)*
-     *        (1-fire_frac(MAX(1,d-1)))+
+     *        (1-fire_frac(max(1,d-1)))+
      *        (fuel_10hr_inc(pft,1,m))/month_length(m)+
-     *        fuel_left_minus(pft,2)+
+     *        fuel_left_minus(pft,3)+
      *        dfuel_update_10hr(pft,1)/0.45
 
             IF (fuel_10hr(pft,1)>0.0) THEN
@@ -9318,7 +10046,7 @@ C    mortality subroutines.
                 fuel_10hr_left(pft,nc)=(fuel_10hr_left(pft,nc)*
      *            *temp+fuel_10hr_inc(pft,1,m)*
      *            fuel_10hr_inc(pft,nc,m)/month_length(m)+
-     *            fuel_left_minus(pft,2)*fuel_10hr_left(pft,nc)
+     *            fuel_left_minus(pft,3)*fuel_10hr_left(pft,nc)
      *            +dfuel_update_10hr(pft,1)*
      *            dfuel_update_10hr(pft,nc)/0.45)/
      *            fuel_10hr_left(pft,1)
@@ -9328,9 +10056,9 @@ C    mortality subroutines.
 
             temp=fuel_100hr_left(pft,1)
             fuel_100hr_left(pft,1)=fuel_100hr_left(pft,1)*
-     *        (1-fire_frac(MAX(1,d-1)))+
+     *        (1-fire_frac(max(1,d-1)))+
      *        (fuel_100hr_inc(pft,1,m))/month_length(m)+
-     *        fuel_left_minus(pft,3)+
+     *        fuel_left_minus(pft,4)+
      *        dfuel_update_100hr(pft,1)/0.45
 
             IF (fuel_100hr(pft,1)>0.0) THEN
@@ -9338,7 +10066,7 @@ C    mortality subroutines.
                 fuel_100hr_left(pft,nc)=(fuel_100hr_left(pft,nc)*
      *            *temp+fuel_100hr_inc(pft,1,m)*
      *            fuel_100hr_inc(pft,nc,m)/month_length(m)+
-     *            fuel_left_minus(pft,3)*fuel_100hr_left(pft,nc)
+     *            fuel_left_minus(pft,4)*fuel_100hr_left(pft,nc)
      *            +dfuel_update_100hr(pft,1)*
      *            dfuel_update_100hr(pft,nc)/0.45)/
      *            fuel_100hr_left(pft,1)
@@ -9348,9 +10076,9 @@ C    mortality subroutines.
 
             temp=fuel_1000hr_left(pft,1)
             fuel_1000hr_left(pft,1)=fuel_1000hr_left(pft,1)*
-     *        (1-fire_frac(MAX(1,d-1)))+
+     *        (1-fire_frac(max(1,d-1)))+
      *        (fuel_1000hr_inc(pft,1,m))/month_length(m)+
-     *        fuel_left_minus(pft,4)+
+     *        fuel_left_minus(pft,5)+
      *        dfuel_update_1000hr(pft,1)/0.45
 
             IF (fuel_10hr(pft,1)>0.0) THEN
@@ -9358,7 +10086,7 @@ C    mortality subroutines.
                 fuel_1000hr_left(pft,nc)=(fuel_1000hr_left(pft,nc)*
      *            *temp+fuel_1000hr_inc(pft,1,m)*
      *            fuel_1000hr_inc(pft,nc,m)/month_length(m)+
-     *            fuel_left_minus(pft,4)*fuel_1000hr_left(pft,nc)
+     *            fuel_left_minus(pft,5)*fuel_1000hr_left(pft,nc)
      *            +dfuel_update_1000hr(pft,1)*
      *            dfuel_update_1000hr(pft,nc)/0.45)/
      *            fuel_1000hr_left(pft,1)
@@ -9379,38 +10107,57 @@ C    to calculated anything asn is reset at the end of the loop
 
 
        DO pft=1,npft
-         IF (fuel_1hr_left(pft,1)<0.0) THEN
-           fuel_left_minus(pft,1)=fuel_1hr_left(pft,1)
-           fuel_1hr_left(pft,1)=0.0
+         IF (fuel_1hr_leaf_left(pft,1)<0.0) THEN
+           fuel_left_minus(pft,1)=fuel_1hr_leaf_left(pft,1)
+           fuel_1hr_leaf_left(pft,1)=0.0
          ELSE
            fuel_left_minus(pft,1)=0
          END IF
-  
-         IF (fuel_10hr_left(pft,1)<0.0) THEN
-           fuel_left_minus(pft,2)=fuel_10hr_left(pft,1)
-           fuel_10hr_left(pft,1)=0.0
+		 
+         IF (fuel_1hr_wood_left(pft,1)<0.0) THEN
+           fuel_left_minus(pft,2)=fuel_1hr_wood_left(pft,1)
+           fuel_1hr_wood_left(pft,1)=0.0
          ELSE
            fuel_left_minus(pft,2)=0
          END IF
-
-         IF (fuel_100hr_left(pft,1)<0.0) THEN
-           fuel_left_minus(pft,3)=fuel_100hr_left(pft,1)
-           fuel_100hr_left(pft,1)=0.0
+		 
+C         IF (fuel_1hr_left(pft,1)<0.0) THEN
+C           fuel_left_minus(pft,1)=fuel_1hr_left(pft,1)
+C           fuel_1hr_left(pft,1)=0.0
+C         ELSE
+C           fuel_left_minus(pft,1)=0
+C         END IF
+  
+         IF (fuel_10hr_left(pft,1)<0.0) THEN
+           fuel_left_minus(pft,3)=fuel_10hr_left(pft,1)
+           fuel_10hr_left(pft,1)=0.0
          ELSE
            fuel_left_minus(pft,3)=0
          END IF
 
-         IF (fuel_1000hr_left(pft,1)<0.0) THEN
-           fuel_left_minus(pft,4)=fuel_1000hr_left(pft,1)
-           fuel_1000hr_left(pft,1)=0.0
+         IF (fuel_100hr_left(pft,1)<0.0) THEN
+           fuel_left_minus(pft,4)=fuel_100hr_left(pft,1)
+           fuel_100hr_left(pft,1)=0.0
          ELSE
            fuel_left_minus(pft,4)=0
          END IF
+
+         IF (fuel_1000hr_left(pft,1)<0.0) THEN
+           fuel_left_minus(pft,5)=fuel_1000hr_left(pft,1)
+           fuel_1000hr_left(pft,1)=0.0
+         ELSE
+           fuel_left_minus(pft,5)=0
+         END IF
        END DO
 
-
-
-       fuel_1hr_total=SUM(fuel_1hr_left(:,1))
+       fuel_1hr_total=SUM(fuel_1hr_leaf_left(:,1))+
+     *   SUM(fuel_1hr_wood_left(:,1))
+	 
+       fuel_1hr_leaf_total=SUM(fuel_1hr_leaf_left(:,1))
+       fuel_1hr_wood_total=SUM(fuel_1hr_wood_left(:,1))
+	   
+	   !PRINT*, "yay1"
+	   !PRINT*, fuel_1hr_leaf_total
 
        fuel_10hr_total=0.0
        fuel_100hr_total=0.0
@@ -9425,7 +10172,8 @@ C    to calculated anything asn is reset at the end of the loop
          END IF
        END DO
 
-        fuel_1hr_left(:,1)=fuel_1hr_left(:,1)*0.45
+        fuel_1hr_leaf_left(:,1)=fuel_1hr_leaf_left(:,1)*0.45
+        fuel_1hr_wood_left(:,1)=fuel_1hr_wood_left(:,1)*0.45
         fuel_10hr_left(:,1)=fuel_10hr_left(:,1)*0.45
         fuel_100hr_left(:,1)=fuel_100hr_left(:,1)*0.45
         fuel_1000hr_left(:,1)=fuel_1000hr_left(:,1)*0.45
@@ -9445,8 +10193,7 @@ c             to calculate amount of live grass!!
 		net_fuel=0.0
 
        fuel_1000hr_total=0.0
-       
-
+        
         do pft=1,npft
           if (present(pft)) then
 
@@ -9529,15 +10276,24 @@ c
 c Doug 06/09: mask areas of fuel limitation (i.e, where 1hr, 10hr and livegrass
 c     is to small for propogation of fire
 
-
-         IF (fuel_1hr_total+fuel_10hr_total+livegrass<90) goto 201
+         !PRINT*, "?"
+		 !print*, d
+		 !print*, fuel_1hr_total
+         IF (fuel_1hr_total+livegrass<200) THEN
+           pfuel_limit=pfuel_limit+1/365 !Doug 12/12: add a day with fuel limitation
+           GOTO 201
+         END IF
+		   
 
 
 
         dead_fuel = fuel_1hr_total + fuel_10hr_total
      *     + fuel_100hr_total  !total dead fuel g/m2
 
-        if(dead_fuel.le.0.0)goto 201
+        IF(dead_fuel.le.0.0) THEN
+          pfuel_limit=pfuel_limit+1/365 !Doug 12/12: add a day with fuel limitation
+          GOTO 201
+        END IF
 
 c       net fuel load
         net_fuel=0.0
@@ -9545,14 +10301,18 @@ c       net fuel load
      *    net_fuel=(1.0-MINER_TOT)*(dead_fuel/1000.0)
 
 
-        if(net_fuel.le.0.0)goto 201
+        IF (net_fuel.le.0.0) THEN
+          pfuel_limit=pfuel_limit+1/365 !Doug 12/12: add a day with fuel limitation
+          GOTO 201
+        END IF
 
 c    fuel bulk density, weighted per fuel class and fuel load
 c    ACHTUNG: WEIGHTING per fpc AND fuel load or per fuel load only? Reg-FIRM1: per FPC       
         do pft=1,npft
           if (present(pft)) then
             if (dead_fuel.gt.0.0) then
-              ratio_fbd(pft) = ((fuel_1hr_left(pft,1) + 
+              ratio_fbd(pft) = ((fuel_1hr_leaf_left(pft,1) +
+     *              fuel_1hr_wood_left(pft,1) +
      *              fbd_a * fuel_10hr_left(pft,1) + 	!Doug 03/09: fuel_xhr--> fuel_xhr_left (annual to daily fuel)
      *                     fbd_b * fuel_100hr_left(pft,1)) / 0.45) 
      *              / dead_fuel
@@ -9901,9 +10661,11 @@ c dead fuel consumption: in g biomass per m?² - not gC/m?² !!
 
       call fuel_consumption(npft,present,fuel_consum,fire_frac,
 !     *  fuel_1hr,fuel_10hr,fuel_100hr,fuel_1000hr,livegrass,pot_fc_lg,
-     *  fuel_1hr_left,fuel_10hr_left,fuel_100hr_left,	!Doug 03/09: fuel_xhr_0-->fuel_xhr_left (annual to daily)
+     *  fuel_1hr_leaf_left,fuel_1hr_wood_left,
+     *  fuel_10hr_left,fuel_100hr_left,	!Doug 03/09: fuel_xhr_0-->fuel_xhr_left (annual to daily)
      *  fuel_1000hr_left,livegrass,pot_fc_lg_0,
-     *  tree,fuel_1hr_total,moistfactor,dlm,d,MINER_TOT,fc_1hr,fc_lg,
+     *  tree,fuel_1hr_total,moistfactor,dlm,d,MINER_TOT,
+     *  fc_1hr_leaf,fc_1hr_wood,fc_lg,
      *  fc_10hr,fc_100hr,fc_1000hr,cf,char_moistfactor,
      *  dlm_lg, dlm_1hr, dlm_10hr, dlm_100hr, dlm_1000hr,
      *  moistfactor_livegrass, moistfactor_1hr,moistfactor_10hr,
@@ -9985,7 +10747,7 @@ c          sh=0.0
 
           m_i_surface(m)=m_i_surface(m)+d_i_surface(d)
           an_i_surface=an_i_surface+d_i_surface(d)
-
+			
           area_burnt(m)=area_burnt(m)+d_area_burnt(d)
 C Yan
           num_fire_human(m)=num_fire_human(m)+d_numfire_human(d)
@@ -10031,10 +10793,20 @@ c   surface fire: update fuel load per dead fuel class and litter_ag in general
          fuel_1000hr(pft,1)=fuel_1000hr(pft,1)-fc_1000hr(pft,1)
          fuel_1000hr_left(pft,1)=fuel_1000hr_left(pft,1)-
      *     fc_1000hr(pft,1)	!Doug 03/09
+	 
+	 
+         litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)-
+     *     (fc_1hr_leaf(pft,1)*0.45)
+	 
+         litter_ag_wood(pft,1)=litter_ag_wood(pft,1)-
+     *    (fc_1hr_wood(pft,1)*0.45)-
+     *    (fc_10hr(pft,1)*0.45)-(fc_100hr(pft,1)*0.45)-fc_1000hr(pft,1)
 
 
-         litter_ag(pft,1)=litter_ag(pft,1)-(fc_1hr(pft,1)*0.45)-
-     *   (fc_10hr(pft,1)*0.45)-(fc_100hr(pft,1)*0.45)-fc_1000hr(pft,1)
+c         litter_ag(pft,1)=litter_ag(pft,1)-(fc_1hr(pft,1)*0.45)-
+c     *   (fc_10hr(pft,1)*0.45)-(fc_100hr(pft,1)*0.45)-fc_1000hr(pft,1)
+
+
 	 
 
 c        fuel_1hr_left(pft,1)=fuel_1hr_0(pft,1)*(1.0-afire_frac)
@@ -10164,29 +10936,63 @@ c     Calculate total number of indivs killed for fire affected area!!!
 c     Send a/g non-combusted biomass of dead trees to fuel cats & a/g litter !A
 c       But make them available for burning in the next year ! Kirsten
 
-       temp=fuel_update_1hr(pft,1)
-       fuel_update_1hr(pft,1) = fuel_update_1hr(pft,1) + 
-     *                (nind_kill(pft) * (1-ck(pft)) *
-     *                (lm_ind(pft,1) + 0.045 * ag_non_leaf_ind(pft,1)))
 
-
-       dfuel_update_1hr(pft,1)=fuel_update_1hr(pft,1)-temp	!Doug 03/09, find daily update
-
-
-
-       if (fuel_update_1hr(pft,1) .gt. 0.) then
+ 
+C       temp=fuel_update_1hr(pft,1)
+C       fuel_update_1hr(pft,1) = fuel_update_1hr(pft,1) + 
+C     *                (nind_kill(pft) * (1-ck(pft)) *
+C     *                (lm_ind(pft,1) + 0.045 * ag_non_leaf_ind(pft,1)))
+C	 
+C
+C	 
+C       if (fuel_update_1hr(pft,1) .gt. 0.) then
+C          do nc=2,nco2
+C             fuel_update_1hr(pft,nc) = (fuel_update_1hr(pft,nc)*temp + 
+C     *            (nind_kill(pft) * (1-ck(pft)) *
+C     *            (lm_ind(pft,1)*lm_ind(pft,nc) + 0.045 
+C     *            * ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc))))
+C     *            /fuel_update_1hr(pft,1)
+C
+C             dfuel_update_1hr(pft,nc)=nind_kill(pft) * (1-ck(pft)) *    !Doug 06/09
+C     *            (lm_ind(pft,1)*lm_ind(pft,nc) + 0.045 
+C     *            * ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc))
+C          enddo
+C       endif
+ 
+       temp=fuel_update_1hr_leaf(pft,1)
+       fuel_update_1hr_leaf(pft,1) = fuel_update_1hr_leaf(pft,1) + 
+     *                (nind_kill(pft) * (1-ck(pft)) * lm_ind(pft,1))
+	 
+       dfuel_update_1hr_leaf(pft,1)=fuel_update_1hr_leaf(pft,1)-temp	!Doug 03/09, find daily update
+	 
+       if (fuel_update_1hr_leaf(pft,1) .gt. 0.) then
           do nc=2,nco2
-             fuel_update_1hr(pft,nc) = (fuel_update_1hr(pft,nc)*temp + 
+             fuel_update_1hr_leaf(pft,nc) =
+     *            (fuel_update_1hr_leaf(pft,nc)*temp + 
      *            (nind_kill(pft) * (1-ck(pft)) *
-     *            (lm_ind(pft,1)*lm_ind(pft,nc) + 0.045 
-     *            * ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc))))
-     *            /fuel_update_1hr(pft,1)
-
-             dfuel_update_1hr(pft,nc)=nind_kill(pft) * (1-ck(pft)) *    !Doug 06/09
-     *            (lm_ind(pft,1)*lm_ind(pft,nc) + 0.045 
-     *            * ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc))
+     *            (lm_ind(pft,1)*lm_ind(pft,nc))))
+     *            /fuel_update_1hr_leaf(pft,1)
           enddo
        endif
+ 
+       temp=fuel_update_1hr_wood(pft,1)
+       fuel_update_1hr_wood(pft,1) = fuel_update_1hr_wood(pft,1) + 
+     *                (nind_kill(pft) * (1-ck(pft)) *
+     *                (0.045 * ag_non_leaf_ind(pft,1)))
+	 
+       dfuel_update_1hr_wood(pft,1)=fuel_update_1hr_wood(pft,1)-temp	!Doug 03/09, find daily update	 
+	 
+       if (fuel_update_1hr_wood(pft,1) .gt. 0.) then
+          do nc=2,nco2
+             fuel_update_1hr_wood(pft,nc) = 
+     *            (fuel_update_1hr_wood(pft,nc)*temp + 
+     *            (nind_kill(pft) * (1-ck(pft)) *
+     *            (0.045 
+     *            * ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc))))
+     *            /fuel_update_1hr_wood(pft,1)
+          enddo
+       endif
+	   
 
        temp=fuel_update_10hr(pft,1)
        fuel_update_10hr(pft,1) = fuel_update_10hr(pft,1) + 
@@ -10280,12 +11086,15 @@ c    add DEAD FUEL combustion to fire carbon flux per PFT
 
         temp=dcflux_fire_pft(d,pft,1)
         dcflux_fire_pft(d,pft,1)=dcflux_fire_pft(d,pft,1)+
-     *   ((fc_1hr(pft,1)+fc_10hr(pft,1)+fc_100hr(pft,1))*0.45)
+     *   ((fc_1hr_leaf(pft,1)+fc_1hr_wood(pft,1)+
+     *       fc_10hr(pft,1)+fc_100hr(pft,1))*0.45)
      *       +fc_1000hr(pft,1)
        if (dcflux_fire_pft(d,pft,1) .gt. 0.0) then
           do nc=2,nco2
         dcflux_fire_pft(d,pft,nc)=(dcflux_fire_pft(d,pft,nc)*temp+
-     *   ((fc_1hr(pft,1)*fc_1hr(pft,nc)+fc_10hr(pft,1)*fc_10hr(pft,nc)
+     *   ((fc_1hr_leaf(pft,1)*fc_1hr_leaf(pft,nc)
+     *   +fc_1hr_wood(pft,1)*fc_1hr_wood(pft,nc)
+     *   +fc_10hr(pft,1)*fc_10hr(pft,nc)
      *   +fc_100hr(pft,1)*fc_100hr(pft,nc))*0.45)
      *   +fc_1000hr(pft,1)*fc_1000hr(pft,nc))/dcflux_fire_pft(d,pft,1)
           enddo
@@ -10367,11 +11176,12 @@ c       dead grass
 
         temp=dcflux_fire_pft(d,pft,1) 
         dcflux_fire_pft(d,pft,1)=dcflux_fire_pft(d,pft,1)
-     *       +(fc_1hr(pft,1)*0.45)
+     *       +((fc_1hr_leaf(pft,1)+fc_1hr_wood(pft,1))*0.45)
         if (dcflux_fire_pft(d,pft,1) .gt. 0.0) then
           do nc=2,nco2
              dcflux_fire_pft(d,pft,nc)=(dcflux_fire_pft(d,pft,nc)*temp+
-     *         fc_1hr(pft,1)*fc_1hr(pft,nc)*0.45)/
+     *         (fc_1hr_leaf(pft,1)*fc_1hr_leaf(pft,nc)
+     *         +fc_1hr_wood(pft,1)*fc_1hr_wood(pft,nc))*0.45)/
      *         dcflux_fire_pft(d,pft,1)
           enddo
        endif
@@ -10491,7 +11301,8 @@ C Yan
             count_int=0
           endif
 
-        fuel_1hr_left(:,1)=fuel_1hr_left(:,1)/0.45			!Doug 03/01
+        fuel_1hr_leaf_left(:,1)=fuel_1hr_leaf_left(:,1)/0.45			!Doug 03/01
+        fuel_1hr_wood_left(:,1)=fuel_1hr_wood_left(:,1)/0.45			!Doug 03/01
         fuel_10hr_left(:,1)=fuel_10hr_left(:,1)/0.45
         fuel_100hr_left(:,1)=fuel_100hr_left(:,1)/0.45
         fuel_1000hr_left(:,1)=fuel_1000hr_left(:,1)/0.45
@@ -10499,6 +11310,14 @@ C Yan
 
           mfuel_1hr_total(min(m,12))=mfuel_1hr_total(min(m,12))+              !Doug 03/09: monthly fuel
      *      (fuel_1hr_total*(1-fire_frac(d)))/month_length(min(m,12)) !for outputtng only
+          mfuel_1hr_leaf_total(min(m,12))=
+     *      mfuel_1hr_leaf_total(min(m,12))+              !Doug 03/09: monthly fuel
+     *      (fuel_1hr_leaf_total*(1-fire_frac(d)))/
+     *       month_length(min(m,12)) !for outputtng only
+          mfuel_1hr_wood_total(min(m,12))=
+     *      mfuel_1hr_wood_total(min(m,12))+              !Doug 03/09: monthly fuel
+     *      (fuel_1hr_wood_total*(1-fire_frac(d)))/
+     *      month_length(min(m,12)) !for outputtng only
 
           mfuel_10hr_total(min(m,12))=mfuel_10hr_total(min(m,12))+
      *      (fuel_10hr_total*(1-fire_frac(d)))/month_length(min(m,12))
@@ -10509,15 +11328,12 @@ C Yan
           mfuel_1000hr_total(min(m,12))=mfuel_1000hr_total(min(m,12))+
      *      (fuel_1000hr_total*(1-fire_frac(d)))/month_length(min(m,12))
 
-
           mlivegrass(min(m,12))=mlivegrass(min(m,12))+
      *      (livegrass*(1-fire_frac(d)))/month_length(min(m,12))
 
 
-
 c     stop daily loop if entire grid cell burnt
          if (afire_frac.eq.1.0) then
-c            print*,year,' day= ',d,afire_frac
            goto 200
           end if
 
@@ -10530,44 +11346,83 @@ c       pause
 201       continue
        enddo !daily time step
 
-        fuel_1hr_left(:,1)=fuel_1hr_left(:,1)*0.45			!Doug 03/01
+        fuel_1hr_leaf_left(:,1)=fuel_1hr_leaf_left(:,1)*0.45			!Doug 03/01
+        fuel_1hr_wood_left(:,1)=fuel_1hr_wood_left(:,1)*0.45			!Doug 03/01
         fuel_10hr_left(:,1)=fuel_10hr_left(:,1)*0.45
         fuel_100hr_left(:,1)=fuel_100hr_left(:,1)*0.45
         fuel_1000hr_left(:,1)=fuel_1000hr_left(:,1)*0.45
 
         DO pft=1,npft
           IF (present(pft)) THEN
-            temp=fuel_1hr_left(pft,1)
+            temp=fuel_1hr_leaf_left(pft,1)
 
-            fuel_1hr_left(pft,1)=fuel_1hr_left(pft,1)*
+            fuel_1hr_leaf_left(pft,1)=fuel_1hr_leaf_left(pft,1)*
      *        (1-fire_frac(365))+
      *        fuel_left_minus(pft,1)+
-     *        dfuel_update_1hr(pft,1)/0.45	!stopc
+     *        dfuel_update_1hr_leaf(pft,1)/0.45
 
-            IF (fuel_1hr(pft,1)>0.0) THEN
+            IF (fuel_1hr_leaf(pft,1)>0.0) THEN
               DO nc=2,nco2
-                fuel_1hr_left(pft,nc)=(fuel_1hr_left(pft,nc)
+                fuel_1hr_leaf_left(pft,nc)=(fuel_1hr_leaf_left(pft,nc)
      *            *temp+
      *            fuel_left_minus(pft,1)*
-     *            fuel_1hr_left(pft,nc)+
-     *            dfuel_update_1hr(pft,1)*
-     *            dfuel_update_1hr(pft,nc)/0.45)/
-     *            fuel_1hr_left(pft,1)
+     *            fuel_1hr_leaf_left(pft,nc)+
+     *            dfuel_update_1hr_leaf(pft,1)*
+     *            dfuel_update_1hr_leaf(pft,nc)/0.45)/
+     *            fuel_1hr_leaf_left(pft,1)
               END DO
             END IF
+			
+            temp=fuel_1hr_wood_left(pft,1)
+
+            fuel_1hr_wood_left(pft,1)=fuel_1hr_wood_left(pft,1)*
+     *        (1-fire_frac(365))+
+     *        fuel_left_minus(pft,2)+
+     *        dfuel_update_1hr_wood(pft,1)/0.45
+
+            IF (fuel_1hr_wood(pft,1)>0.0) THEN
+              DO nc=2,nco2
+                fuel_1hr_wood_left(pft,nc)=(fuel_1hr_wood_left(pft,nc)
+     *            *temp+
+     *            fuel_left_minus(pft,2)*
+     *            fuel_1hr_wood_left(pft,nc)+
+     *            dfuel_update_1hr_wood(pft,1)*
+     *            dfuel_update_1hr_wood(pft,nc)/0.45)/
+     *            fuel_1hr_wood_left(pft,1)
+              END DO
+            END IF
+	 
+C            temp=fuel_1hr_left(pft,1)
+C 
+C            fuel_1hr_left(pft,1)=fuel_1hr_left(pft,1)*
+C     *        (1-fire_frac(365))+
+C     *        fuel_left_minus(pft,1)+
+C     *        dfuel_update_1hr(pft,1)/0.45
+
+C            IF (fuel_1hr(pft,1)>0.0) THEN
+C              DO nc=2,nco2
+C                fuel_1hr_left(pft,nc)=(fuel_1hr_left(pft,nc)
+C     *            *temp+
+C     *            fuel_left_minus(pft,1)*
+C     *            fuel_1hr_left(pft,nc)+
+C     *            dfuel_update_1hr(pft,1)*
+C     *            dfuel_update_1hr(pft,nc)/0.45)/
+C     *            fuel_1hr_left(pft,1)
+C              END DO
+C            END IF
 
 
             temp=fuel_10hr_left(pft,1)
             fuel_10hr_left(pft,1)=fuel_10hr_left(pft,1)*
      *        (1-fire_frac(365))+
-     *        fuel_left_minus(pft,2)+
+     *        fuel_left_minus(pft,3)+
      *        dfuel_update_10hr(pft,1)/0.45
 
             IF (fuel_10hr(pft,1)>0.0) THEN
               DO nc=2,nco2
                 fuel_10hr_left(pft,nc)=(fuel_10hr_left(pft,nc)*
      *            *temp+
-     *            fuel_left_minus(pft,2)*fuel_10hr_left(pft,nc)
+     *            fuel_left_minus(pft,3)*fuel_10hr_left(pft,nc)
      *            +dfuel_update_10hr(pft,1)*
      *            dfuel_update_10hr(pft,nc)/0.45)/
      *            fuel_10hr_left(pft,1)
@@ -10578,14 +11433,14 @@ c       pause
             temp=fuel_100hr_left(pft,1)
             fuel_100hr_left(pft,1)=fuel_100hr_left(pft,1)*
      *        (1-fire_frac(365))+
-     *        fuel_left_minus(pft,3)+
+     *        fuel_left_minus(pft,4)+
      *        dfuel_update_100hr(pft,1)/0.45
 
             IF (fuel_100hr(pft,1)>0.0) THEN
               DO nc=2,nco2
                 fuel_100hr_left(pft,nc)=(fuel_100hr_left(pft,nc)*
      *            *temp+
-     *            fuel_left_minus(pft,3)*fuel_100hr_left(pft,nc)
+     *            fuel_left_minus(pft,4)*fuel_100hr_left(pft,nc)
      *            +dfuel_update_100hr(pft,1)*
      *            dfuel_update_100hr(pft,nc)/0.45)/
      *            fuel_100hr_left(pft,1)
@@ -10596,14 +11451,14 @@ c       pause
             temp=fuel_1000hr_left(pft,1)
             fuel_1000hr_left(pft,1)=fuel_1000hr_left(pft,1)*
      *        (1-fire_frac(365))+
-     *        fuel_left_minus(pft,4)+
+     *        fuel_left_minus(pft,5)+
      *        dfuel_update_1000hr(pft,1)/0.45
 
             IF (fuel_10hr(pft,1)>0.0) THEN
               DO nc=2,nco2
                 fuel_1000hr_left(pft,nc)=(fuel_1000hr_left(pft,nc)*
      *            *temp+
-     *            fuel_left_minus(pft,4)*fuel_1000hr_left(pft,nc)
+     *            fuel_left_minus(pft,5)*fuel_1000hr_left(pft,nc)
      *            +dfuel_update_1000hr(pft,1)*
      *            dfuel_update_1000hr(pft,nc)/0.45)/
      *            fuel_1000hr_left(pft,1)
@@ -10628,15 +11483,16 @@ c       pause
         end if
 
        afire_frac=an_areafires/area_ha
-
+		
        do m=1,12
          mfire_frac(m)=area_burnt(m)/area_ha
+		
          if(mfire_frac(m).lt.0.0001)then
           mfire_frac(m)=0.0
           area_burnt(m)=0.0
          end if
        end do
-
+         
        if(afire_frac.lt.0.0001)then
            afire_frac=0.0
            an_areafires=0.0
@@ -10717,24 +11573,54 @@ c       so the old search method for correct cell has been removed
 
 c  send dead biomass from cambial damage to fuel classes at the end of the year
 c  to avoid that the dead fuel influence fire spread of the actual fire season (standing dead biomass)
-       do pft=1,npft
-       if (present(pft)) then
-        temp=fuel_1hr(pft,1)
-        fuel_1hr(pft,1)=fuel_1hr_0(pft,1)*(1.0-afire_frac)
-     *                  +fuel_update_1hr(pft,1)
-     *                 -fuel_load_subtraction(pft,1)
-        if (fuel_1hr(pft,1) .gt. 0.0) then
-           do nc=2,nco2
-              fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp+
-     *          fuel_update_1hr(pft,1)*fuel_update_1hr(pft,nc))
-     *          /fuel_1hr(pft,1)
-           enddo
-        endif
- 
+       DO pft=1,npft
+         IF (present(pft)) THEN
+		 
+           temp=fuel_1hr_leaf(pft,1)
+           fuel_1hr_leaf(pft,1)=fuel_1hr_leaf_0(pft,1)*(1.0-afire_frac)
+     *                  +fuel_update_1hr_leaf(pft,1)
+     *                  -(fuel_load_subtraction(pft,1))*
+     *                  f1hr_leaf_frac(pft)
+	 
+         IF (fuel_1hr_leaf(pft,1) .gt. 0.0) THEN
+           DO nc=2,nco2
+              fuel_1hr_leaf(pft,nc)=(fuel_1hr_leaf(pft,nc)*temp+
+     *          fuel_update_1hr_leaf(pft,1)*
+     *          fuel_update_1hr_leaf(pft,nc)) !Doug 11/12: needs checking
+     *          /fuel_1hr_leaf(pft,1)
+           END DO
+         END IF
+		 
+           temp=fuel_1hr_wood(pft,1)
+           fuel_1hr_wood(pft,1)=fuel_1hr_wood_0(pft,1)*(1.0-afire_frac)
+     *                  +fuel_update_1hr_wood(pft,1)
+     *                  -(fuel_load_subtraction(pft,1))*
+     *                  (1-f1hr_leaf_frac(pft))
+         IF (fuel_1hr_wood(pft,1) .gt. 0.0) THEN
+           DO nc=2,nco2
+              fuel_1hr_wood(pft,nc)=(fuel_1hr_wood(pft,nc)*temp+
+     *          fuel_update_1hr_wood(pft,1)*
+     *          fuel_update_1hr_wood(pft,nc)) !Doug 11/12: needs checking
+     *          /fuel_1hr_wood(pft,1)
+           END DO
+         END IF
+		
+C        temp=fuel_1hr(pft,1)
+C        fuel_1hr(pft,1)=fuel_1hr_0(pft,1)*(1.0-afire_frac)
+C     *                  +fuel_update_1hr(pft,1)
+C     *                 -fuel_load_subtraction(pft,1)
+C        if (fuel_1hr(pft,1) .gt. 0.0) then
+C           do nc=2,nco2
+C              fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp+
+C     *          fuel_update_1hr(pft,1)*fuel_update_1hr(pft,nc))
+C     *          /fuel_1hr(pft,1)
+C           enddo
+C        endif
        temp=fuel_10hr(pft,1)
        fuel_10hr(pft,1)=fuel_10hr_0(pft,1)*(1.0-afire_frac)
      *                  +fuel_update_10hr(pft,1)
      *                  -fuel_load_subtraction(pft,2)
+	 
        if (fuel_10hr(pft,1) .gt. 0.0) then
           do nc=2,nco2
              fuel_10hr(pft,nc)=(fuel_10hr(pft,nc)*temp+
@@ -10766,22 +11652,55 @@ c  to avoid that the dead fuel influence fire spread of the actual fire season (
      *          /fuel_1000hr(pft,1)
           enddo
        endif
- 
-       temp=litter_ag(pft,1)
-       litter_ag(pft,1) = litter_ag(pft,1) + fuel_update_1hr(pft,1) +
+	   
+       temp=litter_ag_leaf(pft,1)
+       litter_ag_leaf(pft,1) = litter_ag_leaf(pft,1) + 
+     *             fuel_update_1hr_leaf(pft,1)
+     *             -fuel_load_subtraction(pft,1)*
+     *             f1hr_leaf_frac(pft)
+       IF (litter_ag_leaf(pft,1) .gt. 0.0) THEN
+          DO nc=2,nco2
+             litter_ag_leaf(pft,nc)= (litter_ag_leaf(pft,nc)*temp+
+     *        fuel_update_1hr_leaf(pft,1)*
+     *        fuel_update_1hr_leaf(pft,nc))
+     *        /litter_ag_leaf(pft,1)
+          END DO
+       END IF
+	   
+       temp=litter_ag_wood(pft,1)
+       litter_ag_wood(pft,1) = litter_ag_wood(pft,1) +
+     *             fuel_update_1hr_wood(pft,1) +
      *             fuel_update_10hr(pft,1) + fuel_update_100hr(pft,1)+
      *             fuel_update_1000hr(pft,1)
-     *             -SUM(fuel_load_subtraction(pft,:))    
-       if (litter_ag(pft,1) .gt. 0.0) then
-          do nc=2,nco2
-             litter_ag(pft,nc)= (litter_ag(pft,nc)*temp
-     *        + fuel_update_1hr(pft,1)*fuel_update_1hr(pft,nc)
+     *             -fuel_load_subtraction(pft,1)*
+     *             (1-f1hr_leaf_frac(pft))
+     *             -SUM(fuel_load_subtraction(pft,2:4))    
+       IF (litter_ag_wood(pft,1) .gt. 0.0) THEN
+          DO nc=2,nco2
+             litter_ag_wood(pft,nc)= (litter_ag_wood(pft,nc)*temp
+     *        + fuel_update_1hr_wood(pft,1)*fuel_update_1hr_wood(pft,nc)
      *        + fuel_update_10hr(pft,1)*fuel_update_10hr(pft,nc)
      *        + fuel_update_100hr(pft,1)*fuel_update_100hr(pft,nc)
      *        + fuel_update_1000hr(pft,1)*fuel_update_1000hr(pft,nc))
-     *        /litter_ag(pft,1)
-          enddo
-       endif
+     *        /litter_ag_wood(pft,1)
+          END DO
+       END IF
+ 
+c       temp=litter_ag(pft,1)
+c       litter_ag(pft,1) = litter_ag(pft,1) + fuel_update_1hr(pft,1) +
+c     *             fuel_update_10hr(pft,1) + fuel_update_100hr(pft,1)+
+c     *             fuel_update_1000hr(pft,1)
+c     *             -SUM(fuel_load_subtraction(pft,:))    
+c       if (litter_ag(pft,1) .gt. 0.0) then
+c          do nc=2,nco2
+c             litter_ag(pft,nc)= (litter_ag(pft,nc)*temp
+c     *        + fuel_update_1hr(pft,1)*fuel_update_1hr(pft,nc)
+c     *        + fuel_update_10hr(pft,1)*fuel_update_10hr(pft,nc)
+c     *        + fuel_update_100hr(pft,1)*fuel_update_100hr(pft,nc)
+c     *        + fuel_update_1000hr(pft,1)*fuel_update_1000hr(pft,nc))
+c     *        /litter_ag(pft,1)
+c          enddo
+c       endif
       endif
       enddo
 
@@ -10854,23 +11773,39 @@ c     Calculate monthly trace gas emission resulting from biomass burning (gSpec
 c     ALLAN: For the sake of neatness, account for rounding errors 
 c     leading to slightly negative balances.
 
-      do pft=1,npft
-      if (present(pft)) then
-        if (litter_ag(pft,1).lt.0.0) then
-          litter_ag(pft,1)=0.0
-          litter_ag(pft,2)=0.0
-          litter_ag(pft,3)=0.0
-        endif
+      DO pft=1,npft
+      IF (present(pft)) THEN
+        IF (litter_ag_leaf(pft,1).lt.0.0) THEN
+          litter_ag_leaf(pft,1)=0.0
+          litter_ag_leaf(pft,2)=0.0
+          litter_ag_leaf(pft,3)=0.0
+        END IF
+        IF (litter_ag_wood(pft,1).lt.0.0) THEN
+          litter_ag_wood(pft,1)=0.0
+          litter_ag_wood(pft,2)=0.0
+          litter_ag_wood(pft,3)=0.0
+        END IF
+		
+c        if (litter_ag(pft,1).lt.0.0) then
+c          litter_ag(pft,1)=0.0
+c          litter_ag(pft,2)=0.0
+c          litter_ag(pft,3)=0.0
+c        endif
         if (litter_bg(pft,1).lt.0.0) then
           litter_bg(pft,1)=0.0
           litter_bg(pft,2)=0.0
           litter_bg(pft,3)=0.0
         endif
-        if (fuel_1hr(pft,1).lt.0.0) then
-          fuel_1hr(pft,1)=0.0
-          fuel_1hr(pft,2)=0.0
-          fuel_1hr(pft,3)=0.0
-        endif
+        IF (fuel_1hr_leaf(pft,1).lt.0.0) THEN
+          fuel_1hr_leaf(pft,1)=0.0
+          fuel_1hr_leaf(pft,2)=0.0
+          fuel_1hr_leaf(pft,3)=0.0
+        END IF
+        IF (fuel_1hr_wood(pft,1).lt.0.0) THEN
+          fuel_1hr_wood(pft,1)=0.0
+          fuel_1hr_wood(pft,2)=0.0
+          fuel_1hr_wood(pft,3)=0.0
+        END IF
         if (fuel_10hr(pft,1).lt.0.0) then
           fuel_10hr(pft,1)=0.0
           fuel_10hr(pft,2)=0.0
@@ -10920,10 +11855,11 @@ c     leading to slightly negative balances.
 
 
          mfuel_1hr_total=mfuel_1hr_total*.45
+         mfuel_1hr_leaf_total=mfuel_1hr_leaf_total*.45
+         mfuel_1hr_wood_total=mfuel_1hr_wood_total*.45
          mfuel_10hr_total=mfuel_10hr_total*.45
          mfuel_100hr_total=mfuel_100hr_total*.45
          mfuel_1000hr_total=mfuel_1000hr_total*.45
-
 
 
 
@@ -10940,8 +11876,10 @@ C           -remove decay values
 c           - include background leaf/twig loss (possibly based on leaf longliverty)
 
 
-      SUBROUTINE fuel_1hr_redist(dfuel_leaf, fuel_1hr_inc_pos,
-     *    fuel_1hr_inc_neg, leaf_decayc, dphen, present,
+      SUBROUTINE fuel_1hr_redist(dfuel_leaf,
+     *    fuel_1hr_leaf_inc_pos,fuel_1hr_leaf_inc_neg,
+     *    fuel_1hr_wood_inc_pos,fuel_1hr_wood_inc_neg,
+     *    leaf_decayc, dphen, present,
      *    tree, npft, nco2)
 
 
@@ -10953,8 +11891,10 @@ c     PARAMETERS
 
 c     ARGUMENTS
       REAL       dfuel_leaf(1:365,1:npft)
-      REAL       fuel_1hr_inc_pos(1:npft,1:nco2,1:12)
-      REAL       fuel_1hr_inc_neg(1:npft,1:nco2,1:12)
+      REAL       fuel_1hr_leaf_inc_pos(1:npft,1:nco2,1:12)
+      REAL       fuel_1hr_leaf_inc_neg(1:npft,1:nco2,1:12)
+      REAL       fuel_1hr_wood_inc_pos(1:npft,1:nco2,1:12)
+      REAL       fuel_1hr_wood_inc_neg(1:npft,1:nco2,1:12)
       REAL       dphen(1:365,1:npft)
       LOGICAL    present(1:npft),tree(1:npft)
 
@@ -10972,7 +11912,7 @@ c     LOCAL VARIABLES
         IF (present(pft)) THEN                  !.AND.tree(pft)==.TRUE.
           delta_phen=dphen(1,pft)-dphen(365,pft)	!Doug 03/09, need to refer to previous years dphen?
 
-          fuel_1hr_inc_total=SUM(fuel_1hr_inc_pos(pft,1,:))/
+          fuel_1hr_inc_total=SUM(fuel_1hr_leaf_inc_pos(pft,1,:))/
      *      (1+sum(dphen(:,pft))*(1-exp(leaf_decayc(pft))))
 
           dfuel_leaf_background=0.0
@@ -11014,7 +11954,7 @@ c          END DO
             dfuel_leaf(:,pft)=dfuel_leaf(:,pft)/
      *        delta_phen_total+dfuel_leaf_background(:)
 
-            fuel_1hr_inc_pos(pft,1,:)=0.0
+            fuel_1hr_leaf_inc_pos(pft,1,:)=0.0
           END IF
 
 C            DO m=1,12
@@ -11396,7 +12336,7 @@ c     subroutine Thermophysical Propertities of the Fuel Array, i.e., bet and q_
       implicit none
 
       integer npft,npftpar
-        parameter (npft=9,npftpar=51)
+        parameter (npft=9,npftpar=54)
         
       real dens_fuel_ave,sigma,H
       real dlm(1:365)
@@ -11449,7 +12389,7 @@ c     subroutine RATE OF forward SPREAD
       implicit none
 
       integer npft,npftpar
-        parameter (npft=9,npftpar=51)
+        parameter (npft=9,npftpar=54)
 !        parameter (npft=9,npftpar=50)
         
       real U_front,base_wind
@@ -11616,9 +12556,11 @@ c-------------------------------------------------------------------------------
 c    subroutine for calculation of fuel consumption in the area affected by fire
 
       subroutine fuel_consumption(npft,present,fuel_consum,fire_frac,
-     *  fuel_1hr_left,fuel_10hr_left,fuel_100hr_left,		!Doug 03/09: fuel_xhr_0 --> fuel_xhr_left (annual --> daily)
+     *  fuel_1hr_leaf_left,fuel_1hr_wood_left,
+     *  fuel_10hr_left,fuel_100hr_left,		!Doug 03/09: fuel_xhr_0 --> fuel_xhr_left (annual --> daily)
      *   fuel_1000hr_left,livegrass_left,pot_fc_lg_0,
-     *  tree,fuel_1hr_total,moistfactor,dlm,d,MINER_TOT,fc_1hr,fc_lg,
+     *  tree,fuel_1hr_total,moistfactor,dlm,d,MINER_TOT,
+     *  fc_1hr_leaf,fc_1hr_wood,fc_lg,
      *  fc_10hr,fc_100hr,fc_1000hr,cf,char_moistfactor,
      *   dlm_lg, dlm_1hr, dlm_10hr, dlm_100hr, dlm_1000hr,
      *   moistfactor_livegrass, moistfactor_1hr,moistfactor_10hr,
@@ -11636,7 +12578,9 @@ c     PARAMETERS
       real fuel_consum_all
       real d_fuel_all
       real fire_frac(1:365)
-      real pot_fc_lg(1:npft,1:nco2),fuel_1hr(1:npft,1:nco2)
+      real pot_fc_lg(1:npft,1:nco2)
+      REAL fuel_1hr_leaf(1:npft,1:nco2)
+      REAL fuel_1hr_wood(1:npft,1:nco2)
       real fuel_10hr(1:npft,1:nco2)
       real fuel_100hr(1:npft,1:nco2),fuel_1000hr(1:npft,1:nco2)
       real fuel_1hr_total,livegrass
@@ -11644,7 +12588,9 @@ c     PARAMETERS
       real moistfactor
       real dlm(1:365)
       real MINER_TOT
-      real fc_1hr(1:npft,1:nco2),fc_lg(1:npft,1:nco2)
+      REAL fc_1hr_leaf(1:npft,1:nco2)
+      REAL fc_1hr_wood(1:npft,1:nco2)
+      REAL fc_lg(1:npft,1:nco2)
       real fc_10hr(1:npft,1:nco2)
       real fc_100hr(1:npft,1:nco2),fc_1000hr(1:npft,1:nco2)
       real cf(1:npft)
@@ -11664,7 +12610,9 @@ c     local variables
 c      real dw1(1:365)
       real tau_l(1:npft)
 
-      real fuel_1hr_left(1:npft,1:nco2),fuel_10hr_left(1:npft,1:nco2)		!Doug 03/09: fuel_xhr_0 --> fuel_xhr_left (annual --> daily)
+      REAL fuel_1hr_leaf_left(1:npft,1:nco2)
+      REAL fuel_1hr_wood_left(1:npft,1:nco2)
+      REAL fuel_10hr_left(1:npft,1:nco2)		!Doug 03/09: fuel_xhr_0 --> fuel_xhr_left (annual --> daily)
       real fuel_100hr_left(1:npft,1:nco2)
       real fuel_1000hr_left(1:npft,1:nco2)
       real livegrass_left,pot_fc_lg_0(1:npft,1:nco2)
@@ -11713,7 +12661,8 @@ c     CHECK method
 
       do pft=1,npft
        do nc=1,nco2
-        fc_1hr(pft,nc)=0.0
+        fc_1hr_leaf(pft,nc)=0.0
+        fc_1hr_wood(pft,nc)=0.0
         fc_lg(pft,nc)=0.0
         fc_10hr(pft,nc)=0.0
         fc_100hr(pft,nc)=0.0
@@ -11727,29 +12676,48 @@ c        tau_l(pft)=0.0 !cycle through the dead fuel classes and livegrass
 c     1hr fuel consumption
 
       if(moist_1hr.le.0.18) then
-         fc_1hr(pft,1)=1.0*(1.0-MINER_TOT)*(fuel_1hr_left(pft,1)/0.45)
-     *        *fire_frac(d)
-         fc_1hr(pft,2)=fuel_1hr_left(pft,2)
-         fc_1hr(pft,3)=fuel_1hr_left(pft,3)
+         fc_1hr_leaf(pft,1)=1.0*(1.0-MINER_TOT)*
+     *     (fuel_1hr_leaf_left(pft,1)/0.45)*fire_frac(d)
+         fc_1hr_leaf(pft,2)=fuel_1hr_leaf_left(pft,2)
+         fc_1hr_leaf(pft,3)=fuel_1hr_leaf_left(pft,3)
+		 
+         fc_1hr_wood(pft,1)=1.0*(1.0-MINER_TOT)*
+     *     (fuel_1hr_wood_left(pft,1)/0.45)*fire_frac(d)
+         fc_1hr_wood(pft,2)=fuel_1hr_wood_left(pft,2)
+         fc_1hr_wood(pft,3)=fuel_1hr_wood_left(pft,3)
          cf_1hr=1.0  
       else
          if(moist_1hr.gt.0.18.and.moist_1hr.le.0.73) then
-            fc_1hr(pft,1)=(1.10-0.62*moist_1hr)*(1.0-MINER_TOT)*
-     *                   (fuel_1hr_left(pft,1)/0.45)*fire_frac(d)    !(fuel_1hr_0(pft,1)/0.45)*fire_frac(d)
-            fc_1hr(pft,2)=fuel_1hr_left(pft,2)
-            fc_1hr(pft,3)=fuel_1hr_left(pft,3)
+            fc_1hr_leaf(pft,1)=(1.10-0.62*moist_1hr)*(1.0-MINER_TOT)*
+     *                   (fuel_1hr_leaf_left(pft,1)/0.45)*fire_frac(d)    !(fuel_1hr_0(pft,1)/0.45)*fire_frac(d)
+            fc_1hr_leaf(pft,2)=fuel_1hr_leaf_left(pft,2)
+            fc_1hr_leaf(pft,3)=fuel_1hr_leaf_left(pft,3)
+			
+            fc_1hr_wood(pft,1)=(1.10-0.62*moist_1hr)*(1.0-MINER_TOT)*
+     *                   (fuel_1hr_wood_left(pft,1)/0.45)*fire_frac(d)    !(fuel_1hr_0(pft,1)/0.45)*fire_frac(d)
+            fc_1hr_wood(pft,2)=fuel_1hr_wood_left(pft,2)
+            fc_1hr_wood(pft,3)=fuel_1hr_wood_left(pft,3)
             cf_1hr=1.10-0.62*moist_1hr
          else
            if(moist_1hr.gt.0.73.and.moist_1hr.le.1.0) then
-            fc_1hr(pft,1)=(2.45-2.45*moist_1hr)*(1.0-MINER_TOT)*
-     *                   (fuel_1hr_left(pft,1)/0.45)*fire_frac(d)   !(fuel_1hr_0(pft,1)/0.45)*fire_frac(d)
-            fc_1hr(pft,2)=fuel_1hr_left(pft,2)
-            fc_1hr(pft,3)=fuel_1hr_left(pft,3)
+            fc_1hr_leaf(pft,1)=(2.45-2.45*moist_1hr)*(1.0-MINER_TOT)*
+     *                   (fuel_1hr_leaf_left(pft,1)/0.45)*fire_frac(d)   !(fuel_1hr_0(pft,1)/0.45)*fire_frac(d)
+            fc_1hr_leaf(pft,2)=fuel_1hr_leaf_left(pft,2)
+            fc_1hr_leaf(pft,3)=fuel_1hr_leaf_left(pft,3)
+			
+            fc_1hr_wood(pft,1)=(2.45-2.45*moist_1hr)*(1.0-MINER_TOT)*
+     *                   (fuel_1hr_wood_left(pft,1)/0.45)*fire_frac(d)   !(fuel_1hr_0(pft,1)/0.45)*fire_frac(d)
+            fc_1hr_wood(pft,2)=fuel_1hr_wood_left(pft,2)
+            fc_1hr_wood(pft,3)=fuel_1hr_wood_left(pft,3)
             cf_1hr=2.45-2.45*moist_1hr
            else
-            fc_1hr(pft,1)=0.0
-            fc_1hr(pft,2)=0.0
-            fc_1hr(pft,3)=0.0
+            fc_1hr_leaf(pft,1)=0.0
+            fc_1hr_leaf(pft,2)=0.0
+            fc_1hr_leaf(pft,3)=0.0
+			
+            fc_1hr_wood(pft,1)=0.0
+            fc_1hr_wood(pft,2)=0.0
+            fc_1hr_wood(pft,3)=0.0
             cf_1hr=0.0
            endif
          endif
@@ -11886,14 +12854,18 @@ c    Allan: Approximate form. No data.
 
 c    total fuel consumption (without 1000hr fuel) in g biomass per m?²!!!
 c    Used to calculate fire intensity in the FLAMING FRONT.
-      fuel_consum=fuel_consum+fc_1hr(pft,1)+fc_10hr(pft,1)
-     *       +fc_100hr(pft,1)
+      fuel_consum=fuel_consum+fc_1hr_leaf(pft,1)+fc_1hr_wood(pft,1)
+     *       +fc_10hr(pft,1)+fc_100hr(pft,1)
                  
 
-        fuel_consum_all=fuel_consum_all+fc_1hr(pft,1)+
+        fuel_consum_all=fuel_consum_all
+     *            +fc_1hr_leaf(pft,1)+fc_1hr_wood(pft,1)+
      *            fc_10hr(pft,1)+fc_100hr(pft,1)+fc_1000hr(pft,1)  !to calculate the total fuel consumed for the further calculation of combustion efficiency.
-        d_fuel_all=d_fuel_all+((fuel_1hr_left(pft,1)+
-     *             fuel_10hr_left(pft,1)+fuel_100hr_left(pft,1))
+        d_fuel_all=d_fuel_all+
+     *             ((fuel_1hr_leaf_left(pft,1)+
+     *             fuel_1hr_wood_left(pft,1)+
+     *             fuel_10hr_left(pft,1)+
+     *             fuel_100hr_left(pft,1))
      *             /0.45+fuel_1000hr_left(pft,1))*fire_frac(d) 
 
 
@@ -12186,8 +13158,11 @@ c     update of individual structure and FPC.
      *  lm_ind,sm_ind,rm_ind,hm_ind,lm_sapl,sm_sapl,rm_sapl,hm_sapl,
      *  crownarea,fpc_grid,lai_ind,height,dbh,tau_c,cl_t,sla,wooddens,
      *  latosa,mprec,reinickerp,
-     *  litter_ag,litter_bg,fuel_1hr,fuel_10hr,fuel_100hr,fuel_1000hr,
-     *  fuel_1hr_inc_pos,fuel_1hr_inc_neg,               !Doug 03/09
+     *  litter_ag_leaf,litter_ag_wood,litter_bg,
+     *  fuel_1hr_leaf,fuel_1hr_wood,
+     *  fuel_10hr,fuel_100hr,fuel_1000hr,
+     *  fuel_1hr_leaf_inc_pos,fuel_1hr_leaf_inc_neg,               !Doug 03/09
+     *  fuel_1hr_wood_inc_pos,fuel_1hr_wood_inc_neg, 
      *  fuel_10hr_inc,fuel_100hr_inc,fuel_1000hr_inc,    !Doug 03/09
      *  pas,crop,                                             !Doug 06/09
      *  tree,allom1,allom2,allom3,acflux_estab,
@@ -12198,7 +13173,7 @@ c     update of individual structure and FPC.
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
 !        parameter (npft=9,npftpar=50,nsoilpar=7)
-        parameter (npft=9,npftpar=51,nsoilpar=7)
+        parameter (npft=9,npftpar=54,nsoilpar=7)
       integer nco2
          parameter (nco2=3)
       real pi
@@ -12229,17 +13204,23 @@ c     ARGUMENTS
       real sla(1:npft)
       real wooddens,latosa,reinickerp
       real mprec(1:12)
-      real litter_ag(1:npft,1:nco2),litter_bg(1:npft,1:nco2)
-      real fuel_1hr(1:npft,1:nco2),fuel_10hr(1:npft,1:nco2)
+      REAL litter_ag_leaf(1:npft,1:nco2)
+      REAL litter_ag_wood(1:npft,1:nco2)
+      REAL litter_bg(1:npft,1:nco2)
+      REAL fuel_1hr_leaf(1:npft,1:nco2)
+      REAL fuel_1hr_wood(1:npft,1:nco2)
+      REAL fuel_10hr(1:npft,1:nco2)
       real fuel_100hr(1:npft,1:nco2)
       real fuel_1000hr(1:npft,1:nco2)
 
-      REAL fuel_1hr_inc_pos(1:npft,1:nco2,1:12)    !Doug 03/09
-      REAL fuel_1hr_inc_neg(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_leaf_inc_pos(1:npft,1:nco2,1:12)    !Doug 03/09
+      REAL fuel_1hr_leaf_inc_neg(1:npft,1:nco2,1:12)
+	  REAL fuel_1hr_wood_inc_pos(1:npft,1:nco2,1:12)    !Doug 03/09
+      REAL fuel_1hr_wood_inc_neg(1:npft,1:nco2,1:12)
       REAL fuel_10hr_inc(1:npft,1:nco2,1:12)
       REAL fuel_100hr_inc(1:npft,1:nco2,1:12)
       REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)
-      REAL temp_fuel(1:4,1:npft,1:nco2)
+      REAL temp_fuel(1:5,1:npft,1:nco2)
 
       REAL pas,crop                                     !Doug 06/09
 
@@ -12331,10 +13312,11 @@ c     Calculate annual precipitation
       enddo
 
 c     Doug 03/09: Store fuel load values before any changes.
-      temp_fuel(1,:,:)=fuel_1hr
-      temp_fuel(2,:,:)=fuel_10hr
-      temp_fuel(3,:,:)=fuel_100hr
-      temp_fuel(4,:,:)=fuel_1000hr
+      temp_fuel(1,:,:)=fuel_1hr_leaf
+      temp_fuel(2,:,:)=fuel_1hr_wood
+      temp_fuel(3,:,:)=fuel_10hr
+      temp_fuel(4,:,:)=fuel_100hr
+      temp_fuel(5,:,:)=fuel_1000hr
 
       do pft=1,npft
 
@@ -12372,30 +13354,78 @@ c         Add up NPP of PFTs that are killed in extra balance
 c         Add killed biomass to litter
 
           if (tree(pft)) then
-            temp=litter_ag(pft,1)            
-            litter_ag(pft,1)=litter_ag(pft,1)+nind(pft)
-     *           *(sm_ind(pft,1)+hm_ind(pft,1)+lm_ind(pft,1))
-            if (litter_ag(pft,1) .gt. 0.0) then
-            do nc=2,nco2
+		    temp=litter_ag_leaf(pft,1)            
+            litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)+nind(pft)
+     *           *lm_ind(pft,1)
+            IF (litter_ag_leaf(pft,1) .gt. 0.0) THEN
+              DO nc=2,nco2
+               litter_inc=(lm_ind(pft,1)*lm_ind(pft,nc))
+               litter_ag_leaf(pft,nc)=(litter_ag_leaf(pft,nc)*temp
+     *              +litter_inc*nind(pft))/litter_ag_leaf(pft,1)
+              END DO
+            END IF
+			
+            temp=litter_ag_wood(pft,1)            
+            litter_ag_wood(pft,1)=litter_ag_wood(pft,1)+nind(pft)
+     *           *(sm_ind(pft,1)+hm_ind(pft,1))
+            IF (litter_ag_wood(pft,1) .gt. 0.0) THEN
+              DO nc=2,nco2
                litter_inc=(sm_ind(pft,1)*sm_ind(pft,nc)+hm_ind(pft,1)
-     *              *hm_ind(pft,nc)+lm_ind(pft,1)*lm_ind(pft,nc))
-               litter_ag(pft,nc)=(litter_ag(pft,nc)*temp
-     *              +litter_inc*nind(pft))/litter_ag(pft,1)
-            enddo
-            endif
+     *              *hm_ind(pft,nc))
+               litter_ag_wood(pft,nc)=(litter_ag_wood(pft,nc)*temp
+     *              +litter_inc*nind(pft))/litter_ag_wood(pft,1)
+              END DO
+            END IF
+		  
+c            temp=litter_ag(pft,1)            
+c            litter_ag(pft,1)=litter_ag(pft,1)+nind(pft)
+c     *           *(sm_ind(pft,1)+hm_ind(pft,1)+lm_ind(pft,1))
+c            if (litter_ag(pft,1) .gt. 0.0) then
+c            do nc=2,nco2
+c               litter_inc=(sm_ind(pft,1)*sm_ind(pft,nc)+hm_ind(pft,1)
+c     *              *hm_ind(pft,nc)+lm_ind(pft,1)*lm_ind(pft,nc))
+c               litter_ag(pft,nc)=(litter_ag(pft,nc)*temp
+c     *              +litter_inc*nind(pft))/litter_ag(pft,1)
+c            enddo
+c            endif
 c         KIRSTEN: per fuel class
-            temp=fuel_1hr(pft,1)
-            fuel_1hr(pft,1)=fuel_1hr(pft,1)+(lm_ind(pft,1)+
-     *           0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
-            if (fuel_1hr(pft,1) .gt. 0.0) then
-            do nc=2,nco2
-               litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
+            temp=fuel_1hr_leaf(pft,1)
+            fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)+
+     *           lm_ind(pft,1)*nind(pft)
+            IF (fuel_1hr_leaf(pft,1) .gt. 0.0) THEN
+              DO nc=2,nco2
+                litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
      *              +sm_ind(pft,1)*sm_ind(pft,nc)*0.045
      *              +hm_ind(pft,1)*hm_ind(pft,nc)+0.045
-               fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
-     *              +litter_inc*nind(pft))/fuel_1hr(pft,1)
+                fuel_1hr_leaf(pft,nc)=(fuel_1hr_leaf(pft,nc)*temp
+     *              +litter_inc*nind(pft))/fuel_1hr_leaf(pft,1)
+              END DO
+            END IF
+			
+            temp=fuel_1hr_wood(pft,1)
+            fuel_1hr_wood(pft,1)=fuel_1hr_wood(pft,1)+
+     *           (0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
+            if (fuel_1hr_wood(pft,1) .gt. 0.0) then
+            do nc=2,nco2
+               litter_inc=sm_ind(pft,1)*sm_ind(pft,nc)*0.045
+     *              +hm_ind(pft,1)*hm_ind(pft,nc)+0.045
+               fuel_1hr_wood(pft,nc)=(fuel_1hr_wood(pft,nc)*temp
+     *              +litter_inc*nind(pft))/fuel_1hr_wood(pft,1)
             enddo
             endif
+			
+c            temp=fuel_1hr(pft,1)
+c            fuel_1hr(pft,1)=fuel_1hr(pft,1)+(lm_ind(pft,1)+
+c     *           0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
+c            if (fuel_1hr(pft,1) .gt. 0.0) then
+c            do nc=2,nco2
+c               litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
+c     *              +sm_ind(pft,1)*sm_ind(pft,nc)*0.045
+c     *              +hm_ind(pft,1)*hm_ind(pft,nc)+0.045
+c               fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
+c     *              +litter_inc*nind(pft))/fuel_1hr(pft,1)
+c            enddo
+c            endif
 
             temp=fuel_10hr(pft,1)
             fuel_10hr(pft,1)=fuel_10hr(pft,1)+((0.075*
@@ -12434,25 +13464,25 @@ c         KIRSTEN: per fuel class
             endif
 
           else  !grasses
-             temp=litter_ag(pft,1)
-             litter_ag(pft,1)=litter_ag(pft,1)+lm_ind(pft,1)
+             temp=litter_ag_leaf(pft,1)
+             litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)+lm_ind(pft,1)
      *            *nind(pft)
-             if (litter_ag(pft,1) .gt. 0.0) then
+             if (litter_ag_leaf(pft,1) .gt. 0.0) then
              do nc=2,nco2
                 litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
-                litter_ag(pft,nc)=(litter_ag(pft,nc)*temp
-     *               +litter_inc*nind(pft))/litter_ag(pft,1)
+                litter_ag_leaf(pft,nc)=(litter_ag_leaf(pft,nc)*temp
+     *               +litter_inc*nind(pft))/litter_ag_leaf(pft,1)
              enddo
              endif
 c         KIRSTEN: 1hr fuel class
-             temp=fuel_1hr(pft,1)
-             fuel_1hr(pft,1)=fuel_1hr(pft,1)+lm_ind(pft,1)
+             temp=fuel_1hr_leaf(pft,1)
+             fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)+lm_ind(pft,1)
      *            *nind(pft)
-             if (fuel_1hr(pft,1) .gt. 0.0) then
+             if (fuel_1hr_leaf(pft,1) .gt. 0.0) then
              do nc=2,nco2
                 litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
-                fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
-     *               +litter_inc*nind(pft))/fuel_1hr(pft,1)
+                fuel_1hr_leaf(pft,nc)=(fuel_1hr_leaf(pft,nc)*temp
+     *               +litter_inc*nind(pft))/fuel_1hr_leaf(pft,1)
              enddo
              endif
           endif
@@ -12725,14 +13755,13 @@ c         compartment, if necessary to satisfy Eqn A
           endif
 
 c          Update LAI and FPC
-
            if (crownarea(pft).gt.0.0) then
              lai_ind(pft)=(lm_ind(pft,1)*sla(pft))/crownarea(pft)
            else
              lai_ind(pft)=0.0
            endif
-
-           fpc_ind=(1.0-exp(-0.5*lai_ind(pft)))
+		   
+           fpc_ind=(1.0-exp(-0.5*lai_ind(pft)))		 
            fpc_grid(pft)=crownarea(pft)*nind(pft)*fpc_ind
        endif
       enddo !pft
@@ -12757,30 +13786,79 @@ c          Update LAI and FPC
               nind_old=nind(pft)
               nind(pft)=nind(pft)/(fpc_tree_total/0.95)
               fpc_grid(pft)=fpc_grid(pft)/(fpc_tree_total/0.95)
-              temp=litter_ag(pft,1)
-              litter_ag(pft,1)=litter_ag(pft,1)+(lm_ind(pft,1)+
-     *             sm_ind(pft,1)+hm_ind(pft,1))*(nind_old-nind(pft))
-              if (litter_ag(pft,1).gt.0.0) then
-                 do nc=2,nco2
-                    litter_ag(pft,nc)=(litter_ag(pft,nc)*temp+
+			  
+              temp=litter_ag_leaf(pft,1)
+              litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)+lm_ind(pft,1)
+     *             *(nind_old-nind(pft))
+              IF (litter_ag_leaf(pft,1).gt.0.0) THEN
+                 DO nc=2,nco2
+                    litter_ag_leaf(pft,nc)=(litter_ag_leaf(pft,nc)*temp+
+     *                   ((lm_ind(pft,1)*lm_ind(pft,nc))*
+     *                   (nind_old-nind(pft))))/ litter_ag_leaf(pft,1)
+                 END DO
+              END IF
+			  
+              temp=litter_ag_wood(pft,1)
+              litter_ag_wood(pft,1)=litter_ag_wood(pft,1)+
+     *             (sm_ind(pft,1)+hm_ind(pft,1))*(nind_old-nind(pft))
+              IF (litter_ag_wood(pft,1).gt.0.0) THEN
+                 DO nc=2,nco2
+                    litter_ag_wood(pft,nc)=(litter_ag_wood(pft,nc)*temp+
      *                   ((hm_ind(pft,1)*hm_ind(pft,nc)+sm_ind(pft,1)*
-     *                   sm_ind(pft,nc)+lm_ind(pft,1)*lm_ind(pft,nc))*
-     *                   (nind_old-nind(pft))))/ litter_ag(pft,1)
-                 enddo
-              endif
+     *                   sm_ind(pft,nc)*(nind_old-nind(pft)))))/
+     *                   litter_ag_wood(pft,1)
+                 END DO
+              END IF
+			  
+c              temp=litter_ag(pft,1)
+c              litter_ag(pft,1)=litter_ag(pft,1)+(lm_ind(pft,1)+
+c     *             sm_ind(pft,1)+hm_ind(pft,1))*(nind_old-nind(pft))
+c              if (litter_ag(pft,1).gt.0.0) then
+c                 do nc=2,nco2
+c                    litter_ag(pft,nc)=(litter_ag(pft,nc)*temp+
+c     *                   ((hm_ind(pft,1)*hm_ind(pft,nc)+sm_ind(pft,1)*
+c     *                   sm_ind(pft,nc)+lm_ind(pft,1)*lm_ind(pft,nc))*
+c     *                   (nind_old-nind(pft))))/ litter_ag(pft,1)
+c                 enddo
+c              endif
 c      Kirsten: fuel class
-            temp=fuel_1hr(pft,1)
-            fuel_1hr(pft,1)=fuel_1hr(pft,1)+(lm_ind(pft,1)+
-     *           0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
-            if (fuel_1hr(pft,1) .gt. 0.0) then
-            do nc=2,nco2
-               litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
-     *              +sm_ind(pft,1)*sm_ind(pft,nc)*0.045
-     *              +hm_ind(pft,1)*hm_ind(pft,nc)+0.045
-               fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
-     *              +litter_inc*nind(pft))/fuel_1hr(pft,1)
-            enddo
-            endif
+            temp=fuel_1hr_leaf(pft,1)
+            fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)+
+     *           lm_ind(pft,1)*nind(pft)
+            IF (fuel_1hr_leaf(pft,1) .gt. 0.0) THEN
+              DO nc=2,nco2
+                litter_inc=sm_ind(pft,1)*sm_ind(pft,nc)*0.045
+     *              +hm_ind(pft,1)*hm_ind(pft,nc)*0.045
+                fuel_1hr_leaf(pft,nc)=(fuel_1hr_leaf(pft,nc)*temp
+     *              +litter_inc*nind(pft))/fuel_1hr_leaf(pft,1)
+              END DO
+            END IF
+			
+            temp=fuel_1hr_wood(pft,1)
+            fuel_1hr_wood(pft,1)=fuel_1hr_wood(pft,1)+
+     *           (0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
+            IF (fuel_1hr_wood(pft,1) .gt. 0.0) THEN
+              DO nc=2,nco2
+                litter_inc=sm_ind(pft,1)*sm_ind(pft,nc)*0.045
+     *              +hm_ind(pft,1)*hm_ind(pft,nc)*0.045
+                fuel_1hr_wood(pft,nc)=(fuel_1hr_wood(pft,nc)*temp
+     *              +litter_inc*nind(pft))/fuel_1hr_wood(pft,1)
+              END DO
+            END IF
+			
+C            temp=fuel_1hr(pft,1)
+C            fuel_1hr(pft,1)=fuel_1hr(pft,1)+(lm_ind(pft,1)+
+C     *           0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
+C            if (fuel_1hr(pft,1) .gt. 0.0) then
+C            do nc=2,nco2
+C               litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
+C     *              +sm_ind(pft,1)*sm_ind(pft,nc)*0.045
+C     *              +hm_ind(pft,1)*hm_ind(pft,nc)+0.045
+C               fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
+C     *              +litter_inc*nind(pft))/fuel_1hr(pft,1)
+C            enddo
+C            endif
+
 
             temp=fuel_10hr(pft,1)
             fuel_10hr(pft,1)=fuel_10hr(pft,1)+((0.075*
@@ -12860,10 +13938,12 @@ c         Accumulate biomass increment due to grass establishment
 
              if (bare.le.0.0) then
                 litter_bg(pft,1)=litter_bg(pft,1)-(bare*rm_sapl(pft,1))
-                litter_ag(pft,1)=litter_ag(pft,1)-(bare*lm_sapl(pft,1))
+                litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)-
+     *             (bare*lm_sapl(pft,1))
                 
 c            KIRSTEN: per fuel class
-              fuel_1hr(pft,1)=fuel_1hr(pft,1)-(bare*lm_sapl(pft,1))
+              fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)-
+     *          (bare*lm_sapl(pft,1))
              else
                if(bare.gt.bare_max) bare=bare_max
                temp=lm_ind(pft,1)
@@ -12956,28 +14036,45 @@ c     recalculate fpc's
 
 c     Doug 03/09: update changein fuel loads
       DO pft=1,npft
-        IF (fuel_1hr(pft,1)-temp_fuel(1,pft,1)>0) THEN
+        IF (fuel_1hr_leaf(pft,1)-temp_fuel(1,pft,1)>0) THEN
           DO nc=1,nco2
-            fuel_1hr_inc_pos(pft,nc,:)=fuel_1hr_inc_pos(pft,nc,:)+
-     *        (fuel_1hr(pft,1)-temp_fuel(1,pft,1))/12
+            fuel_1hr_leaf_inc_pos(pft,nc,:)=
+     *         fuel_1hr_leaf_inc_pos(pft,nc,:)+
+     *        (fuel_1hr_leaf(pft,1)-temp_fuel(1,pft,1))/12
 
           END DO
         ELSE
           DO nc=1,nco2
-            fuel_1hr_inc_neg(pft,nc,:)=fuel_1hr_inc_neg(pft,nc,:)+
-     *        (fuel_1hr(pft,1)-temp_fuel(1,pft,1))/12
+            fuel_1hr_leaf_inc_neg(pft,nc,:)=
+     *         fuel_1hr_leaf_inc_neg(pft,nc,:)+
+     *        (fuel_1hr_leaf(pft,1)-temp_fuel(1,pft,1))/12
+          END DO
+        END IF
+		
+        IF (fuel_1hr_wood(pft,1)-temp_fuel(2,pft,1)>0) THEN
+          DO nc=1,nco2
+            fuel_1hr_wood_inc_pos(pft,nc,:)=
+     *         fuel_1hr_wood_inc_pos(pft,nc,:)+
+     *        (fuel_1hr_wood(pft,1)-temp_fuel(2,pft,1))/12
+
+          END DO
+        ELSE
+          DO nc=1,nco2
+            fuel_1hr_wood_inc_neg(pft,nc,:)=
+     *         fuel_1hr_wood_inc_neg(pft,nc,:)+
+     *        (fuel_1hr_wood(pft,1)-temp_fuel(2,pft,1))/12
           END DO
         END IF
 
         DO nc=1,nco2
           fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
-     *      (fuel_10hr(pft,1)-temp_fuel(2,pft,1))/12
+     *      (fuel_10hr(pft,1)-temp_fuel(3,pft,1))/12
 
           fuel_100hr_inc(pft,nc,:)=fuel_100hr_inc(pft,nc,:)+
-     *      (fuel_100hr(pft,1)-temp_fuel(3,pft,1))/12
+     *      (fuel_100hr(pft,1)-temp_fuel(4,pft,1))/12
 
           fuel_1000hr_inc(pft,nc,:)=fuel_1000hr_inc(pft,nc,:)+
-     *      (fuel_1000hr(pft,1)-temp_fuel(4,pft,1))/12
+     *      (fuel_1000hr(pft,1)-temp_fuel(5,pft,1))/12
         END DO
       END DO
 
@@ -12991,8 +14088,9 @@ c     SUBROUTINE decay
 c     Calculation of radioactive 14C decay
 
       subroutine decay(present,lm_ind,sm_ind,hm_ind,rm_ind,
-     *     litter_ag,litter_bg,cpool_fast,cpool_slow,
-     *     fuel_1hr,fuel_10hr,fuel_100hr,fuel_1000hr)
+     *     litter_ag_leaf,litter_ag_wood,
+     *     litter_bg,cpool_fast,cpool_slow,
+     *     fuel_1hr_leaf,fuel_1hr_wood,fuel_10hr,fuel_100hr,fuel_1000hr)
 
       implicit none
 
@@ -13008,10 +14106,12 @@ c     ARGUMENTS
       logical present(1:npft)
       real lm_ind(1:npft,1:nco2),rm_ind(1:npft,1:nco2)
       real hm_ind(1:npft,1:nco2),sm_ind(1:npft,1:nco2)
-      real litter_ag(1:npft,1:nco2)
+      REAL litter_ag_leaf(1:npft,1:nco2)
+      REAL litter_ag_wood(1:npft,1:nco2)
       real litter_bg(1:npft,1:nco2)
       real cpool_fast(1:nco2),cpool_slow(1:nco2)
-      real fuel_1hr(1:npft,1:nco2)           !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
+      REAL fuel_1hr_leaf(1:npft,1:nco2)      !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
+      REAL fuel_1hr_wood(1:npft,1:nco2)      !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
       real fuel_10hr(1:npft,1:nco2)          !10hr dead fuel: large twigs
       real fuel_100hr(1:npft,1:nco2)         !100hr dead fuel: small branches
       real fuel_1000hr(1:npft,1:nco2)        !1000hr dead fuel: logs, bole, large branches
@@ -13037,9 +14137,15 @@ c     LOCAL VARIABLES
          sm_ind(pft,c)=(((sm_ind(pft,c)/1000.+1.)*dfac)-1.)*1000.
          hm_ind(pft,c)=(((hm_ind(pft,c)/1000.+1.)*dfac)-1.)*1000.
          rm_ind(pft,c)=(((rm_ind(pft,c)/1000.+1.)*dfac)-1.)*1000.
-         litter_ag(pft,c)=(((litter_ag(pft,c)/1000.+1.)*dfac)-1.)*1000.
+         litter_ag_leaf(pft,c)=
+     *       (((litter_ag_leaf(pft,c)/1000.+1.)*dfac)-1.)*1000.
+         litter_ag_wood(pft,c)=
+     *       (((litter_ag_wood(pft,c)/1000.+1.)*dfac)-1.)*1000.
          litter_bg(pft,c)=(((litter_bg(pft,c)/1000.+1.)*dfac)-1.)*1000.
-         fuel_1hr(pft,c)=(((fuel_1hr(pft,c)/1000.+1.)*dfac)-1.)*1000.
+         fuel_1hr_leaf(pft,c)=
+     *     (((fuel_1hr_leaf(pft,c)/1000.+1.)*dfac)-1.)*1000.
+         fuel_1hr_wood(pft,c)=
+     *     (((fuel_1hr_wood(pft,c)/1000.+1.)*dfac)-1.)*1000.
          fuel_10hr(pft,c)=(((fuel_10hr(pft,c)/1000.+1.)*dfac)-1.)*1000.
          fuel_100hr(pft,c)=(((fuel_100hr(pft,c)/1000.+1.)
      *                     *dfac)-1.)*1000.

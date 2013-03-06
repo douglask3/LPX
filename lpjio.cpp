@@ -285,6 +285,8 @@ LPJVariable LPJ_VARIABLES[] = {
   { "anpp_pft_sum",  PER_CO2         },   // Yan: 14/10/07
   { "acflux_estab",  PER_CO2         },
   { "litter_ag",     PER_CO2_PFT     },
+  { "litter_ag_leaf",PER_CO2_PFT     },
+  { "litter_ag_wood",PER_CO2_PFT     },
   { "litter_bg",     PER_CO2_PFT     },
   { "cpool_fast",    PER_CO2         },
   { "cpool_slow",    PER_CO2         },
@@ -347,6 +349,8 @@ LPJVariable LPJ_VARIABLES[] = {
   { "fuel_100hr_total_0", SIMPLE          },
   { "fuel_1000hr_total_0", SIMPLE          },
   { "mfuel_1hr_total",     SIMPLE_MONTHLY  }, //Doug 03/09
+  { "mfuel_1hr_leaf_total",     SIMPLE_MONTHLY  }, //Doug 03/09
+  { "mfuel_1hr_wood_total",     SIMPLE_MONTHLY  }, //Doug 03/09
   { "mfuel_10hr_total",    SIMPLE_MONTHLY  }, //Doug 03/09
   { "mfuel_100hr_total",   SIMPLE_MONTHLY  }, //Doug 03/09
   { "mfuel_1000hr_total",  SIMPLE_MONTHLY  }, //Doug 03/09
@@ -385,7 +389,8 @@ LPJVariable LPJ_VARIABLES[] = {
   { "acflux_fire_grid", SIMPLE       },    //Doug 07/09: another cherat for carbon burnt
   { "gdd_grid",      SIMPLE          },    //Doug 07/09: bioclimatic varible growing degree days base 5
   { "alpha_ws",      SIMPLE          },    //Doug 07/09: Bioclimatic varible for water stress
-  { "cgf",  SIMPLE_MONTHLY }               //Doug 12/10: cload-to-ground fraction
+  { "pfuel_limit",   SIMPLE          },     //Doug 12/12: proportion of days where fire is limited by fuel
+  { "dprec_out",         SIMPLE_DAILY    }     //Doug 12/12: proportion of days where fire is limited by fuel
 };
 
 
@@ -1652,8 +1657,10 @@ extern "C" int put_saved_data_(
              float *k_slow_ave,
              float *litter_decom_ave,
              int   *present,
-             float *litter_ag,
-             float *fuel_1hr,
+             float *litter_ag_leaf,
+             float *litter_ag_wood,
+             float *fuel_1hr_leaf,
+             float *fuel_1hr_wood,
              float *fuel_10hr,
              float *fuel_100hr,
              float *fuel_1000hr,
@@ -1734,11 +1741,17 @@ extern "C" int put_saved_data_(
     // logical present(1:npft)         !whether PFT present in gridcell
     output_to_text_file_1( year1000out, "present", present, NPFT );
     
-    // real litter_ag(1:npft,1:nco2)          !gridcell above-ground litter (gC/m2)
-    output_to_text_file_2( year1000out, "litter_ag", litter_ag, NPFT, NCO2 );
+    // Doug 11/12: real litter_ag_leaf(1:npft,1:nco2)          !gridcell above-ground litter (gC/m2)
+    output_to_text_file_2( year1000out, "litter_ag_leaf", litter_ag_leaf, NPFT, NCO2 );   
+	
+    // Doug 11/12: real litter_ag_wood(1:npft,1:nco2)          !gridcell above-ground litter (gC/m2)
+    output_to_text_file_2( year1000out, "litter_ag_wood", litter_ag_wood, NPFT, NCO2 );
     
-    // real fuel_1hr(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
-    output_to_text_file_2( year1000out, "fuel_1hr", fuel_1hr, NPFT, NCO2 );
+    // Doug 11/12: real fuel_1hr_leaf(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
+    output_to_text_file_2( year1000out, "fuel_1hr_leaf", fuel_1hr_leaf, NPFT, NCO2 );
+    
+    // Doug 11/12: real fuel_1hr_wood(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
+    output_to_text_file_2( year1000out, "fuel_1hr_wood", fuel_1hr_wood, NPFT, NCO2 );
     
     // real fuel_10hr(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
     output_to_text_file_2( year1000out, "fuel_10hr", fuel_10hr, NPFT, NCO2 );
@@ -2035,8 +2048,10 @@ extern "C" int get_saved_data_(
              float *k_slow_ave,
              float *litter_decom_ave,
              int   *present,
-             float *litter_ag,
-             float *fuel_1hr,
+             float *litter_ag_leaf,			 
+             float *litter_ag_wood,
+             float *fuel_1hr_leaf,
+             float *fuel_1hr_wood,
              float *fuel_10hr,
              float *fuel_100hr,
              float *fuel_1000hr,
@@ -2131,11 +2146,17 @@ extern "C" int get_saved_data_(
     // logical present(1:npft)         !whether PFT present in gridcell
     input_from_text_file_1( year1000in, "present", present, NPFT );
     
-    // real litter_ag(1:npft,1:nco2)          !gridcell above-ground litter (gC/m2)
-    input_from_text_file_2( year1000in, "litter_ag", litter_ag, NPFT, NCO2 );
+    // Doug 11/12: real litter_ag_leaf(1:npft,1:nco2)          !gridcell above-ground litter (gC/m2)
+    input_from_text_file_2( year1000in, "litter_ag_leaf", litter_ag_leaf, NPFT, NCO2 );
     
-    // real fuel_1hr(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
-    input_from_text_file_2( year1000in, "fuel_1hr", fuel_1hr, NPFT, NCO2 );
+    // Doug 11/12: real litter_ag_wood(1:npft,1:nco2)          !gridcell above-ground litter (gC/m2)
+    input_from_text_file_2( year1000in, "litter_ag_wood", litter_ag_wood, NPFT, NCO2 );
+    
+    // Doug 11/12: real fuel_1hr_leaf(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
+    input_from_text_file_2( year1000in, "fuel_1hr_leaf", fuel_1hr_leaf, NPFT, NCO2 );
+    
+    // Doug 11/12: real fuel_1hr_wood(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
+    input_from_text_file_2( year1000in, "fuel_1hr_wood", fuel_1hr_wood, NPFT, NCO2 );
     
     // real fuel_10hr(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
     input_from_text_file_2( year1000in, "fuel_10hr", fuel_10hr, NPFT, NCO2 );
@@ -2323,8 +2344,8 @@ extern "C" int outannual_(int *year, int *present,
                           float *lm_ind, float *rm_ind,
                           float *sm_ind, float *hm_ind,
                           float *fpc_grid,
-                          float *anpp, float *acflux_estab,
-                          float *litter_ag, float *litter_bg,
+                          float *anpp, float *acflux_estab,float *litter_ag,
+                          float *litter_ag_leaf, float *litter_ag_wood, float *litter_bg,
                           float *cpool_fast, float *cpool_slow,
                           float *arh, float *afire_frac, float *acflux_fire,
                           float *mcflux_fire,
@@ -2364,7 +2385,9 @@ extern "C" int outannual_(int *year, int *present,
                           float *dead_fuel_all_0, float *fuel_all_0,	
                           float *fuel_1hr_total_0, float *fuel_10hr_total_0,		
                           float *fuel_100hr_total_0, float *fuel_1000hr_total_0,
-                          float *mfuel_1hr_total, float *mfuel_10hr_total,           //Doug 03/09: monthly fuel
+                          float *mfuel_1hr_total,
+						  float *mfuel_1hr_leaf_total,float *mfuel_1hr_wood_total,
+						  float *mfuel_10hr_total,           //Doug 03/09: monthly fuel
                           float *mfuel_100hr_total, float *mfuel_1000hr_total,       //Doug 03/09: monthly fuel
                           float *mlivegrass,                                         //Doug 05/09: monthly fuel
                           float *deltaa, float *deltaa_fpc, float *delt_c13_fpc, 	
@@ -2372,7 +2395,8 @@ extern "C" int outannual_(int *year, int *present,
                           float *fbdep, float * litter_decom_ave, float * turnover_ind,
                           float *crop, float *pas,                                    //Doug 05/09: crop and pasture proportions
                           float *anpp_grid, float *arh_grid, float *acflux_fire_grid,//Doug 07/09: the cheats
-                          float *gdd_grid, float *alpha_ws, float *cgf)                          //Doug 07/09: vioclimatic varibles         
+                          float *gdd_grid, float *alpha_ws, float *pfuel_limit, 
+						  float* dprec_out)                          //Doug 07/09: vioclimatic varibles         
 {
   // Skip output during spin-up if required.
   // Doug 06/09: Skip output if before fist year of ouput
@@ -2449,6 +2473,8 @@ extern "C" int outannual_(int *year, int *present,
   handle_output_record("anpp_sum", anpp_sum);
   handle_output_record("acflux_estab", acflux_estab);
   handle_output_record("litter_ag", litter_ag);
+  handle_output_record("litter_ag_leaf", litter_ag_leaf);  
+  handle_output_record("litter_ag_wood", litter_ag_wood);
   handle_output_record("litter_bg", litter_bg);
   handle_output_record("cpool_fast", cpool_fast);
   handle_output_record("cpool_slow", cpool_slow);
@@ -2531,6 +2557,8 @@ extern "C" int outannual_(int *year, int *present,
   handle_output_record("fuel_100hr_total_0",fuel_100hr_total_0);     
   handle_output_record("fuel_1000hr_total_0",fuel_1000hr_total_0);
   handle_output_record("mfuel_1hr_total",mfuel_1hr_total);           // Doug 03/09
+  handle_output_record("mfuel_1hr_leaf_total",mfuel_1hr_leaf_total); 
+  handle_output_record("mfuel_1hr_wood_total",mfuel_1hr_wood_total); 
   handle_output_record("mfuel_10hr_total",mfuel_10hr_total);         // Doug 03/09
   handle_output_record("mfuel_100hr_total",mfuel_100hr_total);       // Doug 03/09
   handle_output_record("mfuel_1000hr_total",mfuel_1000hr_total);     // Doug 03/09
@@ -2551,7 +2579,8 @@ extern "C" int outannual_(int *year, int *present,
   handle_output_record("acflux_fire_grid",acflux_fire_grid);         //Doug 07/09: another cheat
   handle_output_record("gdd_grid",gdd_grid);                         //Doug 07/09: growing degree days base 5
   handle_output_record("alpha_ws",  alpha_ws);                       //Doug 07/09: bioclimatic alpha
-  handle_output_record("cgf",  cgf);                       //Doug 07/09: bioclimatic alpha
+  handle_output_record("pfuel_limit",  pfuel_limit);                 //Doug 07/09: proportion of days where fire is limited by fuel availability
+  handle_output_record("dprec_out",  dprec_out);                 //Doug 07/09: proportion of days where fire is limited by fuel availability
 
   // Output is written every params.spinup_out_freq years during
   // spin-up (averaged over that period).  During the transient part
