@@ -499,6 +499,7 @@ c     INPUT PARAMETERS
       real a_nd                        ! human-caused, potential ignitions
       real mlightn(1:12)               ! needed by this version of getclimate
       real dlightn(1:365), dlightn_control(1:365)              ! filled by interpolation
+      REAL cgf(1:12)				   ! Doug 09/12: fraction of cloud-to-ground-lightning
       real co2(1:nco2)                 ! atmospheric CO2 concentration (ppmv)
       real lat                         ! latitude (degrees +=N, -=S)
       real lon                         ! longditude (degrees +=E, -=W)
@@ -1054,9 +1055,15 @@ c Doug 07/09: Calculate a GDD for each grid cell. Used for ouput only.
 
 
 
-          call daily2(lat,lon,mlightn,dprec,dlightn)	!Doug 01/09: functions
-						!distributed lighting 										!differently on days with & 
-						!without precipitation
+          call daily_lightning(lat,lon,mlightn,dprec,dlightn,cgf)
+						!Doug 01/09: functions
+							!distributed lighting
+							!differently on days with & 
+							!without precipitation
+						!Doug 09/12: Name of function changed to
+							!make more sense(itself function
+							!changed as well, see Doug 09/12
+							! comments below)
           dlightn=dlightn 
 
           call daily(msun,dsun)
@@ -1385,7 +1392,7 @@ c  acflux_fire(1)
      *      fbdep,litter_decom_ave,turnover_ind,
      *      crop,pas,	!Doug 05/09: just checking crops and pasture are implimented properly
      *      anpp_grid,arh_grid,acflux_fire_grid,                  !Doug 07/09: cheating future run ouputs without deltaC's
-     *      gdd_grid,alpha_ws)                                    !Doug 07/09: biocliamtic variables for heat and water stress
+     *      gdd_grid,alpha_ws,cgf)                                    !Doug 07/09: biocliamtic variables for heat and water stress
 cccc note: you can alternatively use mpet2 and apet to get PET*1.32
 cccc       instead of mpet_grid and apet_grid, respectively
 
@@ -1531,7 +1538,7 @@ c                                SUBROUTINES
 c -----------------------------------------------------------------------------
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
-c     SUBROUTINE DAILY2
+c     SUBROUTINE DAILY_LIGHTNING
 c     Doug 01/09: For calculating lightning strikes. Based on linear
 c	interpolation, but with grouping around rain events
 c
@@ -1539,40 +1546,45 @@ c	Completed in two steps. Step 1 calculates the daily spread of lighning if
 c	lighning was constant, with more ligtning on days with rainfall then days 
 c	without. Step2 to multiplys by linearly interpolated lighting strkes, and 
 c	scales so total lighting remains the same.  
+c
+c		Doug 09/12: function changed to remove iter-cloud
+c	lightning. See Doug 09/12 comments below for deatils.
 
-	SUBROUTINE daily2(lat,lon,mval,dval1,dval2)
+      SUBROUTINE daily_lightning(lat,lon,mval,dval1,dval2,cgf)
 
-	IMPLICIT NONE
+      IMPLICIT NONE
 
-	INTEGER	nmonths			! number of months in a year
-		PARAMETER (nmonths=12)
-	INTEGER	ndayyear		! number of days in a year
-		PARAMETER (ndayyear=365)
-	INTEGER	ndaymonth(1:nmonths)	!number of days in each month
-	INTEGER	m
+      INTEGER	nmonths			! number of months in a year
+        PARAMETER (nmonths=12)
+      INTEGER	ndayyear		! number of days in a year
+        PARAMETER (ndayyear=365)
+      INTEGER	ndaymonth(1:nmonths)	!number of days in each month
+      INTEGER	m
         	DATA (ndaymonth(m),m=1,12)
      *    / 31,28,31,30,31,30,31,31,30,31,30,31 /
 
 
 C	LOCAL VARAIBLES:
-	INTEGER	month,mday, day	!month and day of month and day of year
-
+      INTEGER	month,mday, day	!month and day of month and day of year
+      REAL cgf(1:nmonths) ! Doug 09/12: fraction of lighting that is cloud-to-ground.
+	
 c     I/O:
-      	REAL mval(nmonths),dval1(ndayyear), dval2(ndayyear)
+      REAL mval(nmonths),dval1(ndayyear)
+      REAL dval2(ndayyear)
 
 c	For step 1:
-	REAL	fdal(365)		!the value of the function that 
+      REAL	fdal(365)		!the value of the function that 
 					!redistributes lighting for each day
-	REAL	nwd, pwd		!number and proption of wet days in the month
-	REAL	gceo			!coeffiant used to calculate proportion of
+      REAL	nwd, pwd		!number and proption of wet days in the month
+      REAL	gceo			!coeffiant used to calculate proportion of
 					!lighting strikes on wet days
 		PARAMETER (gceo=0.00001)
 
 c	For step 2:
-	REAL	lmval(2)		!for calculating scaling of rediustributed
+      REAL	lmval(2)		!for calculating scaling of rediustributed
 					!lightning
 
-	REAL	lat,lon
+      REAL	lat,lon
 
 
 
@@ -1581,12 +1593,22 @@ c       ------------------------------------------------------------------------
 c       Step 1
 
         day=0
-
+		
         DO month=1,nmonths	!Month of year
+c		Doug 12/09. Removed inter-cload lighting by calculating
+c		the fraction of cload ground (CG) from total (LT)
+c		lightning. Uses fucntion CG=a*LT^b
+c		where a=0.4858; b=-0.04643, found by comparing US CG and
+c		total lighting data from Vaisala 
+          cgf(month)=0.4858*mval(month)**(-0.04643)
+		  
+          IF(cgf(month)>1) cgf(month)=1
+          IF(cgf(month)<0) cgf(month)=0
+           !PRINT*, "mval",mval(month)
+           !PRINT*, "cgf",cgf
+          
+			
           nwd=0
-
-
-
           DO mday=1,ndaymonth(month)	!day of month
             day=day+1
             IF(dval1(day)>0) nwd=nwd+1
@@ -1595,7 +1617,7 @@ c       Step 1
           pwd=nwd/ndaymonth(month) !pwd= fraction of wet days in month 
             day=day-ndaymonth(month)
             DO mday=1,ndaymonth(month)	!day of month
-              day=day+1    !Seaperates days and calcualates lighting for days with and 
+              day=day+1    !Seperates days and calcualates lightning for days with and 
                            !without rain
 
               IF(dval1(day)>0) THEN
@@ -1635,16 +1657,15 @@ c Step 2
               dval2(mday)=0
             ELSE IF(lmval(2)==0.AND.lmval(1)/=0)	THEN
               PRINT*, "error:redistrbuting lighting around"
-              PRINT*, "wet days in daily2 subroutine"
+              PRINT*, "wet days in daily_lightning subroutine"
               STOP
             END IF
 
-            dval2(mday)=dval2(mday)*lmval(1)/lmval(2)
+            dval2(mday)=cgf(month)*dval2(mday)*lmval(1)/lmval(2)
               IF (dval1(mday)>0) dval2(mday)=0	!removes all lightin
                                                 !on wet days
 
          END DO
-
 
 	END DO !month of year
 
@@ -1652,7 +1673,7 @@ c Step 2
 
 
 	return
-	END !SUBROUTINE	!Daily2
+	END !SUBROUTINE	!daily_lightning
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     SUBROUTINE DAILY1
@@ -8745,7 +8766,7 @@ c       ni_acc=0.0
           dlightn_lcc(:)=0
           m_lightn(:)=0
            counter_fire=0
-	afire_frac_afap_old=0.0
+         afire_frac_afap_old=0.0
 
 
 c     Assign a minimum fire fraction (for presentational purposes)
@@ -9056,7 +9077,7 @@ c         todays amount of green grass leaves: [gC/m2],influence on ROS only thr
               livegrass=livegrass+
      *          (lm_ind(pft,1)/0.45*nind(pft))*dphen(d,pft) 
 c     *                        (lm_ind(pft)/0.45*nind(pft))  
-				
+
 c              used in fire effects section only
 c               pot_fc_lg(pft)=(lm_ind(pft)/0.45*nind(pft))   
             end do	!day
@@ -9355,7 +9376,8 @@ c             to calculate amount of live grass!!
 		net_fuel=0.0
 
        fuel_1000hr_total=0.0
-        
+       
+
         do pft=1,npft
           if (present(pft)) then
 
@@ -9690,7 +9712,7 @@ c  number of fires. only ignitions, when dead fuel load - save computation time
  
         if(bet.lt.1.0)p_ig=p_ig*bet
 	   dlightn_cons=sum(dlightn)/365	!Doug 12/08, trying out constant lightnng
-           dlightn_sca(d)=dlightn(d)*0.15*0.2	! 0.15: continous current parameter; 0.2 Cloud-Ground: Total lighting ratio
+           dlightn_sca(d)=dlightn(d)*0.15	! 0.15: continous current parameter; 0.2 Cloud-Ground: Total lighting ratio
 c	   dlightn_sca(d)=dlightn_cons*0.15*0.2	!Doug 12/08 ""
             dlightn_sca(d)=dlightn_sca(d)*p_ig!*1	!Doug 12/08: play with scaling of ignitions from lightning
 
@@ -9894,7 +9916,7 @@ c          sh=0.0
 
           m_i_surface(m)=m_i_surface(m)+d_i_surface(d)
           an_i_surface=an_i_surface+d_i_surface(d)
-			
+
           area_burnt(m)=area_burnt(m)+d_area_burnt(d)
 C Yan
           num_fire_human(m)=num_fire_human(m)+d_numfire_human(d)
@@ -10418,8 +10440,10 @@ C Yan
           mfuel_1000hr_total(min(m,12))=mfuel_1000hr_total(min(m,12))+
      *      (fuel_1000hr_total*(1-fire_frac(d)))/month_length(min(m,12))
 
+
           mlivegrass(min(m,12))=mlivegrass(min(m,12))+
      *      (livegrass*(1-fire_frac(d)))/month_length(min(m,12))
+
 
 
 c     stop daily loop if entire grid cell burnt
@@ -10535,19 +10559,15 @@ c       pause
         end if
 
        afire_frac=an_areafires/area_ha
-		
+
        do m=1,12
          mfire_frac(m)=area_burnt(m)/area_ha
-		 if (lat>-36 .AND. lat<-35.5 .AND. lon>144 .AND. lon<144.5) THEN
-			print*, mfire_frac(m)
-			!if (m==12) stop
-		  end if
          if(mfire_frac(m).lt.0.0001)then
           mfire_frac(m)=0.0
           area_burnt(m)=0.0
          end if
        end do
-         
+
        if(afire_frac.lt.0.0001)then
            afire_frac=0.0
            an_areafires=0.0
