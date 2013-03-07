@@ -12560,6 +12560,7 @@ c          U_front=(ir*xi*(1.0+phi_wind))/(dens_fuel_ave*eps*q_ig)
       end
 c-------------------------------------------------------------------------------
 c Doug 02/13: Calculates tree mortality and new Bark thickness distribution from cambiol damage
+c Doug 02/13: Calculates tree mortality and new Bark thickness distribution from cambiol damage
        SUBROUTINE BT_change(DBH,BTparam1,BTparam2,
      *   tau_l,pm_tau_class)
 	 
@@ -12592,6 +12593,11 @@ C      local vaiables
        b=sqrt(abs(BB)/(AA-1));
 	   
        IF (isnan(DBH)) DBH=0.0
+	   !PRINT*, "&&&&&"
+	   !print*, BTparam1
+	   !print*, BTparam2
+	   !print*, "++++++"
+	   !print*,BB,AA,a,b,tau_l, DBH
 	   
        s1=BTparam1(1)+DBH*BTparam2(1)
        s2=BTparam1(3)+DBH*BTparam2(3)
@@ -12607,6 +12613,9 @@ C      local vaiables
        l6=0.0
        l7=0.0
        l8=0.0
+	   
+	   !PRINT*, "%%%%%%%%"
+	   !PRINT*, a,b,s1,BTmode,s2
 	   
        IF (a>=s2) THEN
 	     pm_tau_class=1.0
@@ -12673,38 +12682,59 @@ C      local vaiables
 	  
       d1=(s2-s1)*(BTmode-s1)
       d2=(s2-s1)*(s2-BTmode)
+	  
+	  !PRINT*, "?????????"
+	  !PRINT*, l1,l2,l3,l4
+	  !print*, l5,l6,l7,l8
+	  !print*, d1,d2
 	   
 	   
        IF (l1>=0.0 .AND.l2>0.0) THEN
          W=-(2*AA*((l1**3)-(l2**3))+3*AA*s1*((l2**2)-(l1**2))+
      *    6*BB*s1*(log(l1)-log(l2))+6*BB*(l2-l1))/(3*d1)
+     
+       IF (W<0.0001 .AND. W >-0.0001) W=0
 	 
          phi=-(AA*((l1**2)-(l2**2))+2*AA*s1*(l2-l1)+
      *     2*BB*(log(l2)-log(l1))+2*BB*s1*((1/l2)-(1/l1)))/d1
+     
+       IF (phi<0.0001 .AND. phi >-0.0001) phi=0
+       
        END IF
 	   
        IF (l3>=0.0 .AND.l4>0.0) THEN
          X=(2*AA*((l3**3)-(l4**3))+(3*AA*s2*((l4**2)-(l3**2))+
      *     6*BB*s2*(log(l3)-log(l4))+6*BB*(l4-l3)))/(3*d2)
+     
+         IF (X<0.001 .AND. X >-0.001) X=0.0
 	 
 	     chi=(AA*((l3**2)-(l4**2))+2*AA*s2*(l4-l3)+
      *     2*BB*(log(l4)-log(l3))+2*BB*s2*((1/l4)-(1/l3)))/d2
+     
+         IF (chi<0.001 .AND. chi >-0.001) chi=0.0
+     
        END IF
 	   
        IF (l5>=0.0 .AND. l6>0.0) THEN
-c	     Y=-(AA*((l5**2)-(l6**2))+2*AA*s1*(l6-l5)+
-c     *     2*BB*(log(l6)-log(l5))+2*BB*s1*((1/l6)+(1/l5)))/d1
-	     Y=-(2*((l5**3)-(l6**3))+3*s1*((l5**2)-(l6**2)))/(3*d1)
+	     Y=-(2*((l5**3)-(l6**3))+3*s1*((l5**2)-(l6**2)))/(3*d1)        
+         
 		 
 	     psi=-((l5**2)-(l6**2)+2*s1*(l6-l5))/d1
+         
+         IF (psi<0.0001 .AND. psi >-0.0001) psi=0.0;
+         IF (Y<0.0001 .AND. Y >-0.0001) Y=0.0; psi=0.0
+         
        END IF
 	   
        IF (l7>=0.0 .AND. l8>0.0) THEN
-c     !    Z=(AA*((l7**2)-(l8**2))+2*AA*s2*(l8-l7)+
-c     !*     2*BB*(log(l8)-log(l7))+2*BB*s2*((1/l8)-(1/l7)))/d2
          Z=(2*((l7**3)-(l8**3))+3*s2*((l8**2)-(l7**2)))/(3*d2)
+         
+         IF (Z<0.0001 .AND. Z >-0.0001) Z=0.0
 	 
 	     omg=((l7**2)-(l8**2)+2*s2*(l8-l7))/d2
+         
+         IF (omg<0.0001 .AND. omg >-0.0001) omg=0.0
+         
        END IF
 	   
        pm_tau_class=1-(phi+chi+psi+omg)
@@ -12725,8 +12755,14 @@ c     !*     2*BB*(log(l8)-log(l7))+2*BB*s2*((1/l8)-(1/l7)))/d2
          
          WRITE(10,*), "error: BT medium is lower or higher than"
          WRITE(10,*),  "lowest/highest possible limit in fire"
+         WRITE(10,*), "W, X, Y, Z: ", W, X, Y, Z
+         WRITE(10,*), "phi, chi, psi, omg", phi, chi, psi, omg
+         WRITE(10,*), "s1, s2", s1, s2
+         WRITE(10,*), "BTmode0: ", BTmode0
+         WRITE(10,*), "BTmean: ", BTmean
          WRITE(10,*), "BTmode: ", BTmode
-         BTmode_frac=0.0	 
+         BTmode_frac=0.0
+        
 	      
        END IF
 	   
@@ -12738,7 +12774,7 @@ c     !*     2*BB*(log(l8)-log(l7))+2*BB*s2*((1/l8)-(1/l7)))/d2
        RETURN
 	   
        end
-           
+            
 c-------------------------------------------------------------------------------
 c    subroutine for calculation of fuel consumption in the area affected by fire
 
@@ -14287,6 +14323,8 @@ c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     SUBROUTINE bt_establish
 c Doug 02/13: Calculates new bark thickness spread after establishment
+c     SUBROUTINE bt_establish
+c Doug 02/13: Calculates new bark thickness spread after establishment
        SUBROUTINE bt_establish(BTparam,BTmode0,nind0,estab_grid)
 	 
        IMPLICIT NONE
@@ -14300,7 +14338,7 @@ C      INPUTS/OUTPUTS
 	   
 C      local vaiables
        REAL A,B,C,D
-       REAL alpha,beta,gamma,delta
+       !REAL alpha,beta,gamma,delta
        REAL s1,s2
        REAL c1,c2
        REAL d1,d2
@@ -14311,6 +14349,9 @@ C      local vaiables
          BTparam(2)=BTmode0
          RETURN
        END IF
+	   !PRINT*, "EST"
+	   !PRINT*, "@@@@@"
+	   !PRINT*, BTparam
        s1=BTparam(1)
        s2=BTparam(3)
        c1=BTmode0;
@@ -14318,6 +14359,10 @@ C      local vaiables
        m=estab_grid
        n=nind0
        BTmode_old=BTparam(2)
+	   
+	   !PRINT*, "EST"
+	   !print*, "!!!!!!!"
+	   !print*, s1,s2,c1,c2,m,n
 	   
        A=-(2*c2**3-3*s1*c2**2+s1**3)/(3*(s1-s2)*(c2-s1))
        B=(2*c2**3-3*s2*c2**2+s2**3)/(3*(s1-s2)*(c2-s2))
@@ -14335,10 +14380,14 @@ C      local vaiables
        BTmode_frac=(BTmode-s1)/(s2-s1)
        BTparam(2)=BTparam(1)+BTmode_frac*(BTparam(3)-BTparam(1))
 	   
+
+	   
 	   
        IF (BTparam(2)<BTmode0 .OR. BTparam(2)>BTmode_old) THEN
-         IF (abs(BTparam(2)-BTmode0)<0.00001) THEN
+         IF (abs(BTparam(2)-BTmode0)<0.0001) THEN
            BTparam(2)=BTmode0
+         ELSEIF (abs(BTparam(2)-BTmode_old)<0.0001) THEN
+           BTparam(2)=BTmode_old
          ELSE
            WRITE(10,*), "EST BT PROBLEM"
            WRITE(10,*), "error: BT medium is lower or higher than"
@@ -14346,15 +14395,14 @@ C      local vaiables
            WRITE(10,*), "EST BT PROBLEM"
 	       WRITE(10,*), "+_+_+_+_+_+_+"
 	       WRITE(10,*), "A,B,C,D: ", A,B,C,D
-	       WRITE(10,*), "alpha, besta, gamma, delta: ",
-     *         alpha, beta, gamma, delta
 	       WRITE(10,*), "BTmean: ", BTmean
 	       WRITE(10,*), "BTmode: ", BTmode
-	       WRITE(10,*), "BTmode: ", BTparam(2)
-	       WRITE(10,*), "BTmode: ", BTmode0
-	       WRITE(10,*), "BTmode: ", BTmode_old
+	       WRITE(10,*), "BTparam(2): ", BTparam(2)
+	       WRITE(10,*), "BTmode0: ", BTmode0
+	       WRITE(10,*), "BTmode_old: ", BTmode_old
 	       WRITE(10,*), "*/*/*/*/"
-         
+           IF (BTparam(2)<BTmode0) BTparam(2)=BTmode0
+           IF (BTparam(2)>BTmode_old) BTparam(2)=BTmode_old
          END IF
        END IF
 	   
@@ -14362,7 +14410,7 @@ C      local vaiables
 	   
        end
            
-	  
+	   
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     SUBROUTINE decay
