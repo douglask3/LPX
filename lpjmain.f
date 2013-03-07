@@ -8102,7 +8102,7 @@ C		  			  In old version, indicidual grass lpf grew as if
 c                     without compeition from other grass. This fixes
 c                     that with scling by total grass cover.
 C---------------------------------------------------------------
-                     OLD VERSION
+C                     OLD VERSION
           if (crownarea(pft).gt.0.0) then
             lai_ind(pft)=(lm_ind(pft,1)*sla(pft))/crownarea(pft)
           else
@@ -12135,11 +12135,11 @@ c
       real alpha_1hr, alpha_10hr,alpha_100hr
       real alpha_livegrass,alpha_1000hr
 
-c        parameter (alpha_1hr=0.001,alpha_10hr=0.00005424)	!Doug 08/12: fiddleing with the alphas
-c        parameter (alpha_100hr=0.00001485,
-c     *		alpha_1000hr = 0.000001) 
-        parameter (alpha_1hr=0.025,alpha_10hr=0.0025)
-        parameter (alpha_100hr=0.00025, alpha_1000hr = 0.000025) 
+        parameter (alpha_1hr=0.001,alpha_10hr=0.00005424)	!Doug 08/12: fiddleing with the alphas
+        parameter (alpha_100hr=0.00001485,
+     *		alpha_1000hr = 0.000001) 
+c        parameter (alpha_1hr=0.025,alpha_10hr=0.0025)
+c        parameter (alpha_100hr=0.00025, alpha_1000hr = 0.000025) 
 c        parameter (alpha_livegrass=0.0005) 
 c     Allan: Alpha values for livegrass and 1000hr dead fuels are particularly
 c            subjective 
