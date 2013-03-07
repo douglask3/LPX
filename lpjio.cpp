@@ -390,7 +390,9 @@ LPJVariable LPJ_VARIABLES[] = {
   { "gdd_grid",      SIMPLE          },    //Doug 07/09: bioclimatic varible growing degree days base 5
   { "alpha_ws",      SIMPLE          },    //Doug 07/09: Bioclimatic varible for water stress
   { "pfuel_limit",   SIMPLE          },     //Doug 12/12: proportion of days where fire is limited by fuel
-  { "dprec_out",         SIMPLE_DAILY    }     //Doug 12/12: proportion of days where fire is limited by fuel
+  { "dprec_out",         SIMPLE_DAILY    },     //Doug 12/12: proportion of days where fire is limited by fuel
+  { "BTparam1",         PER_CO2_PFT    },     //Doug 12/12: proportion of days where fire is limited by fuel
+  { "BTparam2",         PER_CO2_PFT    }     //Doug 12/12: proportion of days where fire is limited by fuel
 };
 
 
@@ -2396,7 +2398,7 @@ extern "C" int outannual_(int *year, int *present,
                           float *crop, float *pas,                                    //Doug 05/09: crop and pasture proportions
                           float *anpp_grid, float *arh_grid, float *acflux_fire_grid,//Doug 07/09: the cheats
                           float *gdd_grid, float *alpha_ws, float *pfuel_limit, 
-						  float* dprec_out)                          //Doug 07/09: vioclimatic varibles         
+						  float* dprec_out, float* BTparam1, float* BTparam2)                          //Doug 07/09: vioclimatic varibles         
 {
   // Skip output during spin-up if required.
   // Doug 06/09: Skip output if before fist year of ouput
@@ -2581,6 +2583,8 @@ extern "C" int outannual_(int *year, int *present,
   handle_output_record("alpha_ws",  alpha_ws);                       //Doug 07/09: bioclimatic alpha
   handle_output_record("pfuel_limit",  pfuel_limit);                 //Doug 07/09: proportion of days where fire is limited by fuel availability
   handle_output_record("dprec_out",  dprec_out);                 //Doug 07/09: proportion of days where fire is limited by fuel availability
+  handle_output_record("BTparam1",  BTparam1);                 //Doug 07/09: proportion of days where fire is limited by fuel availability
+  handle_output_record("BTparam2",  BTparam2);                 //Doug 07/09: proportion of days where fire is limited by fuel availability
 
   // Output is written every params.spinup_out_freq years during
   // spin-up (averaged over that period).  During the transient part
