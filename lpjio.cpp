@@ -48,7 +48,7 @@ using namespace std;
 // Array sizes etc.
 
 const int NMON = 12, NDAYS = 365, NTRACE = 6, NTRANSIENT = 1;
-const int NPFT = 9;
+const int NPFT = 10;
 const int CLIMBUF = 20;
 const int NCO2 = 3;                             // Number of C variables : C02, C13, C14
 const int co2_dim_values[NCO2] = { 1, 2, 3 };  // Values for the C dimension
