@@ -314,7 +314,7 @@ c *      calculated within output subroutines using code similar to the       *
 c *      following (in this case, for calculation of annual ecosystem NPP):   *
 c *                                                                           *
 c *      integer pft,npft                                                     *
-c *      parameter (npft=10)                                                   *
+c *      parameter (npft=13)                                                   *
 c *      real anpp_total                                                      *
 c *                                                                           *
 c *      npp_total=0.0                                                        *
@@ -467,7 +467,7 @@ c -----------------------------------------------------------------------------
 
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
-        parameter (npft=10)             ! number of PFTs
+        parameter (npft=13)             ! number of PFTs
 
         parameter (npftpar=59)         ! number of PFT parameters
       
@@ -1079,7 +1079,7 @@ c Doug 07/09: Calculate a GDD for each grid cell. Used for ouput only.
           END DO
 
 
-c          call daily_lightning(lat,lon,mlightn,dprec,dlightn,cgf)
+          call daily_lightning(lat,lon,mlightn,dprec,dlightn,cgf)
 						!Doug 01/09: functions
 							!distributed lighting
 							!differently on days with & 
@@ -1089,8 +1089,8 @@ c          call daily_lightning(lat,lon,mlightn,dprec,dlightn,cgf)
 							!changed as well, see Doug 09/12
 							! comments below)
 
-          call daily2(lat,lon,mlightn,dprec,dlightn)	!Doug 01/09: functions
-          cgf(:)=0.2
+c          call daily2(lat,lon,mlightn,dprec,dlightn)	!Doug 01/09: functions
+c          cgf(:)=0.2
 
           call daily(msun,dsun)
           call daily(mwindsp,dwindsp)
@@ -2362,7 +2362,7 @@ c     Calculation of maximum crown area for woody PFTs
 
 c     PARAMETERS:
       integer npft,npftpar,nsoilpar
-        parameter (npft=10,npftpar=59,nsoilpar=7)
+        parameter (npft=13,npftpar=59,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
       real pi
@@ -2487,12 +2487,15 @@ c     ---------------------------------------------------------------------
 c          1      2      3      4      5      6      7      8          PFT
 c     ---------------------------------------------------------------------
 
-     *  0.85,   0.0,  0.00,   0.5,  0.20,  0.25, 100.0,  0.60,        !  1
-     *  0.50,   0.0,  0.10,   0.5,  0.20,  0.25, 100.0,  0.70,        !  2
+     *  0.85,   0.0,  0.00,   0.5,  0.20,  0.25, 100.0,  0.60,        !  1     
+     *  0.50,   0.0,  0.10,   0.5,  0.20,  0.25, 100.0,  0.70,        !  1r
+     *  0.50,   0.0,  0.10,   0.5,  0.20,  0.25, 100.0,  0.70,        !  2     
+     *  0.50,   0.0,  0.10,   0.5,  0.20,  0.25, 100.0,  0.70,        !  2r
      *  0.60,   0.0,  0.00,   0.3,  1.20,  0.25, 100.0,  0.12,        !  3
      *  0.50,   0.0,  0.10,   0.3,  1.20,  0.25, 100.0,  0.50,        !  4
-     *  0.50,   0.0,  0.10,   0.3,  1.20,  0.25, 100.0,  0.50,        !  4
+     *  0.50,   0.0,  0.10,   0.3,  1.20,  0.25, 100.0,  0.50,        !  4r
      *  0.70,   0.0,  0.00,   0.5,  1.20,  0.25, 120.0,  0.12,        !  5
+     *  0.70,   0.0,  0.00,   0.5,  1.20,  0.25, 120.0,  0.12,        !  5r
      *  0.90,   0.0,  0.00,   0.3,  1.20,  0.25, 100.0,  0.12,        !  6
 c     *  0.90,   0.0,  0.00,   0.3,  1.30,  0.35, 100.0,  0.12,        !  7
      *  0.90,   0.0,  0.00,   0.5,  1.20,  0.3, 100.0,  0.12,        !  8
@@ -2506,11 +2509,14 @@ c          9     10     11     12     13     14     15     16     17   PFT
 c     ---------------------------------------------------------------------
 
      *   2.0,  2.00,  20.0,   2.0,  29.0, 330.0,  29.0,   1.0,   1.0, !  1
+     *   2.0,  2.00,  20.0,   2.0,  29.0, 330.0,  29.0,   1.0,   1.0, !  1r
      *   1.0,  0.50,  20.0,   1.0,  29.0, 330.0,  29.0,   1.0,   3.0, !  2
+     *   1.0,  0.50,  20.0,   1.0,  29.0, 330.0,  29.0,   1.0,   3.0, !  2r
      *   4.0,  4.00,  20.0,   4.0,  29.0, 330.0,  29.0,   2.0,   1.0, !  3
      *   1.0,  1.00,  20.0,   1.0,  29.0, 330.0,  29.0,   1.0,   1.0, !  4
-     *   1.0,  1.00,  20.0,   1.0,  29.0, 330.0,  29.0,   1.0,   1.0, !  4
+     *   1.0,  1.00,  20.0,   1.0,  29.0, 330.0,  29.0,   1.0,   1.0, !  4r
      *   1.0,  0.50,  20.0,   1.0,  29.0, 330.0,  29.0,   1.0,   2.0, !  5
+     *   1.0,  0.50,  20.0,   1.0,  29.0, 330.0,  29.0,   1.0,   2.0, !  5r
      *   4.0,  4.00,  20.0,   4.0,  29.0, 330.0,  29.0,   2.0,   1.0, !  6
 c     *   1.0,  0.50,  20.0,   1.0,  29.0, 330.0,  29.0,   2.0,   2.0, !  7
      *   1.0,  0.50,  20.0,   1.0,  29.0, 330.0,  29.0,   1.0,   2.0, !  8
@@ -2524,11 +2530,14 @@ c           18      19     20      21     22     23     pft
 c     ---------------------------------------------------
 
      *     1.0,  1000.0,  15.0,  1.500,  1.2,    0.0,    !  1
+     *     1.0,  1000.0,  15.0,  1.500,  1.2,    0.0,    !  1r
      *     1.0,  1000.0,  15.0,  1.500,  1.2,    0.0,    !  2
+     *     1.0,  1000.0,  15.0,  1.500,  1.2,    0.0,    !  2r
      *     1.0,  1000.0,  15.0,  1.500,  1.2,    0.0,    !  3
      *     1.0,  1000.0,  15.0,  1.500,  1.2,    0.0,    !  4
-     *     1.0,  1000.0,  15.0,  1.500,  1.2,    0.0,    !  4
+     *     1.0,  1000.0,  15.0,  1.500,  1.2,    0.0,    !  4r
      *     1.0,   200.0,  15.0,  1.500,  1.2,    0.0,    !  5
+     *     1.0,   200.0,  15.0,  1.500,  1.2,    0.0,    !  5r
      *     1.0,  1000.0,  15.0,  1.500,  1.2,    1.0,    !  6
 c     *     1.0,   100.0,  15.0,  1.500,  1.2,    1.0,    !  7
      *     1.0,   200.0,  15.0,  1.500,  1.2,    1.0,    !  8
@@ -2540,11 +2549,14 @@ c     -------------------------------------
 c          24     25     26      27    PFT
 c     -------------------------------------
      *    2.0,   25.0,  30.0,   55.0, !  1
+     *    2.0,   25.0,  30.0,   55.0, !  1r
      *    2.0,   25.0,  30.0,   55.0, !  2
+     *    2.0,   25.0,  30.0,   55.0, !  2r
      *   -4.0,   20.0,  30.0,   42.0, !  3
      *   -4.0,   20.0,  30.0,   42.0, !  4
-     *   -4.0,   20.0,  30.0,   42.0, !  4
+     *   -4.0,   20.0,  30.0,   42.0, !  4r
      *   -4.0,   20.0,  25.0,   38.0, !  5
+     *   -4.0,   20.0,  25.0,   38.0, !  5r
      *   -4.0,   15.0,  25.0,   38.0, !  6
 c     *   -4.0,   15.0,  25.0,   38.0, !  7
      *   -4.0,   15.0,  25.0,   38.0, !  8
@@ -2558,11 +2570,14 @@ c     ------------------------------------------------------------
 c          28       29       30       31       32       PFT
 c     ------------------------------------------------------------
      *    15.5,  1000.0,    0.0,    1000.0,    0.0,     !  1
+     *    15.5,  1000.0,    0.0,    1000.0,    0.0,     !  1r
      *    13.5,  1000.0,    0.0,    1000.0,    0.0,     !  2
+     *    13.5,  1000.0,    0.0,    1000.0,    0.0,     !  2r
      *    -2.0,    15.0,  900.0,    1000.0,    0.0,     !  3
      *     1.0,    15.5, 1200.0,    1000.0,    0.0,     !  4
-     *     1.0,    15.5, 1200.0,    1000.0,    0.0,     !  4
+     *     1.0,    15.5, 1200.0,    1000.0,    0.0,     !  4r
      *   -17.0,    15.5, 1200.0,    1000.0,    0.0,     !  5
+     *   -17.0,    15.5, 1200.0,    1000.0,    0.0,     !  5r
      *   -32.5,    -4.0,  600.0,    1000.0,    0.0,     !  6
 c     * -1000.0,    -2.0,  350.0,      23.0,    0.0,     !  7
      * -1000.0,    -4.0,  350.0,    1000.0,    0.0,     !  8
@@ -2587,11 +2602,14 @@ c     *     2.0,   43.0,       5.0,  0.06, 16.0,   !  7
 !     *     5.0,  -1000.0,     7.0,  0.01,  2.0/   ! 10
 
      *     5.0,  -1000.0,     7.0,  0.02, 10.0,   !  1
+     *     5.0,  -1000.0,     7.0,  0.02, 10.0,   !  1r
      *     5.0,  -1000.0,     7.0,  0.02, 10.0,   !  2
+     *     5.0,  -1000.0,     7.0,  0.02, 10.0,   !  2r
      *     5.0,  -1000.0,     5.0,  0.06, 16.0,   !  3
      *     5.0,  -1000.0,     5.0,  0.02, 10.0,   !  4
-     *     5.0,  -1000.0,     5.0,  0.02, 10.0,   !  4
+     *     5.0,  -1000.0,     5.0,  0.02, 10.0,   !  4r
      *     5.0,  -1000.0,     5.0,  0.02, 13.0,   !  5
+     *     5.0,  -1000.0,     5.0,  0.02, 13.0,   !  5r
      *     5.0,  -1000.0,     5.0,  0.06, 18.0,   !  6
 c     *     2.0,   43.0,       5.0,  0.06, 16.0,   !  7
      *     5.0,  -1000.0,     6.0,  0.06, 16.0,   !  8
@@ -2604,11 +2622,14 @@ c     --------------------------------------------------------------------
 c          38       39      40      41      42   43       44      45    PFT
 c     --------------------------------------------------------------------
      *    1580.0, 103.0,   6.80,   8.10,   8.50, 1.999, 0.3334, 0.160, !  1
+     *    1580.0, 103.0,   6.80,   8.10,   8.50, 1.999, 0.3334, 0.160, !  1r
      *    1664.0,  63.0,   2.20,   3.40,   8.50, 2.540, 0.10,   0.351, !  2
+     *    1664.0,  63.0,   2.20,   3.40,   8.50, 2.540, 0.10,   0.351, !  2r
      *    1568.0, 106.0,   4.80,   5.70,  17.60, 3.240, 0.3334, 0.094, !  3
      *    1568.0, 106.0,   4.80,   5.70,  17.60, 3.240, 0.3334, 0.070, !  4
-     *    1568.0, 106.0,   4.80,   5.70,  17.60, 3.240, 0.3334, 0.070, !  4
+     *    1568.0, 106.0,   4.80,   5.70,  17.60, 3.240, 0.3334, 0.070, !  4r
      *    1568.0, 106.0,   4.80,   5.70,  17.60, 3.240, 0.3334, 0.094, !  5
+     *    1568.0, 106.0,   4.80,   5.70,  17.60, 3.240, 0.3334, 0.094, !  5r
      *    1568.0, 106.0,   4.80,   5.70,  17.60, 3.240, 0.6667, 0.094, !  6
 c     *     2.0,   43.0,       5.0,  0.06,   !  7
      *    1568.0, 106.0,   4.80,   5.70,  17.60, 3.240, 0.3334, 0.094, !  8
@@ -2622,11 +2643,14 @@ c     -------------------------------------------------
 c         46		47      48    	 49   	50    		 51  		 52    		PFT
 c     -------------------------------------------------
      *    0.630, -0.2819,	0.9283,	4.703,	0.00169,   0.01345,  0.03232,   !  1
+     *    0.630, 0,	        0.01,	0.02,	0.00168,   0.00169,  0.00170,   !  1r
      *    0.460, -0.5267,   0.7500,	8.998,	0.007634,  0.01573,  0.03720,   !  2
+     *    0.460, 0,	        0.01,	0.02,	0.00762,   0.00763,  0.00764,   !  2r
      *    0.667, -0.08965,	1.069,	18.27,	0.00385,   0.0204,   0.02899,   !  3
      *    0.560, 0.1591,	2.064,	2.140,	0.006267,  0.01669,  0.08060,   !  4
-     *    0.560, 0.08,      1.0,	1.1,	0.004 ,    0.01,     0.05,   !  4
+     *    0.560, 0.158,      0.159,	0.160,	0.00626 ,  0.00627,  0.00628,   !  4r
      *    0.667, 0.2861,	0.8009,	6.703,	0.002615,  0.02087,  0.03438,   !  5
+     *    0.667, 0.285,	    0.286,	0.287,	0.0025,    0.0026,   0.0027,   !  5r
      *    0.667, -0.8317,	0.5727,	1.964,	0.02154,   0.02558,  0.03519,   !  6
 c     *     2.0,   43.0,       5.0,  0.06,   !  7
      *    0.667, 0.2861,	0.8009,	6.703,	0.002615,  0.02087,  0.03438,   !  8
@@ -2640,11 +2664,14 @@ c     -------------------------------------------------
 c         53	54	   55	56	    57    58     59     PFT
 c     -------------------------------------------------
      *    0.95, 3.00, 0.26, 0.93,  0.039, 2.75,  0.0,  !  1
+     *    0.95, 3.00, 0.26, 0.93,  0.039, 2.75,  1.0,  !  1r
      *    0.05, 3.00, 0.25, 1.17,  0.039, 2.75,  0.0,  !  2
+     *    0.05, 3.00, 0.25, 1.17,  0.039, 2.75,  1.0,  !  2r
      *    0.95, 3.75, 0.03, 0.70,  0.041, 1.97,  0.0,  !  3
      *    0.95, 3.00, 0.03, 0.86,  0.104, 1.37,  0.0,  !  4
-     *    0.95, 3.00, 0.03, 0.86,  0.104, 1.37,  1.0,  !  4
+     *    0.95, 3.00, 0.03, 0.86,  0.104, 1.37,  1.0,  !  4r
      *    0.95, 3.00, 0.03, 0.95,  0.104, 1.37,  0.0,  !  5
+     *    0.95, 3.00, 0.03, 0.95,  0.104, 1.37,  1.0,  !  5r
      *    0.95, 3.00, 0.58, 0.776, 0.041, 1.97,  0.0,  !  6
 c     *     2.0,   43.0,       5.0,  0.06,   !  7
      *    0.95, 3.00, 0.18, 0.94,  0.104, 1.37,  0.0,  !  8
@@ -2851,7 +2878,7 @@ c     Initialise state variables (as required) for current grid cell
 
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
-        parameter (npft=10,npftpar=59,nsoilpar=7)
+        parameter (npft=13,npftpar=59,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
       real rainscalar
@@ -3063,7 +3090,7 @@ c#endif
 
 c     PARAMETERS:
       integer npft,npftpar,nsoilpar
-        parameter (npft=10,npftpar=59,nsoilpar=7)
+        parameter (npft=13,npftpar=59,nsoilpar=7)
       real pi
         parameter (pi=3.14159265)
       real a,b                          !empirical constants (Eqn 18)
@@ -3809,7 +3836,7 @@ c     Temperature-based phenology for summergreen PFTs
 
 c     PARAMETERS
       integer npft,npftpar
-        parameter (npft=10,npftpar=59)
+        parameter (npft=13,npftpar=59)
 
 c     ARGUMENTS
       real pftpar(1:npft,1:npftpar)
@@ -3970,7 +3997,7 @@ c     growing degree days
 
 c     PARAMETERS
       integer npft,npftpar,climbuf
-        parameter (npft=10,npftpar=59,climbuf=20)
+        parameter (npft=13,npftpar=59,climbuf=20)
                                 !NB must be same values as in main program
 
 c     ARGUMENTS
@@ -4088,7 +4115,7 @@ c     Apply bioclimatic limits on PFT survival and establishment
 
 c     PARAMETERS
       integer npft,npftpar
-      parameter (npft=10,npftpar=59)
+      parameter (npft=13,npftpar=59)
 
 c     ARGUMENTS
       real pftpar(1:npft,1:npftpar)
@@ -4181,7 +4208,7 @@ c     timestep:
 
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
-        parameter (npft=10,npftpar=59,nsoilpar=7)
+        parameter (npft=13,npftpar=59,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
 
@@ -4288,7 +4315,7 @@ c     LOCAL:
      *  / 31,28,31,30,31,30,31,31,30,31,30,31 /
       real lambdam(1:npft)
       data (lambdam(i),i=1,npft)
-     *     /0.9,0.9,0.9,0.8,0.8,0.8,0.8,0.9,0.65,0.4/
+     *     /0.9,0.9,0.9,0.9,0.9,0.8,0.8,0.8,0.8,0.8,0.9,0.65,0.4/
 
 c     Initialisations of locals
       leafondays_an=0
@@ -4885,7 +4912,7 @@ c     PARAMETERS
       real e0,t0c3,t0c4,cq,tk25,tmc4,tmc3
       integer npft
 
-      parameter (npft=10)
+      parameter (npft=13)
       parameter (po2=20.9e3)!O2 partial pressure in Pa
       parameter (p=1.0e5)   !atmospheric pressure in Pa
       parameter (bc3=0.015) !leaf respiration as fraction of Vmax for C3 plants
@@ -4932,7 +4959,7 @@ c     LOCAL VARIABLES
       integer i 
       real lambdam(1:npft)
       data (lambdam(i),i=1,npft)
-     *     /0.9,0.9,0.9,0.8,0.8,0.8,0.8,0.9,0.65,0.4/
+     *     /0.9,0.9,0.9,0.9,0.9,0.8,0.8,0.8,0.8,0.8,0.9,0.65,0.4/
 
       real apar,pi,ko,kc,tau,gammastar,c1,c2,b,phipi
       real s,sigma,vm,and,pa,je,jc,vmmax,cn,tk,t0,adt
@@ -5184,7 +5211,7 @@ c     conductance and PFT daily water stress factor
 
 c     PARAMETERS:
       integer npft,npftpar,nsoilpar
-        parameter (npft=10,npftpar=59,nsoilpar=7)
+        parameter (npft=13,npftpar=59,nsoilpar=7)
       real alpham,gm,pt          ! ,emax
 c        parameter (emax=5.0)    ! maximum daily transpiration rate (mm/day)
         parameter (gm=3.26)      ! empirical parameter in demand function
@@ -5600,7 +5627,7 @@ c     This program is based upon the model used by Lloyd and Farquhar (1994).
 
 c     PARAMETERS
       integer npft,nco2
-      parameter (npft=10,nco2=3)
+      parameter (npft=13,nco2=3)
       real a,es,a1,b,b3,f,e
       parameter (a=4.4,es=1.1,a1=0.7,b=27.5,b3=30.0,e=0.0,f=8.0)
 
@@ -5732,7 +5759,7 @@ c     C4 photosynethsis isotope discrimination calculations
 	  
 c	  PARAMETERS
       INTEGER npft
-        PARAMETER(npft=10)	  
+        PARAMETER(npft=13)	  
 
 c     ARGUMENTS
       real mgpp(1:12,1:npft,1:3),phi
@@ -5976,8 +6003,8 @@ c     Calculation of maintenance and growth respiration and NPP
 
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
-!        parameter (npft=10,npftpar=50,nsoilpar=7)
-        parameter (npft=10,npftpar=59,nsoilpar=7)
+!        parameter (npft=13,npftpar=50,nsoilpar=7)
+        parameter (npft=13,npftpar=59,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
       real k
@@ -6281,12 +6308,12 @@ c         don't allow negative anpp. set to zero
       enddo !pft
 
 C     Doug 02/13: grass pfts hardcoded. This needs redoing
-      if(anpp(9,2).ne.0.0.and.anpp(10,2).ne.0.0)then
-             delt_c13_fpc=delt_c13_fpc/(fpc_grid(9)+fpc_grid(10))
-      else if(anpp(9,2).eq.0.0.and.anpp(10,2).ne.0.0)then
-         delt_c13_fpc=delt_c13_fpc/fpc_grid(10)
-      else if(anpp(10,2).eq.0.0.and.anpp(9,2).ne.0.0)then
-         delt_c13_fpc=delt_c13_fpc/fpc_grid(9)
+      if(anpp(12,2).ne.0.0.and.anpp(13,2).ne.0.0)then
+             delt_c13_fpc=delt_c13_fpc/(fpc_grid(12)+fpc_grid(13))
+      else if(anpp(12,2).eq.0.0.and.anpp(13,2).ne.0.0)then
+         delt_c13_fpc=delt_c13_fpc/fpc_grid(13)
+      else if(anpp(13,2).eq.0.0.and.anpp(12,2).ne.0.0)then
+         delt_c13_fpc=delt_c13_fpc/fpc_grid(12)
       else
          delt_c13_fpc=0.0
       end if
@@ -6313,8 +6340,8 @@ c     Doug 01/09: addition of fuel_1hr_inc as I/O
 
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
-!      parameter (npft=10,npftpar=50,nsoilpar=7)
-      parameter (npft=10,npftpar=59,nsoilpar=7)
+!      parameter (npft=13,npftpar=50,nsoilpar=7)
+      parameter (npft=13,npftpar=59,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
       real reprod_cost              !proportion of NPP lost to reproduction
@@ -6466,8 +6493,8 @@ c     Doug 01/09: addition of fuel_ihr_inc as I/O
 
 c     PARAMETERS:
       integer npft,npftpar,nsoilpar
-!        parameter (npft=10,npftpar=50,nsoilpar=7)
-        parameter (npft=10,npftpar=59,nsoilpar=7)
+!        parameter (npft=13,npftpar=50,nsoilpar=7)
+        parameter (npft=13,npftpar=59,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
 
@@ -6697,8 +6724,8 @@ c     Doug 01/09: addition of fuel_1hr_inc as I/O
 
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
-!      parameter (npft=10,npftpar=50,nsoilpar=7)
-      parameter (npft=10,npftpar=59,nsoilpar=7)
+!      parameter (npft=13,npftpar=50,nsoilpar=7)
+      parameter (npft=13,npftpar=59,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
 c     DOug 12/09: No longer need the equlibium fix. Infact, the fix was a little bit rubbish.
@@ -6859,8 +6886,8 @@ C		Doug 11/12: seperate out litter and wood responses to temperature using Q10 p
           wood_response=0.0
         END IF
         DO pft=1,npft
-           k_litter_leaf(pft)=k_litter10!(pftpar(pft,56)*leaf_repsonse)/12.0
-           k_litter_wood(pft)=k_litter10!(pftpar(pft,57)*wood_response)/12.0
+           k_litter_leaf(pft)=(pftpar(pft,56)*leaf_repsonse)/12.0!k_litter10!
+           k_litter_wood(pft)=(pftpar(pft,57)*wood_response)/12.0!k_litter10!
         END DO
         k_litter_bg=(k_litter10*temp_resp*moist_resp)/12.0
         k_fast(m)=(k_soil_fast10*temp_resp*moist_resp)/12.0
@@ -7156,7 +7183,7 @@ c     Doug 01/09: addition of fuel_1hr_inc as I/O
 
 c     PARAMETERS
       integer npft
-        parameter (npft=10)
+        parameter (npft=13)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
 
@@ -7473,7 +7500,7 @@ c     Doug 01/09: addition of fuel_1hr_inc as I/O
 
 c     PARAMETERS
       integer npft,npftpar
-      parameter (npft=10,npftpar=59)
+      parameter (npft=13,npftpar=59)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
       real pi,xacc,yacc
@@ -8180,45 +8207,45 @@ c                     without compeition from other grass. This fixes
 c                     that with scling by total grass cover.
 C---------------------------------------------------------------
 c                     OLD VERSION
-          if (crownarea(pft).gt.0.0) then
-            lai_ind(pft)=(lm_ind(pft,1)*sla(pft))/crownarea(pft)
-          else
-            lai_ind(pft)=0.0
-          endif
+c          if (crownarea(pft).gt.0.0) then
+c            lai_ind(pft)=(lm_ind(pft,1)*sla(pft))/crownarea(pft)
+c          else
+c            lai_ind(pft)=0.0
+c          endif
+c 
+c          fpc_ind=(1.0-exp(-0.5*lai_ind(pft)))
+c          fpc_grid_old=fpc_grid(pft)
+c          fpc_grid(pft)=crownarea(pft)*nind(pft)*fpc_ind
+C---------------------------------------------------------------
+c                     NEW VERSION
+          lm_tot(pft)=0.0
  
-          fpc_ind=(1.0-exp(-0.5*lai_ind(pft)))
+          IF (tree(pft)) THEN
+            lm_tot(pft)=lm_ind(pft,1)
+          ELSE ! Grass
+            DO ppft=1,npft
+              IF (.NOT.tree(ppft)) THEN
+                lm_tot(pft)=lm_tot(pft)+lm_ind(ppft,1)
+              END IF
+            END DO
+          END IF
+ 		  
+          IF (crownarea(pft).GT.0.0) THEN
+            lai_ind(pft)=(lm_tot(pft)*sla(pft))/crownarea(pft)
+          ELSE
+            lai_ind(pft)=0.0
+          END IF
+ 		  
+          fpc_ind=1.0-exp(-0.5*lai_ind(pft))		  
           fpc_grid_old=fpc_grid(pft)
           fpc_grid(pft)=crownarea(pft)*nind(pft)*fpc_ind
-C---------------------------------------------------------------
-C                     NEW VERSION
-C          lm_tot(pft)=0.0
-C 
-C          IF (tree(pft)) THEN
-C            lm_tot(pft)=lm_ind(pft,1)
-C          ELSE ! Grass
-C            DO ppft=1,npft
-C              IF (.NOT.tree(ppft)) THEN
-C                lm_tot(pft)=lm_tot(pft)+lm_ind(ppft,1)
-C              END IF
-C            END DO
-C          END IF
-C 		  
-C          IF (crownarea(pft).GT.0.0) THEN
-C            lai_ind(pft)=(lm_tot(pft)*sla(pft))/crownarea(pft)
-C          ELSE
-C            lai_ind(pft)=0.0
-C          END IF
-C 		  
-C          fpc_ind=1.0-exp(-0.5*lai_ind(pft))		  
-C          fpc_grid_old=fpc_grid(pft)
-C          fpc_grid(pft)=crownarea(pft)*nind(pft)*fpc_ind
-C 		  
-C          IF (lm_tot(pft).GT.0.0) THEN
-C            fpc_grid(pft)=fpc_grid(pft)*lm_ind(pft,1)/lm_tot(pft)
-C          ELSE
-C            fpc_grid(pft)=0.0
-C          END IF
-C---------------------------------------------------------------
+ 		  
+          IF (lm_tot(pft).GT.0.0) THEN
+            fpc_grid(pft)=fpc_grid(pft)*lm_ind(pft,1)/lm_tot(pft)
+          ELSE
+            fpc_grid(pft)=0.0
+          END IF
+c---------------------------------------------------------------
  
           fpc_inc(pft)=max(0.0,fpc_grid(pft)-fpc_grid_old)
           if(fpc_grid(pft).eq.0.0) present(pft)=.false.
@@ -8279,7 +8306,7 @@ c     Doug 01/09: addition of fuel_1hr_inc as I/O
 
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
-        parameter (npft=10,npftpar=59,nsoilpar=7)
+        parameter (npft=13,npftpar=59,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
       real fpc_tree_max
@@ -8652,7 +8679,7 @@ c     Doug 01/09: addition of fuel_1hr_inc as I/O
 
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
-      parameter (npft=10,npftpar=59,nsoilpar=7)
+      parameter (npft=13,npftpar=59,nsoilpar=7)
       integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
       real mort_max
@@ -9012,7 +9039,7 @@ c     Biomass destruction through disturbance by fire
 
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
-         parameter (npft=10,npftpar=59,nsoilpar=7)
+         parameter (npft=13,npftpar=59,nsoilpar=7)
       real p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12
          parameter (p1=0.17,p2=0.10,p3=0.04,p4=0.01,p5=0.01
      *              ,p6=0.01,p7=0.03,p8=0.04,p9=0.09,p10=0.12,
@@ -12238,11 +12265,11 @@ c
       real alpha_1hr, alpha_10hr,alpha_100hr
       real alpha_livegrass,alpha_1000hr
 
-        parameter (alpha_1hr=0.001,alpha_10hr=0.00005424)	!Doug 08/12: fiddleing with the alphas
-        parameter (alpha_100hr=0.00001485,
-     *		alpha_1000hr = 0.000001) 
-c        parameter (alpha_1hr=0.025,alpha_10hr=0.0025)
-c        parameter (alpha_100hr=0.00025, alpha_1000hr = 0.000025) 
+c        parameter (alpha_1hr=0.001,alpha_10hr=0.00005424)	!Doug 08/12: fiddleing with the alphas
+c        parameter (alpha_100hr=0.00001485,
+c     *		alpha_1000hr = 0.000001) 
+        parameter (alpha_1hr=0.025,alpha_10hr=0.0025)
+        parameter (alpha_100hr=0.00025, alpha_1000hr = 0.000025) 
 c        parameter (alpha_livegrass=0.0005) 
 c     Allan: Alpha values for livegrass and 1000hr dead fuels are particularly
 c            subjective 
@@ -12447,7 +12474,7 @@ c     subroutine Thermophysical Propertities of the Fuel Array, i.e., bet and q_
       implicit none
 
       integer npft,npftpar
-        parameter (npft=10,npftpar=59)
+        parameter (npft=13,npftpar=59)
         
       real dens_fuel_ave,sigma,H
       real dlm(1:365)
@@ -12500,8 +12527,8 @@ c     subroutine RATE OF forward SPREAD
       implicit none
 
       integer npft,npftpar
-        parameter (npft=10,npftpar=59)
-!        parameter (npft=10,npftpar=50)
+        parameter (npft=13,npftpar=59)
+!        parameter (npft=13,npftpar=50)
         
       real U_front,base_wind
       real dens_fuel_ave,sigma,H
@@ -13499,8 +13526,8 @@ c     update of individual structure and FPC.
 
 c     PARAMETERS
       integer npft,npftpar,nsoilpar
-!        parameter (npft=10,npftpar=50,nsoilpar=7)
-        parameter (npft=10,npftpar=59,nsoilpar=7)
+!        parameter (npft=13,npftpar=50,nsoilpar=7)
+        parameter (npft=13,npftpar=59,nsoilpar=7)
       integer nco2
          parameter (nco2=3)
       real pi
@@ -14528,7 +14555,7 @@ c     Calculation of radioactive 14C decay
 
 c     PARAMETERS
       integer npft
-      parameter (npft=10)
+      parameter (npft=13)
       integer nco2
          parameter (nco2=3)
       real lambda
@@ -14631,7 +14658,7 @@ c
 
 c     PARAMETERS
       INTEGER npft
-          PARAMETER(npft=10)
+          PARAMETER(npft=13)
       
 c     ARGUMENTS
       logical clear,tree(1:npft),abandon,present(1:npft)
@@ -14736,7 +14763,7 @@ c     PARAMETERS
       real above,below
         parameter (above=0.4,below=0.6)
       INTEGER npft
-        PARAMETER(npft=10)
+        PARAMETER(npft=13)
 
 c     ARGUMENTS
       logical present(1:npft),agri
