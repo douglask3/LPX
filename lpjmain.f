@@ -500,6 +500,8 @@ c     INPUT PARAMETERS
       real mlightn(1:12)               ! needed by this version of getclimate
       real dlightn(1:365), dlightn_control(1:365)              ! filled by interpolation
       REAL cgf(1:12)				   ! Doug 09/12: fraction of cloud-to-ground-lightning
+      REAL fdry(1:12)                  ! Doug 04/13: fraction of lighting striking on a dry day 
+      REAL lt_days(1:12)               ! Doug 04/13: fraction of dry days with lightning 
       real co2(1:nco2)                 ! atmospheric CO2 concentration (ppmv)
       real lat                         ! latitude (degrees +=N, -=S)
       real lon                         ! longditude (degrees +=E, -=W)
@@ -1053,9 +1055,8 @@ c Doug 07/09: Calculate a GDD for each grid cell. Used for ouput only.
             END IF
           END DO
 
-
-
-          call daily_lightning(lat,lon,mlightn,dprec,dlightn,cgf)
+          call daily_lightning(lat,lon,mlightn,dprec,dlightn,
+     *      cgf,fdry,lt_days)
 						!Doug 01/09: functions
 							!distributed lighting
 							!differently on days with & 
@@ -1392,7 +1393,7 @@ c  acflux_fire(1)
      *      fbdep,litter_decom_ave,turnover_ind,
      *      crop,pas,	!Doug 05/09: just checking crops and pasture are implimented properly
      *      anpp_grid,arh_grid,acflux_fire_grid,                  !Doug 07/09: cheating future run ouputs without deltaC's
-     *      gdd_grid,alpha_ws,cgf)                                    !Doug 07/09: biocliamtic variables for heat and water stress
+     *      gdd_grid,alpha_ws,cgf,fdry,lt_days)                                    !Doug 07/09: biocliamtic variables for heat and water stress
 cccc note: you can alternatively use mpet2 and apet to get PET*1.32
 cccc       instead of mpet_grid and apet_grid, respectively
 
@@ -1550,10 +1551,12 @@ c
 c		Doug 09/12: function changed to remove iter-cloud
 c	lightning. See Doug 09/12 comments below for deatils.
 
-      SUBROUTINE daily_lightning(lat,lon,mval,dval1,dval2,cgf)
+      SUBROUTINE daily_lightning(lat,lon,mval,dval1,dval2
+     *  ,cgf,fdry,lt_days)
 
       IMPLICIT NONE
 
+C   Obvious parameters
       INTEGER	nmonths			! number of months in a year
         PARAMETER (nmonths=12)
       INTEGER	ndayyear		! number of days in a year
@@ -1567,7 +1570,8 @@ c	lightning. See Doug 09/12 comments below for deatils.
 C	LOCAL VARAIBLES:
       INTEGER	month,mday, day	!month and day of month and day of year
       REAL cgf(1:nmonths) ! Doug 09/12: fraction of lighting that is cloud-to-ground.
-	
+      REAL daily_stikes !Doug 04/13: number of strikes per km per day
+
 c     I/O:
       REAL mval(nmonths),dval1(ndayyear)
       REAL dval2(ndayyear)
@@ -1578,9 +1582,6 @@ c	For step 1:
       REAL	nwd, pwd	!number and proption of wet days in the month, and number of dry days
       INTEGER  ndd, nld !Doug 11/12 number of dry days and number of lighting days
       INTEGER  r !conatains random interger
-      REAL	gceo			!coeffiant used to calculate proportion of
-					!lighting strikes on wet days
-		PARAMETER (gceo=0.00001)
       REAL lt_days(1:nmonths) !Doug 11/12 proportion of dry days where lightning will strikes
       INTEGER ltk(1:31) !Doug 11/12 stores the day of the month when there is no rain
 		
@@ -1589,12 +1590,25 @@ c	For step 2:
 					!lightning
 
       REAL	lat,lon
-	  REAL flt, fdry(1:nmonths),fwet
-	  	REAL	gceo0,gceo1,gceo2			!coeffiant used to calculate proportion of
-					!lighting strikes on wet days
-		PARAMETER (gceo0=0.00001)
-		PARAMETER (gceo1=0.0432)
-		PARAMETER (gceo2=-0.888)
+      REAL flt, fdry(1:nmonths),fwet
+      
+C   Doug 04/13: Parameters for calculating scaling factors
+C       Doug 04/13: CG-IC ration
+c       Uses fucntion CG=cgp1*LT^cgp2
+c		found by comparing US CG and total lighting data from Vaisala/LIS 
+      REAL  cgp1,cgp2
+        PARAMETER (cgp1=0.0001267)
+        PARAMETER (cgp2=-0.4180)
+      
+C       Doug 04/13: Wet day/Dry day       
+      REAL  wdp1,wdp2
+        PARAMETER (wdp1=0.85033)
+        PARAMETER (wdp2=-2.835)
+        
+C       Doug 04/13: Wet day/Dry day       
+      REAL  ldp1
+        PARAMETER (ldp1=92338.0)
+       
 
 c Doug 11/12 Declarations for the random generator. This is called to randomoize 
 c lighting days amoungst the dry days of the month
@@ -1605,144 +1619,106 @@ c lighting days amoungst the dry days of the month
 
 c       --------------------------------------------------------------------------
 c       Step 1
-
         day=0
-		fdal(:)=0
-		lt_days(:)=0
+        fdal(:)=0
+        lt_days(:)=0
 		
         DO month=1,nmonths	!Month of year
-		ltk(:)=0 !Doug 10/12
-        
+            ltk(:)=0 !Doug 10/12
+          
+            daily_stikes=mval(month)/
+     *          (1000000.0*ndaymonth(month)) !Doug 04/13: daily strikes per m2
+     
+     
 c		Doug 09/12. Removed inter-cload lighting by calculating
 c		the fraction of cload ground (CG) from total (LT)
-c		lightning. Uses fucntion CG=a*LT^b
-c		where a=0.4858; b=-0.04643, found by comparing US CG and
-c		total lighting data from Vaisala 
+c		lightning.			
+            cgf(month)=cgp1*(daily_stikes)**(cgp2)	  
 
-			
-          cgf(month)=0.4858*mval(month)**(-0.04643)
-		  
-          IF(cgf(month)>1) cgf(month)=1
-          IF(cgf(month)<0) cgf(month)=0
-           !PRINT*, "mval",mval(month)
-           !PRINT*, "cgf",cgf
-          
-	      ndd=0
-          nwd=0
-          
+            IF(cgf(month)>1.0) cgf(month)=1.0
+            IF(cgf(month)<0.0) cgf(month)=0.0          
+
+                   
+
 C Doug 03/13: claculates the number of wet (nwd) and dry (ndd) days          
-          DO mday=1,ndaymonth(month)	!day of month
-            day=day+1
-            IF(dval1(day)>0) THEN 
-			  nwd=nwd+1
-            ELSE
-			  ndd=ndd+1
-			  
-			  ltk(ndd)=day
-            END IF
-          END DO	!day of month
+            ndd=0.0
+            nwd=0.0  
+            DO mday=1,ndaymonth(month)	!day of month
+                day=day+1
+                IF(dval1(day)>0.0) THEN 
+                    nwd=nwd+1
+                ELSE
+                    ndd=ndd+1
+                    ltk(ndd)=day
+                END IF
+            END DO	!day of month
 		  
-          pwd=nwd/ndaymonth(month) !pwd= fraction of wet days in month 
+        
+            pwd=nwd/ndaymonth(month) !pwd= fraction of wet days in month 
             day=day-ndaymonth(month)
-			flt=gceo1*pwd**gceo2
+            flt=wdp1*exp(pwd*wdp2)
 
-            IF (flt<0) flt=0
-            IF (flt>1) flt=1
+            IF (flt<0.0) flt=0.0
+            IF (flt>1.0) flt=1.0
+
 
 c       Doug 10/12: Determine number of lightning days
-            lt_days(month)=1-0.2267-0.6509*
-     *        (1-(mval(month)*flt)/13333)**26.0756
-			
-            IF (lt_days(month)<0) lt_days(month)=0
-            IF (lt_days(month)>1) lt_days(month)=1
+            lt_days(month)=1-1/((daily_stikes*cgf(month)*flt+1)**92338)
 
-			nld=lt_days(month)*ndd
+        
+            IF (lt_days(month)<0.0) lt_days(month)=0.0
+            IF (lt_days(month)>1.0) lt_days(month)=1.0
 
-            IF (nwd==0) THEN
-              fdry(month)=1/(nld)
-              fwet=0
+            nld=ANINT(lt_days(month)*ndd)
+            IF (nld==0) nld=1
+
+            IF (nwd==0) THEN  
+                fdry(month)=1/(nld)
+                fwet=0
             ELSE
-              fdry(month)=(flt)/(nld)
-              fwet=(1-flt)/(nwd)
+                fdry(month)=(flt)/(nld)
+                fwet=(1-flt)/(nwd)
             END IF		   	
 			
+        
 C Doug 03/13:   1)Randomly clalculted a day that is a) not wet and b) doesn;t have any
 c                   strikes		
 c               2)Sets lightning strikes on that day
 c               3)reduced the amount of available none wet, non lighting days by 1
 c               4) doed it again
-            DO mday=1,nld
-              r=CEILING(ndd*random(k10a))
-              fdal(ltk(r))=fdry(month)
-			  dval2(ltk(r))=mval(month)*fdry(month)
-              ndd=ndd-1
-              ltk(r:ndd)=ltk(r:ndd)+1
+            DO mday=1,nld         
+                r=CEILING(ndd*random(k10a))
+                
+                IF (r>ndd) r=ndd
+                IF (r<1) r=1
+                
+                fdal(ltk(r))=fdry(month)                
+                dval2(ltk(r))=mval(month)*fdry(month)
+
+                ndd=ndd-1
+                ltk(r:ndd)=ltk(r:ndd)+1
             END DO
 			
             DO mday=1,ndaymonth(month)	!day of month
-              day=day+1    !Seperates days and calcualates lighting for days with and 
+                day=day+1    !Seperates days and calcualates lighting for days with and 
                            !without rain
             
-              IF(dval1(day)>0) THEN
-                fdal(day)=0
+                IF(dval1(day)>0) THEN
+                    fdal(day)=0
               !ELSE
                ! fdal(day)=fdry(month) !Doug 03/13: already calculated, so now comment out
-				
-              END IF
-            
+                END IF
             END DO
-          END DO	!Month of year
-
-
-C Doug 03/13: I've comment this out cos interpolation would reallyconfuse things now lighting days has been added, and I it 
-C doesn;t make much difference anyways
-c-------------------------------------------------------------------------------
-c Step 2
-
-	
-c	CALL	daily1(mval,dval2)		!dval2=lighting for a simple
-c                                                !linear interpolation between
-c                                                !montrhly lighting values
-c
-c
-c	day=0
-c        lmval(:)=0.0
-c
-c	DO month=1,nmonths !month of year
-c
-c		
-c          DO mday=1,ndaymonth(month)	!day of month
-c            day=day+1
-c            lmval(1)=lmval(1)+dval2(day)
-c            dval2(day)=dval2(day)*fdal(day)
-c            lmval(2)=lmval(2)+dval2(day)
-c 
-c          END DO 	!day of month
-c	
-c          DO mday=day+1-ndaymonth(month),day
-c            IF (lmval(1)==0.AND.lmval(2)==0) THEN
-c              dval2(mday)=0
-c            ELSE IF(lmval(2)==0.AND.lmval(1)/=0)	THEN
-c              !PRINT*, "error:redistrbuting lighting around"
-c              !PRINT*, "wet days in daily2 subroutine"
-c              !STOP
-c			  lmval(1)=0
-c			  lmval(2)=1
-c            END IF
-c
-c            dval2(mday)=cgf(month)*dval2(mday)*lmval(1)/lmval(2)
-c              IF (dval1(mday)>0) dval2(mday)=0	!removes all lightin
-c                                                !on wet days
-c
-c         END DO
-c
-c	END DO !month of year
-
-
-
-
-	return
-	END !SUBROUTINE	!Daily2
+            
+        END DO	!Month of year
+          
+c      Doug 04/13: Step 2 is now gone! The interpolation it contained didn't make
+c      much difference, and is just an added laye of confusion now we have lightning days
+          
+      return
+      
+      
+      END !SUBROUTINE	!daily_lightning
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     SUBROUTINE DAILY1
