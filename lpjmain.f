@@ -1606,8 +1606,9 @@ C       Doug 04/13: Wet day/Dry day
         PARAMETER (wdp2=-2.835)
         
 C       Doug 04/13: Wet day/Dry day       
-      REAL  ldp1
-        PARAMETER (ldp1=92338.0)
+      REAL  ldp1,ldp2
+        PARAMETER (ldp1=1.099)
+        PARAMETER (ldp2=94678.69)
        
 
 c Doug 11/12 Declarations for the random generator. This is called to randomoize 
@@ -1663,7 +1664,8 @@ C Doug 03/13: claculates the number of wet (nwd) and dry (ndd) days
 
 
 c       Doug 10/12: Determine number of lightning days
-            lt_days(month)=1-1/((daily_stikes*cgf(month)*flt+1)**92338)
+            lt_days(month)=1-1/(ldp1*
+     *          (daily_stikes*cgf(month)*flt+1)**ldp2)
 
         
             IF (lt_days(month)<0.0) lt_days(month)=0.0
