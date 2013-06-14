@@ -12140,7 +12140,7 @@ c        parameter (alpha_100hr=0.00001485,
 c     *		alpha_1000hr = 0.000001) 
         parameter (alpha_1hr=0.025,alpha_10hr=0.0025)
         parameter (alpha_100hr=0.00025, alpha_1000hr = 0.000025) 
-        parameter (alpha_livegrass=0.0005) 
+c        parameter (alpha_livegrass=0.0005) 
 c     Allan: Alpha values for livegrass and 1000hr dead fuels are particularly
 c            subjective 
 c     KIRSTEN:i.e. values made up, revisit alpha_livegrass with livegrass
