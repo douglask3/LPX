@@ -1080,7 +1080,7 @@ c Doug 07/09: Calculate a GDD for each grid cell. Used for ouput only.
 
 c Doug 02/13: calculate daily lighting strikes
 
-c          call daily_lightning(lat,lon,mlightn,dprec,dlightn,cgf)
+          call daily_lightning(lat,lon,mlightn,dprec,dlightn,cgf)
 						!Doug 01/09: functions
 							!distributed lighting
 							!differently on days with & 
@@ -1090,8 +1090,8 @@ c          call daily_lightning(lat,lon,mlightn,dprec,dlightn,cgf)
 							!changed as well, see Doug 09/12
 							! comments below)
 
-          call daily2(lat,lon,mlightn,dprec,dlightn)	!Doug 01/09: functions
-          cgf(:)=0.2
+c          call daily2(lat,lon,mlightn,dprec,dlightn)	!Doug 01/09: functions
+c          cgf(:)=0.2
           
           
           
@@ -2427,16 +2427,16 @@ c     ---------------------------------------------------------------------
 c          1      2      3      4      5      6      7      8          PFT
 c     ---------------------------------------------------------------------
 
-     *  0.425,   0.0,  0.00,   0.5,  0.20,  0.25, 100.0,  0.60,        !  1
-     *  0.25,   0.0,  0.10,   0.5,  0.20,  0.25, 100.0,  0.70,        !  2
-     *  0.60,   0.0,  0.00,   0.3,  1.20,  0.25, 100.0,  0.12,        !  3
-     *  0.50,   0.0,  0.10,   0.3,  1.20,  0.25, 100.0,  0.50,        !  4
-     *  0.70,   0.0,  0.00,   0.5,  1.20,  0.25, 120.0,  0.12,        !  5
-     *  0.90,   0.0,  0.00,   0.3,  1.20,  0.25, 100.0,  0.12,        !  6
+     *  0.80,   0.0,  0.00,   0.5,  0.20,  0.25, 100.0,  0.60,        !  1
+     *  0.70,   0.0,  0.10,   0.5,  0.20,  0.25, 100.0,  0.70,        !  2
+     *  0.85,   0.0,  0.00,   0.3,  1.20,  0.25, 100.0,  0.12,        !  3
+     *  0.80,   0.0,  0.10,   0.3,  1.20,  0.25, 100.0,  0.50,        !  4
+     *  0.80,   0.0,  0.00,   0.5,  1.20,  0.25, 120.0,  0.12,        !  5
+     *  0.85,   0.0,  0.00,   0.3,  1.20,  0.25, 100.0,  0.12,        !  6
 c     *  0.90,   0.0,  0.00,   0.3,  1.30,  0.35, 100.0,  0.12,        !  7
-     *  0.90,   0.0,  0.00,   0.5,  1.20,  0.3, 100.0,  0.12,        !  8
+     *  0.80,   0.0,  0.00,   0.5,  1.20,  0.3, 100.0,  0.12,        !  8
      *  0.90,   0.0,  0.20,   0.5,  1.30,  0.25, 100.0,  0.01,        !  9
-     *  0.70,   1.0,  0.20,   0.5,  0.70,  0.25, 100.0,  0.01/        ! 10
+     *  0.85,   1.0,  0.20,   0.5,  0.70,  0.25, 100.0,  0.01/        ! 10
 
       data ((table(pft,n),n=9,17),pft=1,npft) /
 
@@ -6785,8 +6785,8 @@ C		Doug 11/12: seperate out litter and wood responses to temperature using Q10 p
           wood_response=0.0
         END IF
         DO pft=1,npft
-           k_litter_leaf(pft)=k_litter10!(pftpar(pft,56)*leaf_repsonse)/12.0
-           k_litter_wood(pft)=k_litter10!(pftpar(pft,57)*wood_response)/12.0
+           k_litter_leaf(pft)=(pftpar(pft,56)*leaf_repsonse)/12.0
+           k_litter_wood(pft)=(pftpar(pft,57)*wood_response)/12.0
         END DO
         k_litter_bg=(k_litter10*temp_resp*moist_resp)/12.0
         k_fast(m)=(k_soil_fast10*temp_resp*moist_resp)/12.0
@@ -12135,12 +12135,12 @@ c
       real alpha_1hr, alpha_10hr,alpha_100hr
       real alpha_livegrass,alpha_1000hr
 
-        parameter (alpha_1hr=0.001,alpha_10hr=0.00005424)	!Doug 08/12: fiddleing with the alphas
-        parameter (alpha_100hr=0.00001485,
-     *		alpha_1000hr = 0.000001) 
-c        parameter (alpha_1hr=0.025,alpha_10hr=0.0025)
-c        parameter (alpha_100hr=0.00025, alpha_1000hr = 0.000025) 
-c        parameter (alpha_livegrass=0.0005) 
+c        parameter (alpha_1hr=0.001,alpha_10hr=0.00005424)	!Doug 08/12: fiddleing with the alphas
+c        parameter (alpha_100hr=0.00001485,
+c     *		alpha_1000hr = 0.000001) 
+        parameter (alpha_1hr=0.025,alpha_10hr=0.0025)
+        parameter (alpha_100hr=0.00025, alpha_1000hr = 0.000025) 
+        parameter (alpha_livegrass=0.0005) 
 c     Allan: Alpha values for livegrass and 1000hr dead fuels are particularly
 c            subjective 
 c     KIRSTEN:i.e. values made up, revisit alpha_livegrass with livegrass
