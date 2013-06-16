@@ -8083,45 +8083,45 @@ c                     without compeition from other grass. This fixes
 c                     that with scling by total grass cover.
 C---------------------------------------------------------------
 C                     OLD VERSION
-          if (crownarea(pft).gt.0.0) then
-            lai_ind(pft)=(lm_ind(pft,1)*sla(pft))/crownarea(pft)
-          else
-            lai_ind(pft)=0.0
-          endif
- 
-          fpc_ind=(1.0-exp(-0.5*lai_ind(pft)))
-          fpc_grid_old=fpc_grid(pft)
-          fpc_grid(pft)=crownarea(pft)*nind(pft)*fpc_ind
-C---------------------------------------------------------------
-C                     NEW VERSION
-C          lm_tot(pft)=0.0
-C 
-C          IF (tree(pft)) THEN
-C            lm_tot(pft)=lm_ind(pft,1)
-C          ELSE ! Grass
-C            DO ppft=1,npft
-C              IF (.NOT.tree(ppft)) THEN
-C                lm_tot(pft)=lm_tot(pft)+lm_ind(ppft,1)
-C              END IF
-C            END DO
-C          END IF
-C 		  
-C          IF (crownarea(pft).GT.0.0) THEN
-C            lai_ind(pft)=(lm_tot(pft)*sla(pft))/crownarea(pft)
-C          ELSE
+C          if (crownarea(pft).gt.0.0) then
+C            lai_ind(pft)=(lm_ind(pft,1)*sla(pft))/crownarea(pft)
+C          else
 C            lai_ind(pft)=0.0
-C          END IF
-C 		  
-C          fpc_ind=1.0-exp(-0.5*lai_ind(pft))		  
+C          endif
+C 
+C          fpc_ind=(1.0-exp(-0.5*lai_ind(pft)))
 C          fpc_grid_old=fpc_grid(pft)
 C          fpc_grid(pft)=crownarea(pft)*nind(pft)*fpc_ind
-C 		  
-C          IF (lm_tot(pft).GT.0.0) THEN
-C            fpc_grid(pft)=fpc_grid(pft)*lm_ind(pft,1)/lm_tot(pft)
-C          ELSE
-C            fpc_grid(pft)=0.0
-C          END IF
 C---------------------------------------------------------------
+                     NEW VERSION
+          lm_tot(pft)=0.0
+ 
+          IF (tree(pft)) THEN
+            lm_tot(pft)=lm_ind(pft,1)
+          ELSE ! Grass
+            DO ppft=1,npft
+              IF (.NOT.tree(ppft)) THEN
+                lm_tot(pft)=lm_tot(pft)+lm_ind(ppft,1)
+              END IF
+            END DO
+          END IF
+ 		  
+          IF (crownarea(pft).GT.0.0) THEN
+            lai_ind(pft)=(lm_tot(pft)*sla(pft))/crownarea(pft)
+          ELSE
+            lai_ind(pft)=0.0
+          END IF
+ 		  
+          fpc_ind=1.0-exp(-0.5*lai_ind(pft))		  
+          fpc_grid_old=fpc_grid(pft)
+          fpc_grid(pft)=crownarea(pft)*nind(pft)*fpc_ind
+ 		  
+          IF (lm_tot(pft).GT.0.0) THEN
+            fpc_grid(pft)=fpc_grid(pft)*lm_ind(pft,1)/lm_tot(pft)
+          ELSE
+            fpc_grid(pft)=0.0
+          END IF
+c---------------------------------------------------------------
  
           fpc_inc(pft)=max(0.0,fpc_grid(pft)-fpc_grid_old)
           if(fpc_grid(pft).eq.0.0) present(pft)=.false.
