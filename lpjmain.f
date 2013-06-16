@@ -12690,6 +12690,7 @@ c          U_front=(ir*xi*(1.0+phi_wind))/(dens_fuel_ave*eps*q_ig)
       end
 c-------------------------------------------------------------------------------
 c Doug 02/13: Calculates tree mortality and new Bark thickness distribution from cambiol damage
+c Doug 02/13: Calculates tree mortality and new Bark thickness distribution from cambiol damage
        SUBROUTINE BT_change(DBH,BTparam1,BTparam2,
      *   tau_l,pm_tau_class)
 	 
@@ -12903,7 +12904,7 @@ C      local vaiables
        RETURN
 	   
        end
-           
+            
 c-------------------------------------------------------------------------------
 c    subroutine for calculation of fuel consumption in the area affected by fire
 
@@ -14459,6 +14460,8 @@ c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     SUBROUTINE bt_establish
 c Doug 02/13: Calculates new bark thickness spread after establishment
+c     SUBROUTINE bt_establish
+c Doug 02/13: Calculates new bark thickness spread after establishment
        SUBROUTINE bt_establish(BTparam,BTmode0,nind0,estab_grid)
 	 
        IMPLICIT NONE
@@ -14544,7 +14547,7 @@ C      local vaiables
 	   
        end
            
-	  
+	   
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     SUBROUTINE decay
