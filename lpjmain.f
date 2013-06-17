@@ -1513,7 +1513,7 @@ C				So litter_ag is summed again for output
      *      crop,pas,	!Doug 05/09: just checking crops and pasture are implimented properly
      *      anpp_grid,arh_grid,acflux_fire_grid,                  !Doug 07/09: cheating future run ouputs without deltaC's
      *      gdd_grid,alpha_ws,pfuel_limit,dprec_out,!Doug 07/09: biocliamtic variables for heat and water stress
-     *      BTparam1,BTparam2cgf,fdry,lt_days)                                    
+     *      BTparam1,BTparam2,cgf,fdry,lt_days)                                    
 
 cccc note: you can alternatively use mpet2 and apet to get PET*1.32
 cccc       instead of mpet_grid and apet_grid, respectively
@@ -2476,7 +2476,7 @@ c     ---------------------------------------------------------------------
 c     *  0.90,   0.0,  0.00,   0.3,  1.30,  0.35, 100.0,  0.12,        !  7
      *  0.80,   0.0,  0.00,   0.5,  1.20,  0.3, 100.0,  0.12,        !  8
      *  0.90,   0.0,  0.20,   0.5,  1.30,  0.25, 100.0,  0.01,        !  9
-     *  0.85,   1.0,  0.20,   0.5,  0.70,  0.25, 100.0,  0.01/        ! 10
+     *  0.85,   1.0,  0.20,   0.5,  0.70,  0.25, 100.0,  0.01,        ! 10
      *  0.80,   0.0,  0.10,   0.5,  0.20,  0.25, 100.0,  0.70,        !  1r     
      *  0.70,   0.0,  0.10,   0.5,  0.20,  0.25, 100.0,  0.70,        !  2r
      *  0.80,   0.0,  0.10,   0.3,  1.20,  0.25, 100.0,  0.50,        !  4r
