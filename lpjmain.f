@@ -786,6 +786,7 @@ C Yan
 
            real mfire_frac(1:12)
            real  fbdep, ni_acc
+      REAL dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old
 
 c    Doug & Stephen 05/09: landuse change (for things like deforestation and furniture)
       LOGICAL landuse_on            !Doug 06/09: says if landuse is on or off. I'm taking this out soon to make it a little more elagent
@@ -982,6 +983,11 @@ c DM   To avoid random values when tree(pft) is false
 c       Gridcell initialisations
 
        ni_acc=0.0
+       dlm_1hr_old=0.0
+       dlm_10hr_old=0.0
+       dlm_100hr_old=0.0
+       dlm_1000hr_old=0.0
+       
         call initgrid(tree,k_fast_ave,k_slow_ave,litter_decom_ave,
      *    present,litter_ag,fuel_1hr,fuel_10hr,fuel_100hr,
      *    fuel_1000hr,litter_bg,crownarea,mprec,w,w_t,
@@ -1261,7 +1267,8 @@ c         Calculation of biomass destruction by fire disturbance
      * livegrass_0,dead_fuel_0,dead_fuel_all_0,
      * fuel_all_0,fuel_1hr_total_0,fuel_10hr_total_0,
      * fuel_100hr_total_0,fuel_1000hr_total_0,
-     * mfire_frac,lon,crop,pas,fbdep,ni_acc,afire_frac_afap_old)
+     * mfire_frac,lon,crop,pas,fbdep,ni_acc,afire_frac_afap_old,
+     * dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old)
 
           fuel_1hr_del=fuel_1hr		!Doug MFL1
           fuel_10hr_del=fuel_10hr
@@ -8230,7 +8237,8 @@ c     Biomass destruction through disturbance by fire
      * fuel_all_0,fuel_1hr_total_0,fuel_10hr_total_0,
      * fuel_100hr_total_0,fuel_1000hr_total_0,
      * mfire_frac,lon,
-     * crop,pas,fbdep,ni_acc,afire_frac_afap_old)	 
+     * crop,pas,fbdep,ni_acc,afire_frac_afap_old,
+     * dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old)	 
       implicit none
 
 c     PARAMETERS
@@ -8489,6 +8497,7 @@ c       real fbd_C3_livegrass
        integer class
        real pot_fc_lg_temp(1:npft)
        real ni_acc
+       REAL dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old
        real temp
        real all_ind,litter_inc
        integer nc               ! nc is added for nco2
@@ -9566,7 +9575,8 @@ c Kirsten: moistfactor for livegrass less than for dead fuel!
      *         d,fuel_1hr_total,fuel_10hr_total,fuel_100hr_total,
      *         dead_fuel,ratio_dead_fuel,ratio_live_fuel,dlm_1hr,
      *         dlm_10hr,dlm_100hr,dlm_1000hr,year,ni_acc,
-     *         char_alpha_fuel,d_ni,lon,lat)
+     *         char_alpha_fuel,d_ni,lon,lat,
+     *         dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old)
        if(livegrass.gt.0.0)then 
         moistfactor_livegrass = 2.9*(1.0/ratio_live_fuel-1.0)*
      *                     (1.0-dlm_1hr(d)/moistfactor_1hr)-0.226
@@ -11078,7 +11088,8 @@ c
      *    fuel_100hr_total,dead_fuel,
      *    ratio_dead_fuel,
      *    ratio_live_fuel,dlm_1hr,dlm_10hr, dlm_100hr, dlm_1000hr,year,
-     *    ni_acc,char_alpha_fuel,d_NI,lon,lat)
+     *    ni_acc,char_alpha_fuel,d_NI,lon,lat,
+     *    dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old)
 
       implicit none
 
@@ -11092,15 +11103,15 @@ c
       real   dlm_1hr(1:365), dlm_10hr(1:365)  
       real   dlm_100hr(1:365), dlm_1000hr (1:365)
       real ni_acc
-
+      
       real alpha      !coefficient of fire risk function per fuel class!!
         parameter (alpha=0.0015)
       real alpha_1hr, alpha_10hr,alpha_100hr
       real alpha_livegrass,alpha_1000hr
 
-        parameter (alpha_1hr=0.001,alpha_10hr=0.00005424)	!Doug 08/12: fiddleing with the alphas
-        parameter (alpha_100hr=0.00001485,
-     *		alpha_1000hr = 0.000001) 
+        parameter (alpha_1hr=24,alpha_10hr=2.4)	!Doug 08/12: fiddleing with the alphas
+        parameter (alpha_100hr=0.24,
+     *		alpha_1000hr = 0.024) 
 c        parameter (alpha_1hr=0.025,alpha_10hr=0.0025)
 c        parameter (alpha_100hr=0.00025, alpha_1000hr = 0.000025) 
 c        parameter (alpha_livegrass=0.0005) 
@@ -11116,6 +11127,12 @@ c      real dw1(1:365)
       real wk(1:365),sum_ni_acc
       integer ii
       real lon,lat
+      
+c    Variables for calculating new fuel moisture uisng RH
+      REAL rhumid
+      REAL rhumid_c1,rhumid_c2 
+        parameter (rhumid_c1=17.271,rhumid_c2= 237.7)
+      REAL dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old
 
 c     initialise
 
@@ -11171,15 +11188,34 @@ c         alpha_fuel=0.00001
          char_alpha_fuel=0.00001
        endif
 
-C Leilei 11/08: Swopping dlm(d)=exp(-alpha_fuel*ni_acc), which calcualted dlm with
-c average fuel composition with LeiLei 11/08 lines below 
-c        dlm(d)=exp(-alpha_fuel*ni_acc)
-       
-       dlm_1hr(d) = exp(-alpha_1hr * ni_acc)
-       dlm_10hr(d) = exp(-alpha_10hr * ni_acc)
-       dlm_100hr(d) = exp(-alpha_100hr * ni_acc)
-       dlm_1000hr(d) = exp(-alpha_1000hr * ni_acc)
+C Doug 06/13: dlm_xhr calculated using NI replaced with RH 
+       IF (dprec(d).le.3.0.and.(dtemp_min(d)-4.0).ge.0.0) then
+           rhumid=100*(exp((rhumid_c1*(dtemp_min(d)-4.0))/
+     *        rhumid_c1*(dtemp_min(d)-4.0)))
+           rhumid=rhumid/exp((rhumid_c1*dtemp_max(d))/
+     *        (rhumid_c1*dtemp_max(d)))
+           dlm_1hr(d) = rhumid/100+
+     *        (dlm_1hr_old-rhumid/100)*exp(-alpha_1hr)
+           dlm_10hr(d) = rhumid/100+
+     *        (dlm_10hr_old-rhumid/100)*exp(-alpha_10hr)
+           dlm_100hr(d) = rhumid/100+
+     *        (dlm_100hr_old-rhumid/100)*exp(-alpha_100hr)
+           dlm_1000hr(d) = rhumid/100+
+     *        (dlm_1000hr_old-rhumid/100)*exp(-alpha_1000hr)
+      ELSE
+          dlm_1hr(d)=1
+          dlm_10hr(d)=1
+          dlm_100hr(d)=1
+          dlm_1000hr(d)=1
+      ENDIF
+      dlm_1hr_old=dlm_1hr(d)
+      dlm_10hr_old=dlm_10hr(d)
+      dlm_100hr_old=dlm_100hr(d)
+      dlm_1000hr_old=dlm_1000hr(d)
+      
 
+        print*,rhumid
+        print*,dlm_1hr
 c Leilei 11/08: dlm= the sum of dlm for each different fuel load/
 
        dlm(d)=((dlm_1hr(d)*fuel_1hr_total+dlm_10hr(d)*
