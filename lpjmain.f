@@ -12257,21 +12257,10 @@ c
         parameter (alpha=0.0015)
       real alpha_1hr, alpha_10hr,alpha_100hr
       real alpha_livegrass,alpha_1000hr
-
-<<<<<<< HEAD
-c        parameter (alpha_1hr=0.001,alpha_10hr=0.00005424)	!Doug 08/12: fiddleing with the alphas
-c        parameter (alpha_100hr=0.00001485,
-c     *		alpha_1000hr = 0.000001) 
-        parameter (alpha_1hr=0.025,alpha_10hr=0.0025)
-        parameter (alpha_100hr=0.00025, alpha_1000hr = 0.000025) 
-=======
         parameter (alpha_1hr=24,alpha_10hr=2.4)	!Doug 08/12: fiddleing with the alphas
         parameter (alpha_100hr=0.24,
      *		alpha_1000hr = 0.024) 
-c        parameter (alpha_1hr=0.025,alpha_10hr=0.0025)
-c        parameter (alpha_100hr=0.00025, alpha_1000hr = 0.000025) 
->>>>>>> a240bac0fbabbf745d202e33a4b0f98867b25184
-c        parameter (alpha_livegrass=0.0005) 
+
 c     Allan: Alpha values for livegrass and 1000hr dead fuels are particularly
 c            subjective 
 c     KIRSTEN:i.e. values made up, revisit alpha_livegrass with livegrass
