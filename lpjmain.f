@@ -12333,10 +12333,10 @@ c    Allan
 c         alpha_fuel=0.00001
          char_alpha_fuel=0.00001
        endif
-        print*,"------"
+        
 C Doug 06/13: dlm_xhr calculated using NI replaced with RH 
        IF (dprec(d).le.3.0.and.(dtemp_min(d)-4.0).ge.0.0) THEN
-        PRINT*,"yay"
+        
            rhumid=100*(exp((rhumid_c1*(dtemp_min(d)-4.0))/
      *        (rhumid_c2+(dtemp_min(d)-4.0))))
             
