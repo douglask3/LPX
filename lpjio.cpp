@@ -2401,9 +2401,8 @@ extern "C" int outannual_(int *year, int *present,
                           float *crop, float *pas,                                    //Doug 05/09: crop and pasture proportions
                           float *anpp_grid, float *arh_grid, float *acflux_fire_grid,//Doug 07/09: the cheats
                           float *gdd_grid, float *alpha_ws, float *pfuel_limit, 
-						  float* dprec_out, float* BTparam1, float* BTparam2),                          //Doug 07/09: vioclimatic varibles         
-                          float *gdd_grid, float *alpha_ws, float *cgf, float *fdry,
-                          float *lt_days)                          //Doug 07/09: vioclimatic varibles         
+						  float* dprec_out, float* BTparam1, float* BTparam2,                          //Doug 07/09: vioclimatic varibles         
+                          float *cgf, float *fdry, float *lt_days)                          //Doug 07/09: vioclimatic varibles         
 {
   // Skip output during spin-up if required.
   // Doug 06/09: Skip output if before fist year of ouput
