@@ -12365,8 +12365,6 @@ C Doug 06/13: dlm_xhr calculated using NI replaced with RH
       dlm_1000hr_old=dlm_1000hr(d)
       
         
-        print*,rhumid
-        print*,dlm_1hr(d)
 c Leilei 11/08: dlm= the sum of dlm for each different fuel load/
 
        dlm(d)=((dlm_1hr(d)*fuel_1hr_total+dlm_10hr(d)*
