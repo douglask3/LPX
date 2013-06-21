@@ -11187,13 +11187,16 @@ c    Allan
 c         alpha_fuel=0.00001
          char_alpha_fuel=0.00001
        endif
-
+        print*,"------"
 C Doug 06/13: dlm_xhr calculated using NI replaced with RH 
-       IF (dprec(d).le.3.0.and.(dtemp_min(d)-4.0).ge.0.0) then
+       IF (dprec(d).le.3.0.and.(dtemp_min(d)-4.0).ge.0.0) THEN
+        PRINT*,"yay"
            rhumid=100*(exp((rhumid_c1*(dtemp_min(d)-4.0))/
-     *        rhumid_c1*(dtemp_min(d)-4.0)))
+     *        (rhumid_c2+(dtemp_min(d)-4.0))))
+            
            rhumid=rhumid/exp((rhumid_c1*dtemp_max(d))/
-     *        (rhumid_c1*dtemp_max(d)))
+     *        (rhumid_c2+dtemp_max(d)))
+                
            dlm_1hr(d) = rhumid/100+
      *        (dlm_1hr_old-rhumid/100)*exp(-alpha_1hr)
            dlm_10hr(d) = rhumid/100+
@@ -11203,19 +11206,21 @@ C Doug 06/13: dlm_xhr calculated using NI replaced with RH
            dlm_1000hr(d) = rhumid/100+
      *        (dlm_1000hr_old-rhumid/100)*exp(-alpha_1000hr)
       ELSE
+          rhumid=100
           dlm_1hr(d)=1
           dlm_10hr(d)=1
           dlm_100hr(d)=1
           dlm_1000hr(d)=1
       ENDIF
+      
       dlm_1hr_old=dlm_1hr(d)
       dlm_10hr_old=dlm_10hr(d)
       dlm_100hr_old=dlm_100hr(d)
       dlm_1000hr_old=dlm_1000hr(d)
       
-
+        
         print*,rhumid
-        print*,dlm_1hr
+        print*,dlm_1hr(d)
 c Leilei 11/08: dlm= the sum of dlm for each different fuel load/
 
        dlm(d)=((dlm_1hr(d)*fuel_1hr_total+dlm_10hr(d)*
