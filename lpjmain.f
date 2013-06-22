@@ -514,6 +514,7 @@ c     INPUT PARAMETERS
       integer l,ll,day
       real ii,jj
       real mprec(1:12)                 ! monthly precipitation (mm)
+      real aprec                       ! Doug 06/13: annual precipitation (mm)
       real mtemp_dmin(1:12)            ! monthly minimum temperature
       real mtemp_dmax(1:12)            ! monthly maximum temperature
       real mwet(1:12)                  ! monthly number of wet days  !DIETER
@@ -1004,6 +1005,7 @@ c       Gridcell initialisations
        dlm_10hr_old=0.0
        dlm_100hr_old=0.0
        dlm_1000hr_old=0.0
+       aprec=0.0
        
         call initgrid(tree,k_fast_ave,k_slow_ave,litter_decom_ave,
      *    present,litter_ag,litter_ag_leaf,litter_ag_wood, !Doug 11/12: seperate out grass and wood litter
@@ -1077,7 +1079,7 @@ c         Interpolate monthly climate data to daily values
           call daily(mtemp_dmin,dtemp_min)
           call daily(mtemp_dmax,dtemp_max)
           call prdaily(mprec,dprec,mwet,year)
-
+          aprec=SUM(mprec)
 c Doug 07/09: Calculate a GDD for each grid cell. Used for ouput only.
           gdd_grid=0
           DO day=1,365
@@ -1085,6 +1087,7 @@ c Doug 07/09: Calculate a GDD for each grid cell. Used for ouput only.
                gdd_grid=gdd_grid+dtemp(day)-gddbase
             END IF
           END DO
+
 
 
           call daily_lightning(lat,lon,mlightn,dprec,dlightn,
@@ -1098,6 +1101,7 @@ c Doug 07/09: Calculate a GDD for each grid cell. Used for ouput only.
 							!make more sense(itself function
 							!changed as well, see Doug 09/12
 							! comments below)
+
 
           call daily(msun,dsun)
           call daily(mwindsp,dwindsp)
@@ -1354,7 +1358,8 @@ c         Calculation of biomass destruction by fire disturbance
      * fuel_all_0,fuel_1hr_total_0,fuel_10hr_total_0,
      * fuel_100hr_total_0,fuel_1000hr_total_0,
      * mfire_frac,lon,crop,pas,fbdep,ni_acc,afire_frac_afap_old,
-     * dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old)
+     * dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old,
+     * dpet,aprec)
 
 
           fuel_1hr_del=fuel_1hr_leaf+fuel_1hr_wood		!Doug MFL1
@@ -5303,7 +5308,6 @@ c Yan
       pet_grid=0.0
       drunoff_drain=0.0
       drunoff_surf=0.0
-      daet=0.0
       
       if(d.eq.1) then
        dthaw=1500.0
@@ -9024,7 +9028,8 @@ c     Biomass destruction through disturbance by fire
      * fuel_100hr_total_0,fuel_1000hr_total_0,
      * mfire_frac,lon,
      * crop,pas,fbdep,ni_acc,afire_frac_afap_old,
-     * dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old)	 
+     * dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old,
+     * dpet,aprec)	 
       implicit none
 
 c     PARAMETERS
@@ -9305,6 +9310,8 @@ c       real fbd_C3_livegrass
        real pot_fc_lg_temp(1:npft)
        real ni_acc
        REAL dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old
+       REAL dpet(1:365)
+       REAL aprec
        real temp
        real all_ind,litter_inc
        integer nc               ! nc is added for nco2
@@ -10523,7 +10530,8 @@ c Kirsten: moistfactor for livegrass less than for dead fuel!
      *         dead_fuel,ratio_dead_fuel,ratio_live_fuel,dlm_1hr,
      *         dlm_10hr,dlm_100hr,dlm_1000hr,year,ni_acc,
      *         char_alpha_fuel,d_ni,lon,lat,
-     *         dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old)
+     *         dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old,
+     *         dpet,aprec)
        if(livegrass.gt.0.0)then 
         moistfactor_livegrass = 2.9*(1.0/ratio_live_fuel-1.0)*
      *                     (1.0-dlm_1hr(d)/moistfactor_1hr)-0.226
@@ -12238,7 +12246,8 @@ c
      *    ratio_dead_fuel,
      *    ratio_live_fuel,dlm_1hr,dlm_10hr, dlm_100hr, dlm_1000hr,year,
      *    ni_acc,char_alpha_fuel,d_NI,lon,lat,
-     *    dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old)
+     *    dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old,
+     *    dpet,aprec)
 
       implicit none
 
@@ -12277,9 +12286,16 @@ c      real dw1(1:365)
 c    Variables for calculating new fuel moisture uisng RH
       REAL rhumid
       REAL rhumid_c1,rhumid_c2 
-        parameter (rhumid_c1=17.271,rhumid_c2= 237.7)
+        PARAMETER (rhumid_c1=17.271,rhumid_c2= 237.7)
       REAL dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old
-
+      REAL dpet(1:365)
+      REAL aprec
+      REAL temp_dew
+      REAL EF
+      REAL dew_c1,dew_c2,dew_c3,dew_c4,dew_c5,dew_c6,dew_c7 
+        PARAMETER (dew_c1=-0.127,dew_c2= 1.121,dew_c3= 1.003,
+     *      dew_c4=-1.444,dew_c5= 12.312,
+     *      dew_c6=-32.766,dew_c7= 0.0006)
 c     initialise
 
 c     dw1(:)=0.0
@@ -12336,35 +12352,38 @@ c         alpha_fuel=0.00001
         
 C Doug 06/13: dlm_xhr calculated using NI replaced with RH 
        IF (dprec(d).le.3.0.and.(dtemp_min(d)-4.0).ge.0.0) THEN
-        
-           rhumid=100*(exp((rhumid_c1*(dtemp_min(d)-4.0))/
-     *        (rhumid_c2+(dtemp_min(d)-4.0))))
+
+            EF=dpet(d)/aprec
+            temp_dew=(dtemp_min(d)+273.15)*(dew_c1+dew_c2*
+     *          (dew_c3+dew_c4*EF+dew_c5*(EF**2)+
+     *           dew_c6*(EF**3))+
+     *           dew_c7*(dtemp_max(d)-dtemp_min(d)))
+            temp_dew=temp_dew-273.15
+     
+           rhumid=100*(exp((rhumid_c1*(temp_dew))/
+     *        (rhumid_c2+(temp_dew))))
             
            rhumid=rhumid/exp((rhumid_c1*dtemp_max(d))/
      *        (rhumid_c2+dtemp_max(d)))
-                
-           dlm_1hr(d) = rhumid/100+
-     *        (dlm_1hr_old-rhumid/100)*exp(-alpha_1hr)
-           dlm_10hr(d) = rhumid/100+
-     *        (dlm_10hr_old-rhumid/100)*exp(-alpha_10hr)
-           dlm_100hr(d) = rhumid/100+
-     *        (dlm_100hr_old-rhumid/100)*exp(-alpha_100hr)
-           dlm_1000hr(d) = rhumid/100+
-     *        (dlm_1000hr_old-rhumid/100)*exp(-alpha_1000hr)
       ELSE
           rhumid=100
-          dlm_1hr(d)=1
-          dlm_10hr(d)=1
-          dlm_100hr(d)=1
-          dlm_1000hr(d)=1
       ENDIF
+      
+      dlm_1hr(d) = rhumid/100+
+     *        (dlm_1hr_old-rhumid/100)*exp(-alpha_1hr)
+      dlm_10hr(d) = rhumid/100+
+     *        (dlm_10hr_old-rhumid/100)*exp(-alpha_10hr)
+      dlm_100hr(d) = rhumid/100+
+     *        (dlm_100hr_old-rhumid/100)*exp(-alpha_100hr)
+      dlm_1000hr(d) = rhumid/100+
+     *        (dlm_1000hr_old-rhumid/100)*exp(-alpha_1000hr)
       
       dlm_1hr_old=dlm_1hr(d)
       dlm_10hr_old=dlm_10hr(d)
       dlm_100hr_old=dlm_100hr(d)
       dlm_1000hr_old=dlm_1000hr(d)
       
-        
+
 c Leilei 11/08: dlm= the sum of dlm for each different fuel load/
 
        dlm(d)=((dlm_1hr(d)*fuel_1hr_total+dlm_10hr(d)*
