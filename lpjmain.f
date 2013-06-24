@@ -9445,28 +9445,14 @@ c
 c          fuel_1000hr_left(:,1)=0    !experiment 4
 c          fuel_1000hr_total=0        !experiment 4
 c        END IF
-c 
-
-c Doug 06/09: mask areas of fuel limitation (i.e, where 1hr, 10hr and livegrass
-c     is to small for propogation of fire
-
-
-         IF (fuel_1hr_total+fuel_10hr_total+livegrass<90) goto 201
-
-
 
         dead_fuel = fuel_1hr_total + fuel_10hr_total
      *     + fuel_100hr_total  !total dead fuel g/m2
-
-        if(dead_fuel.le.0.0)goto 201
 
 c       net fuel load
         net_fuel=0.0
         if (dead_fuel.gt.0.0)
      *    net_fuel=(1.0-MINER_TOT)*(dead_fuel/1000.0)
-
-
-        if(net_fuel.le.0.0)goto 201
 
 c    fuel bulk density, weighted per fuel class and fuel load
 c    ACHTUNG: WEIGHTING per fpc AND fuel load or per fuel load only? Reg-FIRM1: per FPC       
@@ -9617,6 +9603,25 @@ c          char_sigma=0.00001
 
           char_sigma=0.00001
        endif
+       
+       
+c Doug 06/09: mask areas of fuel limitation (i.e, where 1hr, 10hr and livegrass
+c     is to small for propogation of fire
+
+        IF (fuel_1hr_total+livegrass+fuel_10hr_total<200) THEN
+           pfuel_limit=pfuel_limit+1/365 !Doug 12/12: add a day with fuel limitation
+           GOTO 201
+        END IF
+
+        IF(dead_fuel.le.0.0) THEN
+          pfuel_limit=pfuel_limit+1/365 !Doug 12/12: add a day with fuel limitation
+          GOTO 201
+        END IF
+        
+        IF (net_fuel.le.0.0) THEN
+          pfuel_limit=pfuel_limit+1/365 !Doug 12/12: add a day with fuel limitation
+          GOTO 201
+        END IF
 
 c influence of wind_speed on rate of forward spread
 c wind speed from NCEP reanalysis data is in m/s, ROS is in m/min
@@ -11134,7 +11139,7 @@ c      real dw1(1:365)
       real lon,lat
       
 c    Variables for calculating new fuel moisture uisng RH
-      REAL rhumid
+      REAL rhumid, emc
       REAL rhumid_c1,rhumid_c2 
         PARAMETER (rhumid_c1=17.271,rhumid_c2= 237.7)
       REAL dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old
@@ -11202,6 +11207,7 @@ c         alpha_fuel=0.00001
         
 C Doug 06/13: dlm_xhr calculated using NI replaced with RH 
        IF (dprec(d).le.3.0.and.(dtemp_min(d)-4.0).ge.0.0) THEN
+
             EF=dpet(d)/aprec
             temp_dew=(dtemp_min(d)+273.15)*(dew_c1+dew_c2*
      *          (dew_c3+dew_c4*EF+dew_c5*(EF**2)+
@@ -11212,25 +11218,30 @@ C Doug 06/13: dlm_xhr calculated using NI replaced with RH
            rhumid=100*(exp((rhumid_c1*(temp_dew))/
      *        (rhumid_c2+(temp_dew))))
             
-           rhumid=rhumid/exp((rhumid_c1*dtemp_max(d))/
+           rhumid=rhumid/exp((rhumid_c1*
+     *        dtemp_max(d))/
      *        (rhumid_c2+dtemp_max(d)))
-      ELSE
-          rhumid=100
-      ENDIF
+     
+            emc=0.942*(rhumid**0.679)+0.000499*exp(0.1*rhumid)+
+     *          0.18*(21.1-((dtemp_max(d)-dtemp_min(d))/2))*
+     *          (1-exp(-0.115*rhumid))
+        ELSE
+            emc=100
+        ENDIF
       
-      dlm_1hr(d) = rhumid/100+
-     *        (dlm_1hr_old-rhumid/100)*exp(-alpha_1hr)
-      dlm_10hr(d) = rhumid/100+
-     *        (dlm_10hr_old-rhumid/100)*exp(-alpha_10hr)
-      dlm_100hr(d) = rhumid/100+
-     *        (dlm_100hr_old-rhumid/100)*exp(-alpha_100hr)
-      dlm_1000hr(d) = rhumid/100+
-     *        (dlm_1000hr_old-rhumid/100)*exp(-alpha_1000hr)
+        dlm_1hr(d) = emc/100+
+     *        (dlm_1hr_old-emc/100)*exp(-alpha_1hr)
+        dlm_10hr(d) = emc/100+
+     *        (dlm_10hr_old-emc/100)*exp(-alpha_10hr)
+        dlm_100hr(d) = emc/100+
+     *        (dlm_100hr_old-emc/100)*exp(-alpha_100hr)
+        dlm_1000hr(d) = emc/100+
+     *        (dlm_1000hr_old-emc/100)*exp(-alpha_1000hr)
       
-      dlm_1hr_old=dlm_1hr(d)
-      dlm_10hr_old=dlm_10hr(d)
-      dlm_100hr_old=dlm_100hr(d)
-      dlm_1000hr_old=dlm_1000hr(d)
+        dlm_1hr_old=dlm_1hr(d)
+        dlm_10hr_old=dlm_10hr(d)
+        dlm_100hr_old=dlm_100hr(d)
+        dlm_1000hr_old=dlm_1000hr(d)
       
 c Leilei 11/08: dlm= the sum of dlm for each different fuel load/
 
