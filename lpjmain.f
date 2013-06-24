@@ -1087,9 +1087,7 @@ c Doug 07/09: Calculate a GDD for each grid cell. Used for ouput only.
                gdd_grid=gdd_grid+dtemp(day)-gddbase
             END IF
           END DO
-<<<<<<< HEAD
-
-
+          
           call daily_lightning(lat,lon,mlightn,dprec,dlightn,
      *      cgf,fdry,lt_days)
 
@@ -1102,14 +1100,6 @@ c Doug 07/09: Calculate a GDD for each grid cell. Used for ouput only.
 							!changed as well, see Doug 09/12
 							! comments below)
 
-=======
-
-          call daily2(lat,lon,mlightn,dprec,dlightn)	!Doug 01/09: functions
-						!distributed lighting 										!differently on days with & 
-						!without precipitation
-          dlightn=dlightn 
-
->>>>>>> drying
           call daily(msun,dsun)
           call daily(mwindsp,dwindsp)
 
@@ -10389,50 +10379,15 @@ c
 c          fuel_1000hr_left(:,1)=0    !experiment 4
 c          fuel_1000hr_total=0        !experiment 4
 c        END IF
-<<<<<<< HEAD
-c 
-
-c Doug 06/09: mask areas of fuel limitation (i.e, where 1hr, 10hr and livegrass
-c     is to small for propogation of fire
-
-         !PRINT*, "?"
-		 !print*, d
-		 !print*, fuel_1hr_total
-         IF (fuel_1hr_total+livegrass+fuel_10hr_total<200) THEN
-           pfuel_limit=pfuel_limit+1/365 !Doug 12/12: add a day with fuel limitation
-           GOTO 201
-         END IF
-		   
-
-
-=======
->>>>>>> drying
 
         dead_fuel = fuel_1hr_total + fuel_10hr_total
      *     + fuel_100hr_total  !total dead fuel g/m2
 
-<<<<<<< HEAD
-        IF(dead_fuel.le.0.0) THEN
-          pfuel_limit=pfuel_limit+1/365 !Doug 12/12: add a day with fuel limitation
-          GOTO 201
-        END IF
-
-=======
->>>>>>> drying
 c       net fuel load
         net_fuel=0.0
         if (dead_fuel.gt.0.0)
      *    net_fuel=(1.0-MINER_TOT)*(dead_fuel/1000.0)
 
-<<<<<<< HEAD
-
-        IF (net_fuel.le.0.0) THEN
-          pfuel_limit=pfuel_limit+1/365 !Doug 12/12: add a day with fuel limitation
-          GOTO 201
-        END IF
-
-=======
->>>>>>> drying
 c    fuel bulk density, weighted per fuel class and fuel load
 c    ACHTUNG: WEIGHTING per fpc AND fuel load or per fuel load only? Reg-FIRM1: per FPC       
         do pft=1,npft
