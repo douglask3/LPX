@@ -12364,7 +12364,7 @@ C Doug 06/13: dlm_xhr calculated using NI replaced with RH
      *        (rhumid_c2+dtemp_max(d)))
      
             emc=0.942*(rhumid**0.679)+0.000499*exp(0.1*rhumid)+
-     *          0.18*(21.1-(dtemp_max(d))*
+     *          0.18*(21.1-dtemp_max(d))*
      *          (1-exp(-0.115*rhumid))
         ELSE
             emc=100
