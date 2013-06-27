@@ -7015,7 +7015,8 @@ c DM  If you are sure the initialization is not needed, comment out
       class=0
       bt(:,:)=0.0
       crown(:)=0.0
-      dbh_class(:,:)=0.0   
+      dbh_class(:,:)=0.0 
+      lm_inc(:)=0.0      
 c#ifdef CO2_THREE_VALUES
 c DM   Worse: given how rm_temp is used, it should be initialised
 c DM   at the beginning of the main loop (why should the value of
@@ -7582,7 +7583,7 @@ c            KIRSTEN: fuel classes
             endif
 
 c           Increment C compartments
-
+            lm_inc(pft)  =lminc_ind*nind(pft)
             lm_ind(pft,1)=lm_ind(pft,1)+lminc_ind
             rm_ind(pft,1)=rm_ind(pft,1)+rminc_ind
 

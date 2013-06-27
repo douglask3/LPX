@@ -276,7 +276,7 @@ LPJVariable LPJ_VARIABLES[] = {
   { "dlightn",       SIMPLE_DAILY    },   // Yan: 24/10/07
   { "nind",          PER_PFT         },
   { "lm_ind",        PER_CO2_PFT     },
-  { "lm_inc",        PER_PFT     },
+  { "lm_inc",        PER_PFT         },
   { "rm_ind",        PER_CO2_PFT     },
   { "sm_ind",        PER_CO2_PFT     },
   { "hm_ind",        PER_CO2_PFT     },
