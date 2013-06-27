@@ -276,6 +276,7 @@ LPJVariable LPJ_VARIABLES[] = {
   { "dlightn",       SIMPLE_DAILY    },   // Yan: 24/10/07
   { "nind",          PER_PFT         },
   { "lm_ind",        PER_CO2_PFT     },
+  { "lm_inc",        PER_PFT         },
   { "rm_ind",        PER_CO2_PFT     },
   { "sm_ind",        PER_CO2_PFT     },
   { "hm_ind",        PER_CO2_PFT     },
@@ -2322,7 +2323,7 @@ extern "C" int get_saved_data_(
 
 extern "C" int outannual_(int *year, int *present,
                           float *nind,
-                          float *lm_ind, float *rm_ind,
+                          float *lm_ind, float *lm_inc, float *rm_ind,
                           float *sm_ind, float *hm_ind,
                           float *fpc_grid,
                           float *anpp, float *acflux_estab,
@@ -2445,6 +2446,7 @@ extern "C" int outannual_(int *year, int *present,
   handle_output_record("dlightn", dlightn);         // Yan: 24/10/07
   handle_output_record("nind", nind);
   handle_output_record("lm_ind", lm_ind);
+  handle_output_record("lm_inc", lm_inc);
   handle_output_record("sm_ind", sm_ind);
   handle_output_record("hm_ind", hm_ind);
   handle_output_record("rm_ind", rm_ind);

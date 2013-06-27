@@ -605,6 +605,7 @@ c     additions by Kirsten
       real litter_decom_ave(1:nco2)    ! running average litter_decom for
                                        ! subroutine littersom
       real lm_ind(1:npft,1:nco2)       ! individual leaf mass (gC)
+      REAL lm_inc(1:npft)              ! Doug 06/13: +ive incremment of leaf matter
       real lm_sapl(1:npft,1:nco2)      ! initial (sapling) leaf mass (gC/m2)
       real mdayl(1:12)                 ! mid-month daylength
       real mgpp(1:12,1:npft,1:nco2)    ! monthly grid cell GPP (gC/m2)
@@ -1202,8 +1203,9 @@ c         compartments
 
 
           call allocation(pftpar,allom1,allom2,allom3,latosa,
-     *      wooddens,reinickerp,tree,sla,wscal,nind,bm_inc,lm_ind,
-     *      sm_ind,hm_ind,rm_ind,crownarea,fpc_grid,lai_ind,height,
+     *      wooddens,reinickerp,tree,sla,wscal,nind,
+     *      bm_inc,lm_ind,lm_inc,sm_ind,hm_ind,rm_ind,
+     *      crownarea,fpc_grid,lai_ind,height,
      *      height_class,dbh,tau_c,cl_t,litter_ag,litter_bg,fuel_1hr,
      *      fuel_10hr,fuel_100hr,fuel_1000hr,
      *      fuel_1hr_inc_pos, fuel_1hr_inc_neg, fuel_10hr_inc,
@@ -1365,7 +1367,7 @@ c  arf(1)
 c  acflux_fire(1)
          acflux_fire_grid=acflux_fire(1)
 
-         call outannual(year,present,nind,lm_ind,rm_ind,sm_ind,
+         call outannual(year,present,nind,lm_ind,lm_inc,rm_ind,sm_ind,
      *      hm_ind,fpc_grid,anpp,acflux_estab,litter_ag,litter_bg,
      *      cpool_fast,cpool_slow,arh,afire_frac,acflux_fire,
      *      mcflux_fire,arunoff,sla,mpar,mapar,mphen,anpp_add,mnpp,
@@ -6965,7 +6967,8 @@ c
 c     Doug 01/09: addition of fuel_1hr_inc as I/O
 
       subroutine allocation(pftpar,allom1,allom2,allom3,latosa,wooddens,
-     * reinickerp,tree,sla,wscal,nind,bm_inc,lm_ind,sm_ind,hm_ind,rm_ind
+     * reinickerp,tree,sla,wscal,nind,
+     * bm_inc,lm_ind,lm_inc,sm_ind,hm_ind,rm_ind
      * ,crownarea,fpc_grid,lai_ind,height,height_class,dbh,tau_c,cl_t,
      * litter_ag,litter_bg,fuel_1hr,fuel_10hr,fuel_100hr,fuel_1000hr,
      * fuel_1hr_inc_pos, fuel_1hr_inc_neg, fuel_10hr_inc,
@@ -6997,7 +7000,9 @@ c     ARGUMENTS
       real wscal(1:npft)
       real nind(1:npft)
       real bm_inc(1:npft,1:nco2)
-      real lm_ind(1:npft,1:nco2),rm_ind(1:npft,1:nco2)
+      REAL lm_ind(1:npft,1:nco2)
+      REAL lm_inc(1:npft)   ! Doug 06/13: total fine mass incrememet for outputs
+      REAL rm_ind(1:npft,1:nco2)
       real sm_ind(1:npft,1:nco2),hm_ind(1:npft,1:nco2)
       real crownarea(1:npft)
       real lai_ind(1:npft),fpc_grid(1:npft)
@@ -7078,7 +7083,8 @@ c DM  If you are sure the initialization is not needed, comment out
       class=0
       bt(:,:)=0.0
       crown(:)=0.0
-      dbh_class(:,:)=0.0   
+      dbh_class(:,:)=0.0 
+      lm_inc(:)=0.0      
 c#ifdef CO2_THREE_VALUES
 c DM   Worse: given how rm_temp is used, it should be initialised
 c DM   at the beginning of the main loop (why should the value of
@@ -7468,7 +7474,8 @@ c           Increment C compartments
             lm_temp=lm_ind(pft,1)
             rm_temp=rm_ind(pft,1)
             sm_temp=sm_ind(pft,1)
-
+            
+            lm_inc(pft)  =lminc_ind*nind(pft)
             lm_ind(pft,1)=lm_ind(pft,1)+lminc_ind
             rm_ind(pft,1)=rm_ind(pft,1)+rminc_ind
             sm_ind(pft,1)=sm_ind(pft,1)+sminc_ind
@@ -7644,7 +7651,7 @@ c            KIRSTEN: fuel classes
             endif
 
 c           Increment C compartments
-
+            lm_inc(pft)  =lminc_ind*nind(pft)
             lm_ind(pft,1)=lm_ind(pft,1)+lminc_ind
             rm_ind(pft,1)=rm_ind(pft,1)+rminc_ind
 
