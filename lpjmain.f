@@ -5300,7 +5300,7 @@ c Yan
       pet_p=0.0
       q=0.0
       prec=0.0
-      
+      daet=0.0
       intercp_tot=0.0
       pet_grid=0.0
       drunoff_drain=0.0
@@ -6854,6 +6854,7 @@ c       (Lloyd & Taylor 1994)
         if (mtemp_soil(m).le.-40.0) then !avoid division by zero
            temp_resp=0.0
         else
+            ! Doug 06/13: temp respinse for leaf and below ground litter and carbon pools.
            temp_resp=exp(308.56*((1.0/56.02)-
      *       (1.0/(mtemp_soil(m)+273.0-227.13))))  !Lloyd & Taylor 1994
         endif
@@ -12358,7 +12359,7 @@ C Doug 06/13: dlm_xhr calculated using NI replaced with RH
      *        (rhumid_c2+dtemp_max(d)))
      
             emc=0.942*(rhumid**0.679)+0.000499*exp(0.1*rhumid)+
-     *          0.18*(21.1-((dtemp_max(d)-dtemp_min(d))/2))*
+     *          0.18*(21.1-(dtemp_max(d))*
      *          (1-exp(-0.115*rhumid))
         ELSE
             emc=100
@@ -12722,8 +12723,7 @@ c          U_front=(ir*xi*(1.0+phi_wind))/(dens_fuel_ave*eps*q_ig)
       end
 c-------------------------------------------------------------------------------
 c Doug 02/13: Calculates tree mortality and new Bark thickness distribution from cambiol damage
-c Doug 02/13: Calculates tree mortality and new Bark thickness distribution from cambiol damage
-       SUBROUTINE BT_change(DBH,BTparam1,BTparam2,
+      SUBROUTINE BT_change(DBH,BTparam1,BTparam2,
      *   tau_l,pm_tau_class)
 	 
        IMPLICIT NONE
@@ -12775,9 +12775,7 @@ C      local vaiables
        l6=0.0
        l7=0.0
        l8=0.0
-	   
-	   !PRINT*, "%%%%%%%%"
-	   !PRINT*, a,b,s1,BTmode,s2
+	  
 	   
        IF (a>=s2) THEN
 	     pm_tau_class=1.0
@@ -12843,13 +12841,7 @@ C      local vaiables
       omg=0.0
 	  
       d1=(s2-s1)*(BTmode-s1)
-      d2=(s2-s1)*(s2-BTmode)
-	  
-	  !PRINT*, "?????????"
-	  !PRINT*, l1,l2,l3,l4
-	  !print*, l5,l6,l7,l8
-	  !print*, d1,d2
-	   
+      d2=(s2-s1)*(s2-BTmode)	   
 	   
        IF (l1>=0.0 .AND.l2>0.0) THEN
          W=-(2*AA*((l1**3)-(l2**3))+3*AA*s1*((l2**2)-(l1**2))+
@@ -12923,15 +12915,12 @@ C      local vaiables
          WRITE(10,*), "BTmode0: ", BTmode0
          WRITE(10,*), "BTmean: ", BTmean
          WRITE(10,*), "BTmode: ", BTmode
-         BTmode_frac=0.0
-        
+         BTmode_frac=0.0        
 	      
        END IF
-	   
 
        BTparam1(2)=BTparam1(2)+BTmode_frac*(BTparam1(3)-BTparam1(2))
        BTparam2(2)=BTparam2(2)+BTmode_frac*(BTparam2(3)-BTparam2(2))
-
 	   
        RETURN
 	   
