@@ -10574,7 +10574,8 @@ c       ref: Rothermel 1983, Pyne 1996
 
 
         wind_speed=(fpc_tree_total*dwindsp(d)*60.0*0.4)+
-     *               (fpc_grass_total*dwindsp(d)*60.0*0.6)
+     *      (fpc_grass_total*dwindsp(d)*60.0*0.6)+
+     *      ((1-(fpc_tree_total+fpc_grass_total))*dwindsp(d)*60.0)
 c        wind_speed=(fpc_tree_total*1.28*60.0*0.4)+
 c     *               (fpc_grass_total*1.28*60.0*0.6)
 c      converts wind_speed (m/min) to ft/min
