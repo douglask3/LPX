@@ -1522,7 +1522,7 @@ C				So litter_ag is summed again for output
      *      crop,pas,	!Doug 05/09: just checking crops and pasture are implimented properly
      *      anpp_grid,arh_grid,acflux_fire_grid,                  !Doug 07/09: cheating future run ouputs without deltaC's
      *      gdd_grid,alpha_ws,pfuel_limit,dprec_out,!Doug 07/09: biocliamtic variables for heat and water stress
-     *      BTparam1,BTparam2,cgf,fdry,lt_days)                                    
+     *      BTparam1,BTparam2,cgf,fdry,lt_days,dlm_1hr_old)                                    
 
 cccc note: you can alternatively use mpet2 and apet to get PET*1.32
 cccc       instead of mpet_grid and apet_grid, respectively
@@ -12348,24 +12348,31 @@ c         alpha_fuel=0.00001
         
 C Doug 06/13: dlm_xhr calculated using NI replaced with RH 
        IF (dprec(d).le.3.0.and.(dtemp_min(d)-4.0).ge.0.0) THEN
-
-            EF=dpet(d)/aprec
+            IF (aprec.EQ.0) THEN
+                emc=0.0
+            ELSE
+                EF=dpet(d)/aprec
+            
             temp_dew=(dtemp_min(d)+273.15)*(dew_c1+dew_c2*
      *          (dew_c3+dew_c4*EF+dew_c5*(EF**2)+
      *           dew_c6*(EF**3))+
      *           dew_c7*(dtemp_max(d)-dtemp_min(d)))
             temp_dew=temp_dew-273.15
-     
-           rhumid=100*(exp((rhumid_c1*(temp_dew))/
-     *        (rhumid_c2+(temp_dew))))
+            IF (temp_dew<-50) THEN
+                rhumid=1
+            ELSE
+                rhumid=100*(exp((rhumid_c1*(temp_dew))/
+     *              (rhumid_c2+(temp_dew))))
             
-           rhumid=rhumid/exp((rhumid_c1*
-     *        dtemp_max(d))/
-     *        (rhumid_c2+dtemp_max(d)))
+                rhumid=rhumid/exp((rhumid_c1*
+     *              dtemp_max(d))/
+     *              (rhumid_c2+dtemp_max(d)))
+            END IF
      
             emc=0.942*(rhumid**0.679)+0.000499*exp(0.1*rhumid)+
      *          0.18*(21.1-dtemp_max(d))*
      *          (1-exp(-0.115*rhumid))
+            END IF
         ELSE
             emc=100
         ENDIF
