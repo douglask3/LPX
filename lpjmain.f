@@ -9944,21 +9944,21 @@ c               pot_fc_lg(pft)=(lm_ind(pft)/0.45*nind(pft))
          fuel_1000hr_total_0=fuel_1000hr_total*0.45
          fuel_all_0=dead_fuel_all_0+livegrass_0       ! [gC/m2]
 
-        IF (dead_fuel.le.0.0) THEN
-          pfuel_limit=1;   !Doug 12/12: propotion of days with fuel limitation
-                           != 1 as not enough fuel this year for any fire
-          GOTO 200
-        END IF
+        !IF (dead_fuel.le.0.0) THEN
+        !  pfuel_limit=1;   !Doug 12/12: propotion of days with fuel limitation
+        !                   != 1 as not enough fuel this year for any fire
+        !  GOTO 200
+        !END IF
 
 c       net fuel load
-        if (dead_fuel.gt.0.0)
-     *    net_fuel=(1.0-MINER_TOT)*(dead_fuel/1000.0)  ! in kg biomass
-
-        if (net_fuel.le.0.0) THEN
-          pfuel_limit=1;   !Doug 12/12: propotion of days with fuel limitation
-                           != 1 as not enough fuel this year for any fire
-          GOTO 200
-        END IF
+        !if (dead_fuel.gt.0.0)
+     *  !  net_fuel=(1.0-MINER_TOT)*(dead_fuel/1000.0)  ! in kg biomass
+        !
+        !if (net_fuel.le.0.0) THEN
+        !  pfuel_limit=1;   !Doug 12/12: propotion of days with fuel limitation
+        !                   != 1 as not enough fuel this year for any fire
+        !  GOTO 200
+        !END IF
 		
 c  TODO : remove if not inside if ...
 
@@ -11442,6 +11442,22 @@ C Yan
         fuel_1000hr_left(:,1)=fuel_1000hr_left(:,1)/0.45
 
 
+     
+
+
+c     stop daily loop if entire grid cell burnt
+         if (afire_frac.eq.1.0) then
+           goto 200
+          end if
+
+
+
+c       pause
+
+
+
+201       continue
+
           mfuel_1hr_total(min(m,12))=mfuel_1hr_total(min(m,12))+              !Doug 03/09: monthly fuel
      *      (fuel_1hr_total*(1-fire_frac(d)))/month_length(min(m,12)) !for outputtng only
           mfuel_1hr_leaf_total(min(m,12))=
@@ -11465,19 +11481,6 @@ C Yan
           mlivegrass(min(m,12))=mlivegrass(min(m,12))+
      *      (livegrass*(1-fire_frac(d)))/month_length(min(m,12))
 
-
-c     stop daily loop if entire grid cell burnt
-         if (afire_frac.eq.1.0) then
-           goto 200
-          end if
-
-
-
-c       pause
-
-
-
-201       continue
        enddo !daily time step
 
         fuel_1hr_leaf_left(:,1)=fuel_1hr_leaf_left(:,1)*0.45			!Doug 03/01
