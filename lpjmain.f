@@ -499,7 +499,8 @@ c     INPUT PARAMETERS
       real popden                      ! human population density
       real a_nd                        ! human-caused, potential ignitions
       real mlightn(1:12)               ! needed by this version of getclimate
-      real dlightn(1:365), dlightn_control(1:365)              ! filled by interpolation
+      REAL mlightn_eff(1:12)                 ! Doug 10/13: effective lightn stikes: Dry CG strikes
+      REAL dlightn(1:365), dlightn_control(1:365)              ! filled by interpolation
       REAL cgf(1:12)				   ! Doug 09/12: fraction of cloud-to-ground-lightning
       REAL fdry(1:12)                  ! Doug 04/13: fraction of lighting striking on a dry day 
       REAL lt_days(1:12)               ! Doug 04/13: fraction of dry days with lightning 
@@ -1090,7 +1091,7 @@ c Doug 07/09: Calculate a GDD for each grid cell. Used for ouput only.
           END DO
 
           call daily_lightning(lat,lon,mlightn,dprec,dlightn,
-     *      cgf,fdry,lt_days)
+     *      mlightn_eff,cgf,fdry,lt_days)
 
 						!Doug 01/09: functions
 							!distributed lighting
@@ -1522,7 +1523,7 @@ C				So litter_ag is summed again for output
      *      crop,pas,	!Doug 05/09: just checking crops and pasture are implimented properly
      *      anpp_grid,arh_grid,acflux_fire_grid,                  !Doug 07/09: cheating future run ouputs without deltaC's
      *      gdd_grid,alpha_ws,pfuel_limit,dprec_out,!Doug 07/09: biocliamtic variables for heat and water stress
-     *      BTparam1,BTparam2,cgf,fdry,lt_days)                                    
+     *      BTparam1,BTparam2,cgf,fdry,lt_days,mlightn_eff)                                    
 
 cccc note: you can alternatively use mpet2 and apet to get PET*1.32
 cccc       instead of mpet_grid and apet_grid, respectively
@@ -1808,8 +1809,8 @@ c
 c		Doug 09/12: function changed to remove iter-cloud
 c	lightning. See Doug 09/12 comments below for deatils.
 
-      SUBROUTINE daily_lightning(lat,lon,mval,dval1,dval2
-     *  ,cgf,fdry,lt_days)
+      SUBROUTINE daily_lightning(lat,lon,mval,dval1,dval2,mval2,
+     *  cgf,fdry,lt_days)
 
       IMPLICIT NONE
 
@@ -1830,7 +1831,7 @@ C	LOCAL VARAIBLES:
       REAL daily_stikes !Doug 04/13: number of strikes per km per day
 
 c     I/O:
-      REAL mval(nmonths),dval1(ndayyear)
+      REAL mval(nmonths),dval1(ndayyear),mval2(nmonths)
       REAL dval2(ndayyear)
 
 c	For step 1:
@@ -1880,6 +1881,7 @@ c       Step 1
         day=0
         fdal(:)=0
         lt_days(:)=0
+        mval2(:)=0.0
 		
         DO month=1,nmonths	!Month of year
             ltk(:)=0 !Doug 10/12
@@ -1956,6 +1958,7 @@ c               4) doed it again
 
                 ndd=ndd-1
                 ltk(r:ndd)=ltk(r:ndd)+1
+
             END DO
 			
             DO mday=1,ndaymonth(month)	!day of month
@@ -1967,6 +1970,7 @@ c               4) doed it again
               !ELSE
                ! fdal(day)=fdry(month) !Doug 03/13: already calculated, so now comment out
                 END IF
+                mval2(month)=mval2(month)+dval2(mday)
             END DO
             
         END DO	!Month of year
