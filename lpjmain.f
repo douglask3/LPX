@@ -11635,74 +11635,7 @@ C            END IF
            an_areafires=0.0
        end if
 
-
-c       Doug 04/09: pasture removed from scaling down of fire, as
-c       data-comparision shows this is not the correct mechanism
-c       for treating pasture
-
-c             IF(crop>0.0) THEN
-               an_areafires=an_areafires*(1.0-crop)
-
-               acflux_fire(1)=acflux_fire(1)*(1.0-crop)
-
-               afire_frac=afire_frac*(1.0-crop)
-
-               livegrass_0=livegrass_0*(1.0-crop)
-
-               dead_fuel_all_0=dead_fuel_all_0*(1.0-crop)
-
-               dead_fuel_0=dead_fuel_0*(1.0-crop)
-
-               fuel_all_0=fuel_all_0*(1.0-crop)
-
-               fuel_1hr_total_0=fuel_1hr_total_0*(1.0-crop)
-
-               fuel_10hr_total_0=fuel_10hr_total_0*(1.0-crop)
-
-               fuel_100hr_total_0=fuel_100hr_total_0*(1.0-crop)
-
-               fuel_1000hr_total_0=fuel_1000hr_total_0*(1.0-crop)
-
-
-               do l=1,12
-
-                 area_burnt(l)=area_burnt(l)*(1.0-crop)
-                 mcflux_fire(l,1)=mcflux_fire(l,1)*(1.0-crop)
-                 mfire_frac(l)=mfire_frac(l)*(1.0-crop)
-                 num_fire(l)=num_fire(l)*(1.0-crop)
-               end do
-
-c             end if
-
-c LeiLei 12/08: experiment in masking out fires on areas fragmented
-c by cropland and/or pasture by setting fuel (and thus fires) to zero
-c in areas above the specified threshold.
-c
-c       Doug 04/09: again, poas and crop is now scalar instead of array
-c       so the old search method for correct cell has been removed
-
-            IF(crop+pas>10) THEN				
-
-               an_areafires=0.0
-               acflux_fire(1)=0.0
-               afire_frac=0.0
-               livegrass_0=0.0
-               dead_fuel_all_0=0.0
-               dead_fuel_0=0.0
-               fuel_all_0=0.0
-               fuel_1hr_total_0=0.0
-               fuel_10hr_total_0=0.0
-               fuel_100hr_total_0=0.0
-               fuel_1000hr_total_0=0.0
-
-               do l=1,12
-                 area_burnt(l)=0.0
-                 mcflux_fire(l,1)=0.0
-                 mfire_frac(l)=0.0
-                 num_fire(l)=0.0
-               end do
-
-            end if
+C Doug: crop stuff has been removed. WIll now be done in post-processing
 
            if(acflux_fire(1).le.0.1)acflux_fire(1)=0.0
 
