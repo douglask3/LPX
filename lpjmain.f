@@ -1809,7 +1809,7 @@ c
 c		Doug 09/12: function changed to remove iter-cloud
 c	lightning. See Doug 09/12 comments below for deatils.
 
-      SUBROUTINE daily_lightning(lat,lon,mval,dval1,dval2,mval2,
+      SUBROUTINE daily_lightning(lat,lon,mval,dval1,dval2,eff_ign,
      *  cgf,fdry,lt_days)
 
       IMPLICIT NONE
@@ -1831,7 +1831,7 @@ C	LOCAL VARAIBLES:
       REAL daily_stikes !Doug 04/13: number of strikes per km per day
 
 c     I/O:
-      REAL mval(nmonths),dval1(ndayyear),mval2(nmonths)
+      REAL mval(nmonths),dval1(ndayyear),eff_ign(nmonths) !Doug 11/13: Effective ignitions
       REAL dval2(ndayyear)
 
 c	For step 1:
@@ -1881,8 +1881,7 @@ c       Step 1
         day=0
         fdal(:)=0
         lt_days(:)=0
-        mval2(:)=0.0
-		
+		eff_ign(:)=0.0
         DO month=1,nmonths	!Month of year
             ltk(:)=0 !Doug 10/12
           
@@ -1955,7 +1954,8 @@ c               4) doed it again
                 
                 fdal(ltk(r))=fdry(month)                
                 dval2(ltk(r))=mval(month)*fdry(month)
-
+                eff_ign(month)=eff_ign(month)+mval(month)*fdry(month)*
+     *              cgf(month)
                 ndd=ndd-1
                 ltk(r:ndd)=ltk(r:ndd)+1
 
@@ -1970,7 +1970,6 @@ c               4) doed it again
               !ELSE
                ! fdal(day)=fdry(month) !Doug 03/13: already calculated, so now comment out
                 END IF
-                mval2(month)=mval2(month)+dval2(mday)
             END DO
             
         END DO	!Month of year
