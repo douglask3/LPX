@@ -397,7 +397,7 @@ LPJVariable LPJ_VARIABLES[] = {
   { "cgf",  SIMPLE_MONTHLY },               //Doug 12/10: cload-to-ground fraction
   { "fdry",  SIMPLE_MONTHLY },               //Doug 12/10: cload-to-ground fraction
   { "lt_days",  SIMPLE_MONTHLY },               //Doug 12/10: cload-to-ground fraction
-  { "mlightn_eff",  SIMPLE_MONTHLY }               //Doug 12/10: cload-to-ground fraction
+  { "mlightn_eff",  SIMPLE_MONTHLY },               //Doug 12/10: cload-to-ground fraction
   { "dlm_1hr_old",      SIMPLE          }    //Doug 07/09: Bioclimatic varible for water stress
 };
 
