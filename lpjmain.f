@@ -1068,7 +1068,7 @@ c         Doug 03/09: MFL; set fuel incraments to zero
 c         --------------------------------------
 c         Start of LOOP THROUGH SIMULATION YEARS
 c         --------------------------------------
-		  
+           
           fuel_10hr_inc(:,:,:)=0.0
           fuel_100hr_inc(:,:,:)=0.0
           fuel_1000hr_inc(:,:,:)=0.0
@@ -1086,7 +1086,7 @@ c Doug 07/09: Calculate a GDD for each grid cell. Used for ouput only.
                gdd_grid=gdd_grid+dtemp(day)-gddbase
             END IF
           END DO
-
+           
           call daily_lightning(lat,lon,mlightn,dprec,dlightn,
      *      cgf,fdry,lt_days)
 
@@ -1121,7 +1121,7 @@ c#endif
 
           call daily(mpet,dpet)
           call daily(mdayl,dayl)
-
+           
 c         Adjust daily precipitation by snowmelt and accumulation in snowpack
           call snow(dtemp,dprec,snowpack,dmelt,msnowpack)
 
@@ -1143,6 +1143,7 @@ c         Calculation of 20-year average climate variables
 c         Implement PFT bioclimatic limits
           call bioclim(pftpar,mtemp_min20,mtemp_max20,gdd,mtemp_max,
      *      survive,estab,year,present)
+            
 
 c        Doug 05/09: agriculture routine, updates pools due to abandonment
 c        or clearance of grid cell 
@@ -1171,24 +1172,19 @@ c         Calculation of GPP and soil water balance
      *      mw1_t,mw2_t,meangc,mgp,deltaa,deltaa_fpc,
      *      deet,alpha_ws)    !Doug 07-08/09
 
+          
 c         Calculation of mid-month soil temperatures
           call soiltemp(soilpar,mtemp,mtemp_old,mtemp_soil,mw1,mw1_t)
 
 c         Interpolate monthly soil temperature to daily values
           call daily(mtemp_soil,dtemp_soil)
           
-c         Calculation of autotrophic respiration and NPP
-C            IF (lat>-25) THEN 
-C              PRINT*,"*****"
-C              PRINT*, fuel_1hr_leaf(:,1)
-C            END IF
+
           call npp(pftpar,dtemp,dtemp_soil,tree,dphen,nind,
      *      lm_ind,sm_ind,rm_ind,mgpp,anpp,mnpp,bm_inc,present,
      * lresp,sresp,rresp,gresp,aresp,year,agpp,delt_c13_fpc,fpc_grid)
-C            IF (lat>-25) THEN 
-C              PRINT*,"npp"
-C              PRINT*, fuel_1hr_leaf(:,1)
-C            END IF
+
+           
 c         Allocation to reproduction
           call reproduction(bm_inc,lm_sapl,sm_sapl,hm_sapl,rm_sapl,
      *        litter_ag_leaf,    !Doug 11/12: seperate out grass and wood litter
@@ -1198,10 +1194,7 @@ c         Allocation to reproduction
 	 
 c         Calculation of leaf, sapwood, and fine-root turnover
 
-C            IF (lat>-25) THEN 
-C              PRINT*,"reproduction"
-C              PRINT*, fuel_1hr_leaf(:,1)
-C            END IF
+
           call turnover(pftpar,present,tree,lm_ind,sm_ind,hm_ind,
      *      rm_ind,
      *      litter_ag_leaf, !Doug 11/12: seperate out grass and wood litter
@@ -1211,7 +1204,7 @@ C            END IF
      *      fuel_10hr_inc, fuel_100hr_inc,	!Doug 01/09: fuel_xhr_inc
      *      nind,turnover_ind)
 
-     
+            
 c         Litter and soil decomposition calculations
 c         This is done before fire, so that fire probability is calculated
 c         on litter remaining after year's decomposition
@@ -1238,6 +1231,7 @@ c         Removal of PFTs with negative C increment this year
      *      fuel_10hr_inc, fuel_100hr_inc,fuel_1000hr_inc)              !Doug 01/09: fuel_xhr_inc
 
      
+            
 c         Allocation of annual carbon increment to leaf, stem and fine root
 c         compartments
 
@@ -1260,6 +1254,7 @@ C            END IF
      *      fuel_10hr_inc,fuel_100hr_inc,fuel_1000hr_inc,!Doug 01/09: fuel_xhr_inc
      *      fpc_inc,present,year, evergreen)
 
+   
 c         Implement light competition between trees and grasses
           call light(present,tree,lm_ind,sm_ind,hm_ind,rm_ind,
      *      crownarea,fpc_grid,fpc_inc,nind,
@@ -1272,6 +1267,7 @@ c         Implement light competition between trees and grasses
      *      fuel_10hr_inc,fuel_100hr_inc,fuel_1000hr_inc,!Doug 01/09: fuel_xhr_inc
      *      sla,year)
 
+            
 c         Implement light competition and background mortality among tree PFTs
 c         (including heat damage and due to lower limit of npp for boreal trees)
           call mortality(pftpar,present,tree,boreal,bm_inc,
@@ -1284,12 +1280,14 @@ c         (including heat damage and due to lower limit of npp for boreal trees)
      *      fuel_10hr_inc,fuel_100hr_inc,fuel_1000hr_inc,!Doug 01/09: fuel_xhr_inc
      *      dtemp,anpp,mtemp_max,year)
 
+            
 c         Calculation of biomass destruction by fire disturbance
         fuel_1hr_del=fuel_1hr_del-fuel_1hr_leaf-fuel_1hr_wood		!Doug MFL1
         fuel_10hr_del=fuel_10hr_del-fuel_10hr
         fuel_100hr_del=fuel_100hr_del-fuel_100hr
         fuel_1000hr_del=fuel_1000hr_del-fuel_1000hr
 
+           
          call fire(year,start_year,                                  !Doug 07/09: added start year
      *      pftpar,dtemp,dtemp_min,dtemp_max,dprec,
      *      dwindsp,dlightn,dphen,dphen_change,                      !Doug 06/09: dphen_change added for fire paradox experiments
@@ -1363,6 +1361,7 @@ c         update of individual structure and FPC.
      *      tree,allom1,allom2,allom3,acflux_estab,leafondays,
      *      leafoffdays,leafon,mnpp,anpp,mnpp_add,anpp_add,year)
 
+            
      
 c       Doug 05/09: agricultural production and product decomposition     
 C          call agriprod(present,agri,anpp,cflux_prod_total,
@@ -1380,11 +1379,7 @@ c         radioactive decay of 14C
      *      fuel_1hr_leaf,fuel_1hr_wood,
      *      fuel_10hr,fuel_100hr,fuel_1000hr)
 
-C            IF (lat>-25) THEN 
-C              PRINT*,"DECAY"
-C              PRINT*, fuel_1hr_leaf(:,1)
-C              IF (year==1003) STOP
-C            END IF
+
 c KIRSTEN 25 July 2006: set pft array to zero, where pft not present before passing on to cpp driver.
 c Not very familiar with cpp, normally it should be done in the driver.
 
@@ -1444,8 +1439,8 @@ C				So litter_ag is summed again for output
 	        END DO
           END DO
           dprec_out=dprec
-		  
-         call outannual(year,present,nind,lm_ind,lm_inc,rm_ind,sm_ind,
+
+          call outannual(year,present,nind,lm_ind,lm_inc,rm_ind,sm_ind,
      *      hm_ind,fpc_grid,anpp,acflux_estab,
      *      litter_ag,litter_ag_leaf,litter_ag_wood, !Doug 11/12: Output seperate ggrass and wood litter
      *      litter_bg,
@@ -1483,6 +1478,7 @@ C				So litter_ag is summed again for output
 cccc note: you can alternatively use mpet2 and apet to get PET*1.32
 cccc       instead of mpet_grid and apet_grid, respectively
 
+           
 #ifdef LPJ_STEP_1A
           if (year.eq.spinup_years) then
 c DM      Saved variables are the ones initialized in initgrid plus
@@ -12309,7 +12305,9 @@ C Doug 06/13: dlm_xhr calculated using NI replaced with RH
                 emc=0.0
             ELSE
                 EF=dpet(d)/aprec
-            
+                IF (dtemp_max(d)<dtemp_min(d)) THEN
+                    dtemp_max(d)=dtemp_min(d)
+                ENDIF
             temp_dew=(dtemp_min(d)+273.15)*(dew_c1+dew_c2*
      *          (dew_c3+dew_c4*EF+dew_c5*(EF**2)+
      *           dew_c6*(EF**3))+
@@ -12318,6 +12316,7 @@ C Doug 06/13: dlm_xhr calculated using NI replaced with RH
             IF (temp_dew<-50) THEN
                 rhumid=1
             ELSE
+            
                 rhumid=100*(exp((rhumid_c1*(temp_dew))/
      *              (rhumid_c2+(temp_dew))))
             
@@ -12325,7 +12324,8 @@ C Doug 06/13: dlm_xhr calculated using NI replaced with RH
      *              dtemp_max(d))/
      *              (rhumid_c2+dtemp_max(d)))
             END IF
-     
+            IF (rhumid<0) rhumid=0
+            IF (rhumid>100) rhumid=100
             emc=0.942*(rhumid**0.679)+0.000499*exp(0.1*rhumid)+
      *          0.18*(21.1-dtemp_max(d))*
      *          (1-exp(-0.115*rhumid))
@@ -12333,15 +12333,30 @@ C Doug 06/13: dlm_xhr calculated using NI replaced with RH
         ELSE
             emc=100
         ENDIF
-      
-        dlm_1hr(d) = emc/100+
+        IF (ISNAN(dlm_1hr_old)) THEN
+            dlm_1hr(d) = emc/100
+        ELSE
+            dlm_1hr(d) = emc/100+
      *        (dlm_1hr_old-emc/100)*exp(-alpha_1hr)
-        dlm_10hr(d) = emc/100+
+        ENDIF
+         IF (ISNAN(dlm_10hr_old)) THEN
+            dlm_10hr(d) = emc/100
+        ELSE 
+            dlm_10hr(d) = emc/100+
      *        (dlm_10hr_old-emc/100)*exp(-alpha_10hr)
-        dlm_100hr(d) = emc/100+
+        ENDIF
+        IF (ISNAN(dlm_100hr_old)) THEN
+            dlm_100hr(d) = emc/100
+        ELSE
+            dlm_100hr(d) = emc/100+
      *        (dlm_100hr_old-emc/100)*exp(-alpha_100hr)
-        dlm_1000hr(d) = emc/100+
+        ENDIF
+        IF (ISNAN(dlm_1000hr_old)) THEN
+            dlm_1000hr(d) = emc/100
+        ELSE
+            dlm_1000hr(d) = emc/100+
      *        (dlm_1000hr_old-emc/100)*exp(-alpha_1000hr)
+        ENDIF
       
         dlm_1hr_old=dlm_1hr(d)
         dlm_10hr_old=dlm_10hr(d)
@@ -12350,13 +12365,17 @@ C Doug 06/13: dlm_xhr calculated using NI replaced with RH
       
 
 c Leilei 11/08: dlm= the sum of dlm for each different fuel load/
- 
-       dlm(d)=((dlm_1hr(d)*fuel_1hr_total+dlm_10hr(d)*
+C Doug 09/13: dlm is just live grass moisture if there in no
+C   dead fuel. Not correcting for this maked dlm an NaN if no fuel is left.
+       IF (dead_fuel==0) THEN
+            dlm(d)=dlm_lg(d)
+       ELSE
+            dlm(d)=((dlm_1hr(d)*fuel_1hr_total+dlm_10hr(d)*
      *         fuel_10hr_total+
      *         dlm_100hr(d)*fuel_100hr_total)/dead_fuel)
      *         *ratio_dead_fuel+			!Doug 12/08 *1
      *         dlm_lg(d)*ratio_live_fuel		!Doug 12/08 remove
-c     *		*1	
+       END IF
         mlm(m)=mlm(m)+dlm(d)/month_length(m)
 
         !if (dlm(d)>1.05) then
