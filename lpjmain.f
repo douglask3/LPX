@@ -1473,6 +1473,7 @@ C				So litter_ag is summed again for output
      *      fbdep,litter_decom_ave,turnover_ind,
      *      crop,pas,	!Doug 05/09: just checking crops and pasture are implimented properly
      *      anpp_grid,arh_grid,acflux_fire_grid,                  !Doug 07/09: cheating future run ouputs without deltaC's
+     *      gdd_grid,alpha_ws,pfuel_limit,dprec_out,!Doug 07/09: biocliamtic variables for heat and water stress
      *      BTparam1,BTparam2,cgf,fdry,lt_days,mlightn_eff,
      *      dlm_1hr_old,mlm)            
 cccc note: you can alternatively use mpet2 and apet to get PET*1.32
