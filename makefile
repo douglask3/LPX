@@ -57,24 +57,7 @@ LDLIBS     = -L$(NETCDF)/lib -lnetcdf_c++ -lnetcdf -L/usr/lib/gcc/x86_64-linux-g
 #LDLIBS     = -L$(NETCDF)/lib -lnetcdf_c++ -lnetcdf -L/usr/lib/gcc/darwin/3.3 -lstdc++
 #LDLIBS     = -L$(NETCDF)/lib -lnetcdf_c++ -lnetcdf #-L/lib/gcc/i686-pc-cygwin/4.5.0 -lstdc++ /usr/bin/x86_64-w64-mingw32-gcc
 #
-# Options for known enviroment
-# Use of Intel 8.1 compiler seems to be frequent
 #
-
-ifeq ($(TARGET),INTEL_FC_81)
-  FC        = ifort
-  FCOPTIONS = -fpp -O3
-  NETCDF    = /opt/local/intel_fc_81
-  LDLIBS    = -L$(NETCDF)/lib -lnetcdf_c++ -lnetcdf -L/usr/lib/gcc-lib/i386-redhat-linux/3.2.3 -lstdc++
-endif
-
-ifeq ($(TARGET),ORMEN_GCC4)
-  FC     = gcc
-  NETCDF = /home/ggxyz/software/netcdf
-  LD     = c++
-  LDLIBS = -L$(NETCDF)/lib -lnetcdf_c++ -lnetcdf -lfrtbegin -lg2c -lgfortran
-endif
-
 EXE = motif-lpj motif-lpj-step1a motif-lpj-step1b motif-lpj-step2
 
 EXE1 = motif-lpj
