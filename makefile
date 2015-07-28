@@ -4,7 +4,7 @@
 # The problem on ormen
 # - there is a f77 (or g77) but it is based on gcc 3.3.5
 # - when you try to use it with the cpp preprocessor (option
-#   -x f77-cpp-input), it says : 
+#   -x f77-cpp-input), it says :
 #   f77: installation problem, cannot exec `cc1': No such file or directory
 # - There are indeed some files in /usr/lib64/gcc-lib/x86_64-suse-linux/3.3.5
 #   but not enough (there is no cc1 !)
@@ -28,10 +28,10 @@
 #        same results with the standard version and the 2 steps versions, some
 #        care must be taken, this symbol activate the corresponding code
 
-#LPJ_OPTIONS_STD    
+#LPJ_OPTIONS_STD
 #LPJ_OPTIONS_STEP_1A
 #LPJ_OPTIONS_STEP_1B
-#LPJ_OPTIONS_STEP_2 
+#LPJ_OPTIONS_STEP_2
 
 #
 # default options (main is in fortran)
@@ -44,40 +44,22 @@
 # FC         = g77
 # FC         =ifort
 
-NETCDF     = /usr/local
+NETCDF     = /home/doug/Documents2/ncdf/netcdf-3.6.3/cxx
 FC         = gfortran
 FCOPTIONS  = -x f77-cpp-input
-
 # FCOPTIONS  = -x f77-cpp-input -O3
 # FCOPTIONS  = -fpp -O3
 CPPOPTIONS = -c -L$(NETCDF)/include/
 CXX        = c++
 CXXOPTIONS = -O3
 LD         = $(FC)
-#LDLIBS     = -L$(NETCDF)/lib -lnetcdf_c++ -lnetcdf
+LDLIBS     = -L$(NETCDF)/lib -lnetcdf_c++ -lnetcdf -L/usr/lib/gcc/x86_64-linux-gnu/4.9/ -lstdc++
 #LDLIBS     = -L$(NETCDF)/lib -lnetcdf_c++ -lnetcdf -L/usr/lib/gcc/darwin/3.3 -lstdc++
-LDLIBS     = -L$(NETCDF)/lib -lnetcdf_c++ -lnetcdf -L/lib/gcc/i686-pc-cygwin/4.5.0 -lstdc++ /usr/bin/x86_64-w64-mingw32-gcc
+#LDLIBS     = -L$(NETCDF)/lib -lnetcdf_c++ -lnetcdf #-L/lib/gcc/i686-pc-cygwin/4.5.0 -lstdc++ /usr/bin/x86_64-w64-mingw32-gcc
 #
 # Options for known enviroment
 # Use of Intel 8.1 compiler seems to be frequent
 #
-
-ifeq ($(HOSTNAME),holocene.ggy.bris.ac.uk)
-  TARGET = INTEL_FC_81
-else
-ifeq ($(HOSTNAME),lgm.ggy.bris.ac.uk)
-  TARGET = INTEL_FC_81
-else
-ifeq ($(HOSTNAME),eocene.ggy.bris.ac.uk)
-  TARGET = INTEL_FC_81
-else
-# Yes, ormen should be ormen.ggy.bris.ac.uk but is not 
-ifeq ($(HOSTNAME),ormen)
-  TARGET = ORMEN_GCC4
-endif
-endif
-endif
-endif
 
 ifeq ($(TARGET),INTEL_FC_81)
   FC        = ifort
@@ -105,7 +87,7 @@ EXE3 = motif-lpj-step1a motif-lpj-step1b motif-lpj-step2
 
 OBJS = lpjmain-std.o lpjmain-step1a.o lpjmain-step1b.o lpjmain-step2.o \
        lpjio-std.o   lpjio-step1a.o   lpjio-step1b.0   lpjio-step2.o   \
-       
+
 #OBJS = lpjmain-std.o lpjio-std.o   Array.o
 
 .PHONY: clean
@@ -134,7 +116,7 @@ motif-lpj-step2: lpjmain-step2.o lpjio-step2.o Array.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 lpjio-std.o: lpjio.cpp
-	$(CXX) $(LPJ_OPTIONS_STD) $(CPPOPTIONS) $(CXXOPTIONS) -o $@ -c $^
+	$(CXX) $(LPJ_OPTIONS_STD) $(CPPOPTIONS) $(CXXOPTIONS) -o $@ $^
 
 lpjio-step1a.o: lpjio.cpp
 	$(CXX) $(LPJ_OPTIONS_STEP_1A) $(CPPOPTIONS) $(CXXOPTIONS) -DLPJ_STEP_1A -o $@ -c $^
