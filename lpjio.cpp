@@ -81,7 +81,7 @@ struct RunParameters {
     ann_popdens_var("popdens"),
     crop_var("crop"), crop_fixed(false),   //Doug 04/09
     pas_var("pas"), pas_fixed(false),      //Doug 04/09
-    lightn_var("lightn"),    
+    lightn_var("lightn"),
     a_nd_fixed(false), fixed_a_nd(0.0), a_nd_var("a_nd"),
     spinup_years(1000), spinup_data_years(50),
     spinup_file("data_after_step1a.txt"), rampup_file("data_after_step1b.txt"),    //Doug 07/09
@@ -174,7 +174,7 @@ struct RunParameters {
 
 
   // CO2 concentration.
-  
+
   float co2_conc[NCO2];
   string co2_file, c13_file, c14_north_file, c14_equator_file, c14_south_file;
   string co2_var, c13_var, c14_var;
@@ -253,7 +253,7 @@ struct LPJOutputVariable {
   bool average_and_output(void);
 
   void transpose_buffers(int time_axis_len, int other_axis_len);
-  
+
   LPJVariable *def;
   NcVar **annual_nc, **mean_nc, **sdev_nc, **min_nc, **max_nc;
   int buff_size;
@@ -334,19 +334,19 @@ LPJVariable LPJ_VARIABLES[] = {
   { "annum_fire",    SIMPLE          },
   { "annum_fire_human",    SIMPLE    },        // Yan 22/11/07
   { "annum_fire_lightn",   SIMPLE    },        // Yan 22/11/07
-  { "area_burnt",    SIMPLE_MONTHLY  },        
+  { "area_burnt",    SIMPLE_MONTHLY  },
   { "area_burnt_human",    SIMPLE_MONTHLY  },  // Yan 22/11/07
   { "area_burnt_lightn",   SIMPLE_MONTHLY  },  // Yan 22/11/07
   { "an_areafires",  SIMPLE          },
   { "an_areafires_human",  SIMPLE    },  // Yan 22/11/07
   { "an_areafires_lightn", SIMPLE    },  // Yan 22/11/07
-  { "char_net_fuel_0", SIMPLE          },  
-  { "livegrass_0", SIMPLE          },  
-  { "dead_fuel_0", SIMPLE          },  
-  { "dead_fuel_all_0", SIMPLE          },  
-  { "fuel_all_0", SIMPLE          },  
-  { "fuel_1hr_total_0", SIMPLE          },  
-  { "fuel_10hr_total_0", SIMPLE          },  
+  { "char_net_fuel_0", SIMPLE          },
+  { "livegrass_0", SIMPLE          },
+  { "dead_fuel_0", SIMPLE          },
+  { "dead_fuel_all_0", SIMPLE          },
+  { "fuel_all_0", SIMPLE          },
+  { "fuel_1hr_total_0", SIMPLE          },
+  { "fuel_10hr_total_0", SIMPLE          },
   { "fuel_100hr_total_0", SIMPLE          },
   { "fuel_1000hr_total_0", SIMPLE          },
   { "mfuel_1hr_total",     SIMPLE_MONTHLY  }, //Doug 03/09
@@ -356,13 +356,13 @@ LPJVariable LPJ_VARIABLES[] = {
   { "mfuel_100hr_total",   SIMPLE_MONTHLY  }, //Doug 03/09
   { "mfuel_1000hr_total",  SIMPLE_MONTHLY  }, //Doug 03/09
   { "mlivegrass",  SIMPLE_MONTHLY  }, //Doug 05/09
-//  { "fuel_1000hr_total_0", SIMPLE          },  
-  { "deltaa", SIMPLE          },  
-  { "deltaa_fpc", SIMPLE          },  
-  { "delt_c13_fpc", SIMPLE          },  
-  { "fbdep", SIMPLE          },  
+//  { "fuel_1000hr_total_0", SIMPLE          },
+  { "deltaa", SIMPLE          },
+  { "deltaa_fpc", SIMPLE          },
+  { "delt_c13_fpc", SIMPLE          },
+  { "fbdep", SIMPLE          },
   { "mfdi",          SIMPLE_MONTHLY  },
-  { "mfire_frac",          SIMPLE_MONTHLY  }, 
+  { "mfire_frac",          SIMPLE_MONTHLY  },
   { "an_fdi",        SIMPLE          },
   { "litter_decom_ave",        SIMPLE          },
   { "turnover_ind",        SIMPLE          },
@@ -518,7 +518,7 @@ static int read_co2(string var_name, string file_name, float **data);
 //
 //  Reads input climate and land mask files, initialises for looping
 //  over the grid cells and time.
-//   
+//
 
 // In fortran : real dummy_array(1:2,1:3,1:4)
 typedef float (*DummyFortranArray)[3][2];
@@ -624,7 +624,7 @@ extern "C" void initio_(DummyFortranArray dummy_array)
   }
 
   // Read the population density data,human ignition risk and lightening
-  // 
+  //
   if (!params.a_nd_fixed) {
     a_nd_vals = new Array(grid.nlon, grid.nlat);
     read_a_nd(a_nd_vals, params.a_nd_file, grid, params.a_nd_var);
@@ -798,7 +798,7 @@ extern "C" void initio_(DummyFortranArray dummy_array)
     else if (params.crop_file == params.windsp_file)
       clim_crop_nc = clim_windsp_nc;
     else if (params.crop_file == params.ann_popdens_file)
-      clim_crop_nc = clim_ann_popdens_nc; 
+      clim_crop_nc = clim_ann_popdens_nc;
     else {
       clim_crop_nc = new NcFile(params.crop_file.c_str());
       if (!clim_crop_nc->is_valid()) {
@@ -826,7 +826,7 @@ extern "C" void initio_(DummyFortranArray dummy_array)
       clim_pas_nc = clim_windsp_nc;
     else if (params.pas_file == params.ann_popdens_file)
       clim_pas_nc = clim_ann_popdens_nc;
-    else if (!params.crop_fixed && params.pas_file == params.crop_file) 
+    else if (!params.crop_fixed && params.pas_file == params.crop_file)
       clim_pas_nc = clim_wetdays_nc;
     else {
       clim_pas_nc = new NcFile(params.pas_file.c_str());
@@ -838,7 +838,7 @@ extern "C" void initio_(DummyFortranArray dummy_array)
     }
   }
 
-   
+
   // Access all climate variables.
 
   clim_temp_var = clim_temp_nc->get_var(params.temp_var.c_str());
@@ -1118,7 +1118,7 @@ extern "C" void initio_(DummyFortranArray dummy_array)
   if (params.run_out_freq == 0) {    //Doug 07/09: added instances of rampup_years
     if (params.run_years == 0)
       out_years[out_year_idx] = params.spinup_years + params.rampup_years + no_of_months / NMON;
-    else                                      
+    else
       out_years[out_year_idx] = params.spinup_years + params.rampup_years + params.run_years;
   } else {
     for (int out_year = params.spinup_years + params.rampup_years + params.run_out_freq + params.run_out_years;
@@ -1146,7 +1146,7 @@ extern "C" void initio_(DummyFortranArray dummy_array)
   if (params.run_out_freq == 0) {    //Doug 07/09: added instances of rampup_years
     if (params.run_years == 0)
       out_years[out_year_idx] = params.spinup_years + params.rampup_years + no_of_months / NMON;
-    else                                      
+    else
       out_years[out_year_idx] = params.spinup_years + params.rampup_years + params.run_years;
   } else {
     for (int out_year = params.spinup_years + params.rampup_years + params.run_out_freq + params.run_out_years;
@@ -1271,7 +1271,7 @@ extern "C" int get_rampup_years_( int * rampup_years )
 //  get_run_years
 //
 //  When doing a 2 step simulation, gets the length of the second step.
-//   
+//
 
 extern "C" int get_run_years_( int * run_years )
 {
@@ -1393,7 +1393,7 @@ extern "C" int getgrid_(float *latitude, float *longitude, int *soiltype,
     for (int mon = 0; mon < no_of_months; ++mon) {
       clim_temp[mon] -= 273.16;
       clim_precip[mon] *= 3600 * 24 * 30;
-      
+
       if (params.sun_is_cloud) clim_sun[mon] = 100.0 - clim_sun[mon];
       //Kirsten: correct cloudiness if >100 contemporary!
       if ((clim_sun[mon]>100.0) && (clim_sun[mon]<1099)) {
@@ -1455,14 +1455,14 @@ extern "C" int getclimate_(int *year,
   int yearidx;
   if (*year > params.rampup_years + params.spinup_years)
     yearidx = *year - params.spinup_years - params.rampup_years - 1;
-  else if (*year > params.spinup_years) 
+  else if (*year > params.spinup_years)
     yearidx = *year - params.spinup_years - 1;
   else
     yearidx = (*year - 1) % (params.spinup_data_years ?
                              params.spinup_data_years : (no_of_months / NMON));
-  if (yearidx >= no_of_months / NMON) yearidx %= no_of_months / NMON; 
+  if (yearidx >= no_of_months / NMON) yearidx %= no_of_months / NMON;
   int timeidx = yearidx * NMON;
- 
+
 
   // Copy climate data for the current month.
 
@@ -1489,7 +1489,7 @@ extern "C" int getclimate_(int *year,
   else {
       co2[2] = c14_south_vals[yearidx];
   }
-  
+
   *popden = clim_ann_popdens[yearidx];
   *crop = clim_crop[yearidx];    //Doug 04/09
   *pas = clim_pas[yearidx];      //Doug 04/09
@@ -1649,7 +1649,7 @@ extern "C" int end_saved_dataa_()
     year1000out.close();
     return 0;
 }
-                               
+
 
 //----------------------------------------------------------------------
 //
@@ -1733,9 +1733,9 @@ extern "C" int put_saved_data_(
 {
     output_to_text_file_0( year1000out, "latidx", &latidx );
     output_to_text_file_0( year1000out, "lonidx", &lonidx );
-    
+
     output_to_text_file_0( year1000out, "year", year );
-    
+
     // real k_fast_ave   !running average k_fast for subroutine littersom
     output_to_text_file_0( year1000out, "k_fast_ave", k_fast_ave );
 
@@ -1747,150 +1747,150 @@ extern "C" int put_saved_data_(
 
     // logical present(1:npft)         !whether PFT present in gridcell
     output_to_text_file_1( year1000out, "present", present, NPFT );
-    
+
     // Doug 11/12: real litter_ag_leaf(1:npft,1:nco2)          !gridcell above-ground litter (gC/m2)
-    output_to_text_file_2( year1000out, "litter_ag_leaf", litter_ag_leaf, NPFT, NCO2 );   
-	
+    output_to_text_file_2( year1000out, "litter_ag_leaf", litter_ag_leaf, NPFT, NCO2 );
+
     // Doug 11/12: real litter_ag_wood(1:npft,1:nco2)          !gridcell above-ground litter (gC/m2)
     output_to_text_file_2( year1000out, "litter_ag_wood", litter_ag_wood, NPFT, NCO2 );
-    
+
     // Doug 11/12: real fuel_1hr_leaf(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
     output_to_text_file_2( year1000out, "fuel_1hr_leaf", fuel_1hr_leaf, NPFT, NCO2 );
-    
+
     // Doug 11/12: real fuel_1hr_wood(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
     output_to_text_file_2( year1000out, "fuel_1hr_wood", fuel_1hr_wood, NPFT, NCO2 );
-    
+
     // real fuel_10hr(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
     output_to_text_file_2( year1000out, "fuel_10hr", fuel_10hr, NPFT, NCO2 );
-    
+
     // real fuel_100hr(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
     output_to_text_file_2( year1000out, "fuel_100hr", fuel_100hr, NPFT, NCO2 );
-    
+
     // real fuel_1000hr(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
     output_to_text_file_2( year1000out, "fuel_1000hr", fuel_1000hr, NPFT, NCO2 );
-    
+
     // real litter_bg(1:npft,1:nco2)          !gridcell below-ground litter (gC/m2)
     output_to_text_file_2( year1000out, "litter_bg", litter_bg, NPFT, NCO2 );
-    
+
     // real crownarea(1:npft)          !crown area (m2)
     output_to_text_file_1( year1000out, "crownarea", crownarea, NPFT );
 
     // real w(1:2)   !soil layer 1 and 2 water content (fraction of available water holding capacity)
     output_to_text_file_1( year1000out, "w", w, 2 );
-    
+
     // real w_t(1:2)
     output_to_text_file_1( year1000out, "w_t", w_t, 2 );
-    
+
     // real dwscal365(1:npft)          !daily water scalar for day 365
     output_to_text_file_1( year1000out, "dwscal365", dwscal365, NPFT );
-    
-    
+
+
     // real lm_ind(1:npft,1:nco2)             !individual leaf mass (gC)
     output_to_text_file_2( year1000out, "lm_ind", lm_ind, NPFT, NCO2 );
-    
+
     // real sm_ind(1:npft,1:nco2)             !individual sapwood mass (gC)
     output_to_text_file_2( year1000out, "sm_ind", sm_ind, NPFT, NCO2 );
-    
+
     // real hm_ind(1:npft,1:nco2)             !individual heartwood mass (gC)
     output_to_text_file_2( year1000out, "hm_ind", hm_ind, NPFT, NCO2 );
-    
+
     // real rm_ind(1:npft,1:nco2)             !individual fine root mass (gC)
     output_to_text_file_2( year1000out, "rm_ind", rm_ind, NPFT, NCO2 );
-    
+
     // real fpc_grid(1:npft)           !gridcell foliar projective cover (FPC)
     output_to_text_file_1( year1000out, "fpc_grid", fpc_grid, NPFT );
-    
+
     // real mnpp(1:12,1:npft,1:nco2)   !monthly gridcell NPP (gC/m2)
     output_to_text_file_3( year1000out, "mnpp", mnpp, 12, NPFT, NCO2 );
-    
+
     // real anpp(1:npft,1:nco2)               !annual gridcell NPP (gC/m2)
     output_to_text_file_2( year1000out, "anpp", anpp, NPFT, NCO2 );
-    
+
     // integer leafondays(1:npft)
     output_to_text_file_1( year1000out, "leafondays", leafondays, NPFT );
 
     // integer leafoffdays(1:npft)
     output_to_text_file_1( year1000out, "leafoffdays", leafoffdays, NPFT );
-    
+
     // logical leafon(1:npft)
     output_to_text_file_1( year1000out, "leafon", leafon, NPFT );
-    
+
     // real snowpack                   !storage of precipitation as snow (mm)
     output_to_text_file_0( year1000out, "snowpack", snowpack );
 
     // real mtemp_old(1:12)            !last year's monthly temperatures (deg C)
     output_to_text_file_1( year1000out, "mtemp_old", mtemp_old, 12 );
-    
+
     // real maxthaw_old
     output_to_text_file_0( year1000out, "maxthaw_old", maxthaw_old );
-    
+
     // real delta_thawday,
     //output_to_text_file_0( year1000out, "delta_thawday", delta_thawday );
-    
+
     // real mw1(1:12)       ! monthly values w(1), fraction avail. water
     output_to_text_file_1( year1000out, "mw1", mw1, 12 );
-    
+
     // real mw2(1:12)       ! monthly values w(2), fraction avail. water
     output_to_text_file_1( year1000out, "mw2", mw2, 12 );
-    
+
     // real mw1_t(1:12)     ! monthly values w(1), total water (liquid+ice)
     output_to_text_file_1( year1000out, "mw1_t", mw1_t, 12 );
-    
+
     // real mw2_t(1:12)     ! monthly values w(2)
     output_to_text_file_1( year1000out, "mw2_t", mw2_t, 12 );
-    
+
     // real uw1
     output_to_text_file_0( year1000out, "uw1", uw1 );
-    
+
     // real uw2
     output_to_text_file_0( year1000out, "uw2", uw2 );
-    
+
     // real fw(1:2)
     output_to_text_file_1( year1000out, "fw", fw, 2 );
-    
+
     // real mcica(1:12,1:npft)
     output_to_text_file_2( year1000out, "mcica", mcica, 12, NPFT );
-    
+
     // real mgpp(1:12,1:npft,1:nco2)   !monthly grid cell GPP (gC/m2)
     output_to_text_file_3( year1000out, "mgpp", mgpp, 12, NPFT, NCO2 );
-    
+
     // real lresp(1:12,1:npft) !monthly leaf respiration
     output_to_text_file_2( year1000out, "lresp", lresp, 12, NPFT );
-    
+
     // real sresp(1:12,1:npft)  ! monthly sapwood respiration
     output_to_text_file_2( year1000out, "sresp", sresp, 12, NPFT );
-    
+
     // real rresp(1:12,1:npft)  ! monthly root respiration
     output_to_text_file_2( year1000out, "rresp", rresp, 12, NPFT );
-    
+
     // real gresp(1:12,1:npft)  ! monthly growth respiration
     output_to_text_file_2( year1000out, "gresp", gresp, 12, NPFT );
-    
+
     // real aresp(1:12,1:npft) !monthly autotrophic respiration
     output_to_text_file_2( year1000out, "aresp", aresp, 12, NPFT );
-    
+
     // real dbh(1:npft)                ! stem diameter per PFT, Kirsten
     output_to_text_file_1( year1000out, "dbh",dbh, NPFT );
-    
+
     // real tau_c(0:4,1:npft)    ! critical time to cambial kill, Kirsten
     output_to_text_file_2( year1000out, "tau_c", tau_c, 4, NPFT );
-    
+
     // real cl_t(0:4,1:npft)           !crown length per height class, Kirsten
     output_to_text_file_2( year1000out, "cl_t", cl_t, 4, NPFT );
-    
+
     // real height_class(0:4,1:npft)
     output_to_text_file_2( year1000out, "height_class", height_class, 4, NPFT );
-    
+
     // real agpp(1:npft,1:nco2)       !annual gridcell GPP (gC/m2)
     output_to_text_file_2( year1000out, "agpp", agpp, NPFT, NCO2 );
-    
+
     // Others
     // real cpool_fast(1:nco2)                 !fast-decomposing soil C pool (gC/m2)
     output_to_text_file_1( year1000out, "cpool_fast", cpool_fast, NCO2 );
-    
+
     // real cpool_slow(1:nco2)                !slow-decomposing soil C pool (gC/m2)
     output_to_text_file_1( year1000out, "cpool_slow", cpool_slow, NCO2 );
-    
+
     // real bm_inc(1:npft,1:nco2)      !annual biomass increment (gC/m2)
     output_to_text_file_2( year1000out, "bm_inc", bm_inc, NPFT, NCO2 );
 
@@ -1899,25 +1899,25 @@ extern "C" int put_saved_data_(
 
     // real gdd(1:npft)                !current-year growing degree days
     output_to_text_file_1( year1000out, "gdd", gdd, NPFT );
-    
+
     // real lai_ind(1:npft)            !individual leaf area index
     output_to_text_file_1( year1000out, "lai_ind", lai_ind, NPFT );
-    
+
     // real height(1:npft)             !tree height (m)
     output_to_text_file_1( year1000out, "height", height, NPFT );
-    
+
     // real w_ep                       !fraction of available water holding capiacity evap-layer
     output_to_text_file_0( year1000out, "w_ep", w_ep );
-    
+
     // real gdd_buf(1:npft,1:climbuf)  !buffer to store 'climbuf' years of GDD totals
     output_to_text_file_2( year1000out, "gdd_buf", gdd_buf, NPFT, CLIMBUF );
-    
+
     // real mtemp_min_buf(1:climbuf)   !buffer to store 'climbuf' years of coldest month temperatures
     output_to_text_file_1( year1000out, "mtemp_min_buf", mtemp_min_buf, CLIMBUF );
-    
+
     // real mtemp_max_buf(1:climbuf)   !buffer to store 'climbuf' years of coldest month temperatures
     output_to_text_file_1( year1000out, "mtemp_max_buf", mtemp_max_buf, CLIMBUF );
-    
+
     // real lm_sapl(1:npft,1:nco2)      ! initial (sapling) leaf mass (gC/m2)
     output_to_text_file_2( year1000out, "lm_sapl", lm_sapl, NPFT, NCO2 );
     // real sm_sapl(1:npft,1:nco2)      ! initial (sapling) sapwood mass (gC/m2)
@@ -1926,10 +1926,10 @@ extern "C" int put_saved_data_(
     output_to_text_file_2( year1000out, "hm_sapl", hm_sapl, NPFT, NCO2 );
     // real rm_sapl(1:npft,1:nco2)      ! initial (sapling) fine root mass (gC/m2)
     output_to_text_file_2( year1000out, "rm_sapl", rm_sapl, NPFT, NCO2 );
-    
+
     // real meangc(1:12,1:npft)
     output_to_text_file_2( year1000out, "meangc", meangc, NMON, NPFT );
-    
+
     return 0;
 }
 
@@ -2022,11 +2022,11 @@ extern "C" int init_saved_datab_()
        year1000in.open( params.rampup_file.c_str() );
     else
        year1000in.open( params.spinup_file.c_str() );
-    
+
 #else
     year1000in.open( params.spinup_file.c_str() );
 #endif
-    
+
 
     return 0;
 }
@@ -2055,7 +2055,7 @@ extern "C" int get_saved_data_(
              float *k_slow_ave,
              float *litter_decom_ave,
              int   *present,
-             float *litter_ag_leaf,			 
+             float *litter_ag_leaf,
              float *litter_ag_wood,
              float *fuel_1hr_leaf,
              float *fuel_1hr_wood,
@@ -2131,7 +2131,7 @@ extern "C" int get_saved_data_(
              << latidx_read << ", " << lonidx_read << ")\n";
         return -1;
     }
-    
+
     int year_read;
     input_from_text_file_0( year1000in, "year", &year_read );
     if( year_read != *year ) {
@@ -2140,7 +2140,7 @@ extern "C" int get_saved_data_(
              << year_read << ")\n";
         return -1;
     }
-    
+
     // real k_fast_ave   !running average k_fast for subroutine littersom
     input_from_text_file_0( year1000in, "k_fast_ave", k_fast_ave );
 
@@ -2152,177 +2152,177 @@ extern "C" int get_saved_data_(
 
     // logical present(1:npft)         !whether PFT present in gridcell
     input_from_text_file_1( year1000in, "present", present, NPFT );
-    
+
     // Doug 11/12: real litter_ag_leaf(1:npft,1:nco2)          !gridcell above-ground litter (gC/m2)
     input_from_text_file_2( year1000in, "litter_ag_leaf", litter_ag_leaf, NPFT, NCO2 );
-    
+
     // Doug 11/12: real litter_ag_wood(1:npft,1:nco2)          !gridcell above-ground litter (gC/m2)
     input_from_text_file_2( year1000in, "litter_ag_wood", litter_ag_wood, NPFT, NCO2 );
-    
+
     // Doug 11/12: real fuel_1hr_leaf(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
     input_from_text_file_2( year1000in, "fuel_1hr_leaf", fuel_1hr_leaf, NPFT, NCO2 );
-    
+
     // Doug 11/12: real fuel_1hr_wood(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
     input_from_text_file_2( year1000in, "fuel_1hr_wood", fuel_1hr_wood, NPFT, NCO2 );
-    
+
     // real fuel_10hr(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
     input_from_text_file_2( year1000in, "fuel_10hr", fuel_10hr, NPFT, NCO2 );
-    
+
     // real fuel_100hr(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
     input_from_text_file_2( year1000in, "fuel_100hr", fuel_100hr, NPFT, NCO2 );
-    
+
     // real fuel_1000hr(1:npft,1:nco2)    !1hr dead fuel: dead grass,"cured" grass,shed tree leaves, small twigs
     input_from_text_file_2( year1000in, "fuel_1000hr", fuel_1000hr, NPFT, NCO2 );
-    
+
     // real litter_bg(1:npft,1:nco2)          !gridcell below-ground litter (gC/m2)
     input_from_text_file_2( year1000in, "litter_bg", litter_bg, NPFT, NCO2 );
-    
+
     // real crownarea(1:npft)          !crown area (m2)
     input_from_text_file_1( year1000in, "crownarea", crownarea, NPFT );
 
     // real w(1:2)   !soil layer 1 and 2 water content (fraction of available water holding capacity)
     input_from_text_file_1( year1000in, "w", w, 2 );
-    
+
     // real w_t(1:2)
     input_from_text_file_1( year1000in, "w_t", w_t, 2 );
-    
+
     // real dwscal365(1:npft)          !daily water scalar for day 365
     input_from_text_file_1( year1000in, "dwscal365", dwscal365, NPFT );
-    
+
     // real lm_ind(1:npft,1:nco2)             !individual leaf mass (gC)
     input_from_text_file_2( year1000in, "lm_ind", lm_ind, NPFT, NCO2 );
-    
+
     // real sm_ind(1:npft,1:nco2)             !individual sapwood mass (gC)
     input_from_text_file_2( year1000in, "sm_ind", sm_ind, NPFT, NCO2 );
-    
+
     // real hm_ind(1:npft,1:nco2)             !individual heartwood mass (gC)
     input_from_text_file_2( year1000in, "hm_ind", hm_ind, NPFT, NCO2 );
-    
+
     // real rm_ind(1:npft,1:nco2)             !individual fine root mass (gC)
     input_from_text_file_2( year1000in, "rm_ind", rm_ind, NPFT, NCO2 );
-    
+
     // real fpc_grid(1:npft)           !gridcell foliar projective cover (FPC)
     input_from_text_file_1( year1000in, "fpc_grid", fpc_grid, NPFT );
-    
+
     // real mnpp(1:12,1:npft,1:nco2)   !monthly gridcell NPP (gC/m2)
     input_from_text_file_3( year1000in, "mnpp", mnpp, 12, NPFT, NCO2 );
-    
+
     // real anpp(1:npft,1:nco2)               !annual gridcell NPP (gC/m2)
     input_from_text_file_2( year1000in, "anpp", anpp, NPFT, NCO2 );
-    
+
     // integer leafondays(1:npft)
     input_from_text_file_1( year1000in, "leafondays", leafondays, NPFT );
 
     // integer leafoffdays(1:npft)
     input_from_text_file_1( year1000in, "leafoffdays", leafoffdays, NPFT );
-    
+
     // logical leafon(1:npft)
     input_from_text_file_1( year1000in, "leafon", leafon, NPFT );
-    
+
     // real snowpack                   !storage of precipitation as snow (mm)
     input_from_text_file_0( year1000in, "snowpack", snowpack );
 
     // real mtemp_old(1:12)            !last year's monthly temperatures (deg C)
     input_from_text_file_1( year1000in, "mtemp_old", mtemp_old, 12 );
-    
+
     // real maxthaw_old
     input_from_text_file_0( year1000in, "maxthaw_old", maxthaw_old );
-    
+
     // real delta_thawday,
     // input_from_text_file_0( year1000in, "delta_thawday", delta_thawday );
-    
+
     // real mw1(1:12)       ! monthly values w(1), fraction avail. water
     input_from_text_file_1( year1000in, "mw1", mw1, 12 );
-    
+
     // real mw2(1:12)       ! monthly values w(2), fraction avail. water
     input_from_text_file_1( year1000in, "mw2", mw2, 12 );
-    
+
     // real mw1_t(1:12)     ! monthly values w(1), total water (liquid+ice)
     input_from_text_file_1( year1000in, "mw1_t", mw1_t, 12 );
-    
+
     // real mw2_t(1:12)     ! monthly values w(2)
     input_from_text_file_1( year1000in, "mw2_t", mw2_t, 12 );
-    
+
     // real uw1
     input_from_text_file_0( year1000in, "uw1", uw1 );
-    
+
     // real uw2
     input_from_text_file_0( year1000in, "uw2", uw2 );
-    
+
     // real fw(1:2)
     input_from_text_file_1( year1000in, "fw", fw, 2 );
-    
+
     // real mcica(1:12,1:npft)
     input_from_text_file_2( year1000in, "mcica", mcica, 12, NPFT );
-    
+
     // real mgpp(1:12,1:npft,1:nco2)   !monthly grid cell GPP (gC/m2)
     input_from_text_file_3( year1000in, "mgpp", mgpp, 12, NPFT, NCO2 );
-    
+
     // real lresp(1:12,1:npft) !monthly leaf respiration
     input_from_text_file_2( year1000in, "lresp", lresp, 12, NPFT );
-    
+
     // real sresp(1:12,1:npft)  ! monthly sapwood respiration
     input_from_text_file_2( year1000in, "sresp", sresp, 12, NPFT );
-    
+
     // real rresp(1:12,1:npft)  ! monthly root respiration
     input_from_text_file_2( year1000in, "rresp", rresp, 12, NPFT );
-    
+
     // real gresp(1:12,1:npft)  ! monthly growth respiration
     input_from_text_file_2( year1000in, "gresp", gresp, 12, NPFT );
-    
+
     // real aresp(1:12,1:npft) !monthly autotrophic respiration
     input_from_text_file_2( year1000in, "aresp", aresp, 12, NPFT );
-    
+
     // real dbh(1:npft)                ! stem diameter per PFT, Kirsten
     input_from_text_file_1( year1000in, "dbh", dbh, NPFT );
-    
+
     // real tau_c(0:4,1:npft)    ! critical time to cambial kill, Kirsten
     input_from_text_file_2( year1000in, "tau_c", tau_c, 4, NPFT );
-    
+
     // real cl_t(0:4,1:npft)           !crown length per height class, Kirsten
     input_from_text_file_2( year1000in, "cl_t", cl_t, 4, NPFT );
-    
+
     // real height_class(0:4,1:npft)
     input_from_text_file_2( year1000in, "height_class", height_class, 4, NPFT );
-    
+
     // real agpp(1:npft,1:nco2)       !annual gridcell GPP (gC/m2)
     input_from_text_file_2( year1000in, "agpp", agpp, NPFT, NCO2 );
-    
+
     // Others
     // real cpool_fast(1:nco2)                 !fast-decomposing soil C pool (gC/m2)
     input_from_text_file_1( year1000in, "cpool_fast", cpool_fast, NCO2 );
-    
+
     // real cpool_slow(1:nco2)                !slow-decomposing soil C pool (gC/m2)
     input_from_text_file_1( year1000in, "cpool_slow", cpool_slow, NCO2 );
-    
-    
+
+
     // real bm_inc(1:npft,1:nco2)      !annual biomass increment (gC/m2)
     input_from_text_file_2( year1000in, "bm_inc", bm_inc, NPFT, NCO2 );
-    
+
     // real nind(1:npft)               !gridcell individual density (indiv/m2)
     input_from_text_file_1( year1000in, "nind", nind, NPFT );
-    
+
     // real gdd(1:npft)                !current-year growing degree days
     input_from_text_file_1( year1000in, "gdd", gdd, NPFT );
-    
+
     // real lai_ind(1:npft)            !individual leaf area index
     input_from_text_file_1( year1000in, "lai_ind", lai_ind, NPFT );
-    
+
     // real height(1:npft)             !tree height (m)
     input_from_text_file_1( year1000in, "height", height, NPFT );
-    
+
     // real w_ep                       !fraction of available water holding capiacity evap-layer
     input_from_text_file_0( year1000in, "w_ep", w_ep );
-    
+
     // real gdd_buf(1:npft,1:climbuf)  !buffer to store 'climbuf' years of GDD totals
     input_from_text_file_2( year1000in, "gdd_buf", gdd_buf, NPFT, CLIMBUF );
-    
+
     // real mtemp_min_buf(1:climbuf)   !buffer to store 'climbuf' years of coldest month temperatures
     input_from_text_file_1( year1000in, "mtemp_min_buf", mtemp_min_buf, CLIMBUF );
-    
+
     // real mtemp_max_buf(1:climbuf)   !buffer to store 'climbuf' years of coldest month temperatures
     input_from_text_file_1( year1000in, "mtemp_max_buf", mtemp_max_buf, CLIMBUF );
-    
+
     // real lm_sapl(1:npft,1:nco2)      ! initial (sapling) leaf mass (gC/m2)
     input_from_text_file_2( year1000in, "lm_sapl", lm_sapl, NPFT, NCO2 );
     // real sm_sapl(1:npft,1:nco2)      ! initial (sapling) sapwood mass (gC/m2)
@@ -2331,10 +2331,10 @@ extern "C" int get_saved_data_(
     input_from_text_file_2( year1000in, "hm_sapl", hm_sapl, NPFT, NCO2 );
     // real rm_sapl(1:npft,1:nco2)      ! initial (sapling) fine root mass (gC/m2)
     input_from_text_file_2( year1000in, "rm_sapl", rm_sapl, NPFT, NCO2 );
-    
+
     // real meangc(1:12,1:npft)
     input_from_text_file_2( year1000in, "meangc", meangc, NMON, NPFT );
-    
+
     return 0;
 }
 
@@ -2371,12 +2371,12 @@ extern "C" int outannual_(int *year, int *present,
                           float *mintc, float *aintc,
                           float *meangc, float *mgp,
                           float *num_fire, float *annum_fire,
-                          float *area_burnt, float *an_areafires, 
+                          float *area_burnt, float *an_areafires,
                           float *mfdi, float *an_fdi,
-                          float *an_fseason, 
-                          float *acflux_trace, float *mcflux_trace, 
-                          float *m_fc_crown, float *an_fc_crown, 
-                          float *m_i_surface, float *an_i_surface, 
+                          float *an_fseason,
+                          float *acflux_trace, float *mcflux_trace,
+                          float *m_fc_crown, float *an_fc_crown,
+                          float *m_i_surface, float *an_i_surface,
                           float *gdd, float *height, float *mgpp,
                           float *wu, float *wl, float *dphen,
                           float *dphen_change,                    // Doug 05/09
@@ -2387,24 +2387,24 @@ extern "C" int outannual_(int *year, int *present,
                           float *area_burnt_human, float *area_burnt_lightn,         // Yan: 22/11/07
                           float *an_areafires_human, float *an_areafires_lightn,     // Yan: 22/11/07
                           float *afire_frac_human, float *afire_frac_lightn,         // Yan: 22/11/07
-			  float *char_net_fuel_0,		
-			  float *livegrass_0, float *dead_fuel_0,             
-                          float *dead_fuel_all_0, float *fuel_all_0,	
-                          float *fuel_1hr_total_0, float *fuel_10hr_total_0,		
+			  float *char_net_fuel_0,
+			  float *livegrass_0, float *dead_fuel_0,
+                          float *dead_fuel_all_0, float *fuel_all_0,
+                          float *fuel_1hr_total_0, float *fuel_10hr_total_0,
                           float *fuel_100hr_total_0, float *fuel_1000hr_total_0,
                           float *mfuel_1hr_total,
 						  float *mfuel_1hr_leaf_total,float *mfuel_1hr_wood_total,
 						  float *mfuel_10hr_total,           //Doug 03/09: monthly fuel
                           float *mfuel_100hr_total, float *mfuel_1000hr_total,       //Doug 03/09: monthly fuel
                           float *mlivegrass,                                         //Doug 05/09: monthly fuel
-                          float *deltaa, float *deltaa_fpc, float *delt_c13_fpc, 	
-                          float *mfire_frac, 
+                          float *deltaa, float *deltaa_fpc, float *delt_c13_fpc,
+                          float *mfire_frac,
                           float *fbdep, float * litter_decom_ave, float * turnover_ind,
                           float *crop, float *pas,                                    //Doug 05/09: crop and pasture proportions
                           float *anpp_grid, float *arh_grid, float *acflux_fire_grid,//Doug 07/09: the cheats
-                          float *gdd_grid, float *alpha_ws, float *pfuel_limit, 
-						  float* dprec_out, float* BTparam1, float* BTparam2,                          //Doug 07/09: vioclimatic varibles         
-                          float *cgf, float *fdry, float *lt_days, float *mlightn_eff)                          //Doug 07/09: vioclimatic varibles         
+                          float *gdd_grid, float *alpha_ws, float *pfuel_limit,
+						  float* dprec_out, float* BTparam1, float* BTparam2,                          //Doug 07/09: vioclimatic varibles
+                          float *cgf, float *fdry, float *lt_days, float *mlightn_eff)                          //Doug 07/09: vioclimatic varibles
 {
   // Skip output during spin-up if required.
   // Doug 06/09: Skip output if before fist year of ouput
@@ -2433,11 +2433,11 @@ extern "C" int outannual_(int *year, int *present,
   float anpp_pft_sum[NCO2] = { 0.0, 0.0, 0.0 };
   float anpp_sum[NCO2] = { 0.0, 0.0, 0.0 };
 
-  
+
   for (int idx = 0; idx < NPFT; ++idx) {
     litter_bg_sum[0] += litter_bg[0 * NPFT + idx];
   }
-    
+
   for (int jdx = 1; jdx < NCO2; ++jdx) {
     for (int idx = 0; idx < NPFT; ++idx) {
       litter_bg_sum[jdx] += litter_bg[jdx * NPFT + idx] * litter_bg[0 * NPFT + idx];
@@ -2446,18 +2446,18 @@ extern "C" int outannual_(int *year, int *present,
     litter_bg_sum[jdx] /= litter_bg_sum[0];
     anpp_pft_sum[jdx] /= anpp_pft_sum[0];
   }
-   
+
   //for (int jdx = 0; jdx < NCO2; ++jdx) {
-  //  soilc[jdx] = litter_bg_sum[jdx] + cpool_slow[jdx] + cpool_fast[jdx]; 
+  //  soilc[jdx] = litter_bg_sum[jdx] + cpool_slow[jdx] + cpool_fast[jdx];
   //  anpp_sum[jdx] = anpp_pft_sum[jdx] + anpp_add[jdx] + acflux_estab[jdx];
   //}
   // Marko's mail
-  soilc[0]    = litter_bg_sum[0] + cpool_slow[0] + cpool_fast[0]; 
+  soilc[0]    = litter_bg_sum[0] + cpool_slow[0] + cpool_fast[0];
   anpp_sum[0] = anpp_pft_sum[0] + anpp_add[0] + acflux_estab[0];
   for (int jdx = 1; jdx < NCO2; ++jdx) {
     soilc[jdx] = litter_bg_sum[jdx] * litter_bg_sum[0]
                + cpool_slow[jdx]    * cpool_slow[0]
-               + cpool_fast[jdx]    * cpool_fast[0]; 
+               + cpool_fast[jdx]    * cpool_fast[0];
     anpp_sum[jdx] = anpp_pft_sum[jdx] * anpp_pft_sum[0]
                   + anpp_add[jdx]     * anpp_add[0]
                   + acflux_estab[jdx] * acflux_estab[0];
@@ -2482,7 +2482,7 @@ extern "C" int outannual_(int *year, int *present,
   handle_output_record("anpp_sum", anpp_sum);
   handle_output_record("acflux_estab", acflux_estab);
   handle_output_record("litter_ag", litter_ag);
-  handle_output_record("litter_ag_leaf", litter_ag_leaf);  
+  handle_output_record("litter_ag_leaf", litter_ag_leaf);
   handle_output_record("litter_ag_wood", litter_ag_wood);
   handle_output_record("litter_bg", litter_bg);
   handle_output_record("cpool_fast", cpool_fast);
@@ -2556,29 +2556,29 @@ extern "C" int outannual_(int *year, int *present,
   handle_output_record("an_areafires_lightn", an_areafires_lightn);  // Yan 22/11/07
   handle_output_record("afire_frac_human", afire_frac_human);        // Yan 22/11/07
   handle_output_record("afire_frac_lightn", afire_frac_lightn);      // Yan 22/11/07
-  handle_output_record("char_net_fuel_0",char_net_fuel_0);       
-  handle_output_record("dead_fuel_0",dead_fuel_0);       
-  handle_output_record("dead_fuel_all_0",dead_fuel_all_0);       
-  handle_output_record("livegrass_0",livegrass_0);       
-  handle_output_record("fuel_all_0",fuel_all_0);       
-  handle_output_record("fuel_1hr_total_0",fuel_1hr_total_0);       
-  handle_output_record("fuel_10hr_total_0",fuel_10hr_total_0);      
-  handle_output_record("fuel_100hr_total_0",fuel_100hr_total_0);     
+  handle_output_record("char_net_fuel_0",char_net_fuel_0);
+  handle_output_record("dead_fuel_0",dead_fuel_0);
+  handle_output_record("dead_fuel_all_0",dead_fuel_all_0);
+  handle_output_record("livegrass_0",livegrass_0);
+  handle_output_record("fuel_all_0",fuel_all_0);
+  handle_output_record("fuel_1hr_total_0",fuel_1hr_total_0);
+  handle_output_record("fuel_10hr_total_0",fuel_10hr_total_0);
+  handle_output_record("fuel_100hr_total_0",fuel_100hr_total_0);
   handle_output_record("fuel_1000hr_total_0",fuel_1000hr_total_0);
   handle_output_record("mfuel_1hr_total",mfuel_1hr_total);           // Doug 03/09
-  handle_output_record("mfuel_1hr_leaf_total",mfuel_1hr_leaf_total); 
-  handle_output_record("mfuel_1hr_wood_total",mfuel_1hr_wood_total); 
+  handle_output_record("mfuel_1hr_leaf_total",mfuel_1hr_leaf_total);
+  handle_output_record("mfuel_1hr_wood_total",mfuel_1hr_wood_total);
   handle_output_record("mfuel_10hr_total",mfuel_10hr_total);         // Doug 03/09
   handle_output_record("mfuel_100hr_total",mfuel_100hr_total);       // Doug 03/09
   handle_output_record("mfuel_1000hr_total",mfuel_1000hr_total);     // Doug 03/09
   handle_output_record("mlivegrass",mlivegrass);                     // Doug 05/09
-  handle_output_record("deltaa",deltaa);       
-  handle_output_record("deltaa_fpc",deltaa_fpc);       
-  handle_output_record("delt_c13_fpc",delt_c13_fpc);  
-  handle_output_record("mfire_frac",mfire_frac);     
-  handle_output_record("fbdep",fbdep);       
-  handle_output_record("litter_decom_ave",litter_decom_ave);    
-  handle_output_record("turnover_ind",turnover_ind);       
+  handle_output_record("deltaa",deltaa);
+  handle_output_record("deltaa_fpc",deltaa_fpc);
+  handle_output_record("delt_c13_fpc",delt_c13_fpc);
+  handle_output_record("mfire_frac",mfire_frac);
+  handle_output_record("fbdep",fbdep);
+  handle_output_record("litter_decom_ave",litter_decom_ave);
+  handle_output_record("turnover_ind",turnover_ind);
   // Sarah
   //handle_output_record("soilc", soilc);
   handle_output_record("crop", crop);                                //Doug 05/09: proportion of cropland
@@ -2592,8 +2592,8 @@ extern "C" int outannual_(int *year, int *present,
   handle_output_record("dprec_out",  dprec_out);                 //Doug 07/09: proportion of days where fire is limited by fuel availability
   handle_output_record("BTparam1",  BTparam1);                 //Doug 07/09: proportion of days where fire is limited by fuel availability
   handle_output_record("BTparam2",  BTparam2);                 //Doug 07/09: proportion of days where fire is limited by fuel availability
-  handle_output_record("cgf",  cgf); 
-  handle_output_record("fdry",  fdry); 
+  handle_output_record("cgf",  cgf);
+  handle_output_record("fdry",  fdry);
   handle_output_record("lt_days",  lt_days);   //Doug 07/09: bioclimatic alpha
   handle_output_record("mlightn_eff",  mlightn_eff);   //Doug 07/09: bioclimatic alpha
 
@@ -2624,7 +2624,7 @@ extern "C" int outannual_(int *year, int *present,
   //    else {
         if((*year-params.spinup_years-params.rampup_years)%params.run_out_freq!=0)
           return 0;
-      
+
     }
   }
 
@@ -2660,7 +2660,7 @@ extern "C" int outgrid_(void)
   if (++points_done % 10 == 0)
     cerr << points_done << " / " << land_points << " points processed / total land points ("
          << points_done * 100 / land_points << "%)" << endl;
-  
+
   // Find next valid point.
 
   ++lonidx;
@@ -2723,7 +2723,7 @@ LPJOutputVariable::LPJOutputVariable(LPJVariable *in_def,
   }
   if (def->type == SIMPLE_MONTHLY  ||
       def->type == PER_PFT_MONTHLY ||
-      def->type == TRACE_MONTHLY   
+      def->type == TRACE_MONTHLY
       || def->type == PER_CO2_MONTHLY
       )
     month_dim_needed = true;
@@ -2846,7 +2846,7 @@ void LPJOutputVariable::set_nc(int idx, NcFile &n)
       max_nc[idx] = n.add_var(max_nm.c_str(), ncFloat,
                               month_dim, pft_dim, lat_dim, lon_dim);
     break;
-  
+
   case PER_PFT_DAILY:
     if (mean)
       mean_nc[idx] = n.add_var(def->name, ncFloat,
@@ -3805,7 +3805,7 @@ static void read_soil_type(IntArray *soil_type, string soil_type_file,
 
 
 //----------------------------------------------------------------------
-// 
+//
 //  read_lightn
 //
 //  Read lightening data from netCDF file.
@@ -4102,7 +4102,7 @@ static void open_output_files(string file_name, string directory_name)
 
 
     // Write values for coordinate variables.
-    
+
     lat_var->put(&grid.lats[0], grid.nlat);
     lon_var->put(&grid.lons[0], grid.nlon);
     int *pfts = new int[NPFT];

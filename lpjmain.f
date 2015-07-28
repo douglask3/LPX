@@ -1,5 +1,5 @@
 
- 
+
 
 c
 c CODE VERSION OF JULY 12, 2000.
@@ -32,7 +32,7 @@ c                   new PFT parameters 35,36 (Emax,intc);
 c
 c                   alphaa=0.5;
 c
-c                   tsnow changed from -2?°C to 0?°C;
+c                   tsnow changed from -2?ï¿½C to 0?ï¿½C;
 c                   snow melt: km changed to 1.5+0.007*dprec(d)
 c starting 28.4.2004 KIRSTEN: implementation of SPITFIRE plus additional output
 c                            and information from other routines
@@ -114,7 +114,7 @@ c         carried out through the now modified fuel_xhr_total, which is the sum 
 c         fuel_xhr_left over all tree pfts.
 C           Before any fuel changes are calculted, fuel_xhr_inc(_pos/neg) are /0.45, and
 c         fuel_left_xhr is * or / 0.45 at various points to conserve units.
-c         
+c
 c
 c     03/09:          ERROR FILE
 c           If a minor error occurs that does not shut down the model (such as invalid soil
@@ -125,7 +125,7 @@ c     03/09-06/09:    MASKING FIRE IN FUEL LIMITED AREAS
 c           In SPITFIRE in fire subroutine, fuel limited areas are not allowd to burn.
 c         'Masking' occurs in daily timestep, after the days fuel load has been calculated.
 c         If the fuel load is less then then a threshold of
-c         fuel_1hr+fuel_10hr+livegrass*365<2000, then no fires occur and that day, and the 
+c         fuel_1hr+fuel_10hr+livegrass*365<2000, then no fires occur and that day, and the
 c         loop daily loop is cycled round.
 c
 c     03/09-05/09:    MONTHLY FUEL I/0
@@ -142,17 +142,17 @@ C           Included date of change of phen into output (in dphen_change). For e
 c         records day of the year dphen 1st changes. A posative number reprents a posative
 c         change in dephen, negative reprents negative. dphen_change is calculted in gpp.
 c
-c     05/09-06/05: (Stephen & Doug)    IMPLEMENT LAND USE CHANGE 
+c     05/09-06/05: (Stephen & Doug)    IMPLEMENT LAND USE CHANGE
 c
-c	  AGRICULTURAL VERSION (CCMLP Grand Slam expt.)  
+c	  AGRICULTURAL VERSION (CCMLP Grand Slam expt.)
 c  	Extra input variables for years 1901-1998 (=98 years) '96-98' no landuse conversion
 c  	grid cells cleared updated annually
 c  	grid cells abandoned updated annually
 c  	rap (relative agricultural productivity) for agricultural areas
-c  	updated annually              
+c  	updated annually
 c
 c  	The model runs as normal assuming natural vegetation. When the
-c  	gridcell changes state then the productivity of the natural 
+c  	gridcell changes state then the productivity of the natural
 c  	vegetation is taken and the RAP value to receive the agricultural
 c  	productivity.
 c
@@ -162,9 +162,9 @@ c  	main program calls the ioprogram to find out whether in this
 c  	year the gridcell is abandoned or cleared and its state
 c  	agricultural or not. In addition this years RAP is supplied.
 c  	A new subroutine is constructed (agric) which updates the grid cell
-c  	pools if clearance or abandonment in this year. 
+c  	pools if clearance or abandonment in this year.
 c  	The decomposition routine is altered to account for agricultural
-c  	above and below ground litter. 
+c  	above and below ground litter.
 c  	A second subroutine is constructed (agriprod) which calculates
 c  	agricultural production and product decompostion (prod1, prod10,
 c  	prod100).
@@ -173,7 +173,7 @@ c  	Send following information back to the io program:
 c  	conversion flux
 c  	product flux
 c  	pools: agprod1, prod10, prod100
-c   
+c
 c  	Fire routine is kept in based on the natural conditions. Natural litter
 c  	is also calculated and used in the fire routine, but not included
 c  	as output in agricultural gridcell C-balance.
@@ -183,7 +183,7 @@ C           In estabilment subroutine, establishment of tree pft is reduced by t
 c         proportion of pastural land, s.t.:
 c              estab_grid=estab_rate*(1.0-fpc_tree_total)
 c           -->estab_grid=estab_rate*(1.0-fpc_tree_total)*(1-pas)
-c  
+c
 c     06/09:          FIRE INENSITY THRESHOLD FIX
 c           Fix of fire intensity threshold so that the thrshold works. Intensity below
 c         threshold will extinguish fires. Currently set to zero, but that may change...
@@ -470,7 +470,7 @@ c     PARAMETERS
         parameter (npft=13)             ! number of PFTs
 
         parameter (npftpar=59)         ! number of PFT parameters
-      
+
         parameter (nsoilpar=7)         ! number of soil parameters
       integer nco2
         parameter (nco2=3)             ! number of C variables: C,13C,14C
@@ -502,15 +502,15 @@ c     INPUT PARAMETERS
       REAL mlightn_eff(1:12)                 ! Doug 10/13: effective lightn stikes: Dry CG strikes
       REAL dlightn(1:365), dlightn_control(1:365)              ! filled by interpolation
       REAL cgf(1:12)				   ! Doug 09/12: fraction of cloud-to-ground-lightning
-      REAL fdry(1:12)                  ! Doug 04/13: fraction of lighting striking on a dry day 
-      REAL lt_days(1:12)               ! Doug 04/13: fraction of dry days with lightning 
+      REAL fdry(1:12)                  ! Doug 04/13: fraction of lighting striking on a dry day
+      REAL lt_days(1:12)               ! Doug 04/13: fraction of dry days with lightning
       real co2(1:nco2)                 ! atmospheric CO2 concentration (ppmv)
       real lat                         ! latitude (degrees +=N, -=S)
       real lon                         ! longditude (degrees +=E, -=W)
                                        ! Doug 04/09: agriculture variables changed from (720,360)
                                        ! array to scalar due to changeing the I/O method to match
                                        ! standard I/O for other variables
-      real crop                        ! Proportion of cell containing cropland agriculture. 
+      real crop                        ! Proportion of cell containing cropland agriculture.
       real pas                         ! Proportion of cell containing pasture agriculture.
       integer l,ll,day
       real ii,jj
@@ -698,7 +698,7 @@ c DM      real gminp(1:npft)
 c     variables for fire simulation Kirsten
       real acflux_fire(1:nco2)         ! C flux to atmosphere due to fire (gC/m2)
       REAL acflux_fire_grid            ! Doug 08/09: as above, but with no nc dimension. Smaller for outputs
-      real mcflux_fire(1:12,1:nco2)    ! C flux to atmosphere due to fire (gC/m?²)
+      real mcflux_fire(1:12,1:nco2)    ! C flux to atmosphere due to fire (gC/m?ï¿½)
       real an_fseason
 c DM      real fire_length
       real afire_frac                  ! fraction of gridcell burnt this year
@@ -709,9 +709,9 @@ c DM      real fire_length
       real fuel_100hr(1:npft,1:nco2)   ! 100hr dead fuel: small branches
       real fuel_1000hr(1:npft,1:nco2)  ! 1000hr dead fuel: logs, bole, large branches
       REAL pfuel_limit				   ! Doug 12/12: proportion of days where fire is limited by fuel
-	  
-      REAL fuel_1hr_leaf_inc_pos(1:npft,1:nco2,1:12)	
-      REAL fuel_1hr_wood_inc_pos(1:npft,1:nco2,1:12)	
+
+      REAL fuel_1hr_leaf_inc_pos(1:npft,1:nco2,1:12)
+      REAL fuel_1hr_wood_inc_pos(1:npft,1:nco2,1:12)
       REAL fuel_1hr_leaf_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09 MFL: to record changes in each
       REAL fuel_1hr_wood_inc_neg(1:npft,1:nco2,1:12)	!Doug 01/09 MFL: to record changes in each
       REAL fuel_10hr_inc(1:npft,1:nco2,1:12)	!hr fuel load for each month in the
@@ -739,8 +739,8 @@ c DM      real fire_length
       real an_fdi
       real m_fc_crown(1:12),an_fc_crown
       real m_i_surface(1:12),an_i_surface
-      real acflux_trace(1:6)           ! flux of trace gas species x depending on acflux_fire (g/m?²)
-      real mcflux_trace(1:12,1:6)      ! flux of trace gas species x, monthly resolution (g/m?²)
+      real acflux_trace(1:6)           ! flux of trace gas species x depending on acflux_fire (g/m?ï¿½)
+      real mcflux_trace(1:12,1:6)      ! flux of trace gas species x, monthly resolution (g/m?ï¿½)
 c DM      real xmcflux_trace(1:12*6)       ! for passage to c driver
 c DM      real nep,sum_anpp,sum_vegc,sum_litc,sum_soilc
 
@@ -783,7 +783,7 @@ c DM      real xmgp(1:12*npft)             ! monthly potential canopy conductanc
        integer spinup_years,rampup_years,run_years    !Doug 07/09: include rampup
 #endif
        integer start_year                             !Doug 07/09: number of years in spinup and rampup
-       
+
       real dhuman_ign(1:365)              !number of human-set fires per mln.ha
 C Yan
        real num_fire_human(12),num_fire_lightn(12)
@@ -793,13 +793,13 @@ C Yan
        real an_i_surface_human,an_i_surface_lightn
        real afire_frac_human,afire_frac_lightn
        real an_areafires_human,an_areafires_lightn
-	
+
 		real char_net_fuel
           real char_net_fuel_0
 
           real livegrass_0,dead_fuel_0,dead_fuel_all_0
          real fuel_all_0,fuel_1hr_total_0,fuel_10hr_total_0
-         real fuel_100hr_total_0,fuel_1000hr_total_0	   
+         real fuel_100hr_total_0,fuel_1000hr_total_0
 
 
 !           real deltaa
@@ -921,7 +921,7 @@ c       grass mass structure and calculate maximum crown area
 c       Initialise year counter
 #if defined(LPJ_STEP_2) || defined (LPJ_STEP_1B)
 
-#ifdef LPJ_STEP_2 
+#ifdef LPJ_STEP_2
 c       Doug 07/09: Set to spinup_years  + rampup_years for reading back
         year=spinup_years+rampup_years
 #else
@@ -1008,7 +1008,7 @@ c       Gridcell initialisations
        dlm_100hr_old=0.0
        dlm_1000hr_old=0.0
        aprec=0.0
-       
+
         call initgrid(tree,k_fast_ave,k_slow_ave,litter_decom_ave,
      *    present,litter_ag,litter_ag_leaf,litter_ag_wood, !Doug 11/12: seperate out grass and wood litter
      *    fuel_1hr_leaf,fuel_1hr_wood,fuel_10hr,fuel_100hr,
@@ -1050,7 +1050,7 @@ c          call daily1(mlightn,dlightn_control)
           fuel_10hr_del(:,:)=0.0
           fuel_100hr_del(:,:)=0.0
           fuel_1000hr_del(:,:)=0.0
-		  
+
           fuel_1hr_del=fuel_1hr_leaf+fuel_1hr_wood		!Doug MFL1
           fuel_10hr_del=fuel_10hr
 
@@ -1060,22 +1060,22 @@ c          call daily1(mlightn,dlightn_control)
 
 
           afire_frac_afap_old=0.0
-		  
+
 c         Doug 03/09: MFL; set fuel incraments to zero
           fuel_1hr_leaf_inc_pos(:,:,:)=0.0
           fuel_1hr_wood_inc_pos(:,:,:)=0.0
           fuel_1hr_leaf_inc_neg(:,:,:)=0.0
           fuel_1hr_wood_inc_neg(:,:,:)=0.0
-		  
+
         do while (doyear)
 c         --------------------------------------
 c         Start of LOOP THROUGH SIMULATION YEARS
 c         --------------------------------------
-		  
+
           fuel_10hr_inc(:,:,:)=0.0
           fuel_100hr_inc(:,:,:)=0.0
           fuel_1000hr_inc(:,:,:)=0.0
-		  
+
 c         Interpolate monthly climate data to daily values
           call daily(mtemp,dtemp)
           call daily(mtemp_dmin,dtemp_min)
@@ -1095,7 +1095,7 @@ c Doug 07/09: Calculate a GDD for each grid cell. Used for ouput only.
 
 						!Doug 01/09: functions
 							!distributed lighting
-							!differently on days with & 
+							!differently on days with &
 							!without precipitation
 						!Doug 09/12: Name of function changed to
 							!make more sense(itself function
@@ -1148,9 +1148,9 @@ c         Implement PFT bioclimatic limits
      *      survive,estab,year,present)
 
 c        Doug 05/09: agriculture routine, updates pools due to abandonment
-c        or clearance of grid cell 
-	  
-C          call agriculture(clear,mtemp_min20,tree,agri_burn, 
+c        or clearance of grid cell
+
+C          call agriculture(clear,mtemp_min20,tree,agri_burn,
 C     *      lm_ind,sm_ind,hm_ind,rm_ind,nind,convflux,agri_litter_ag,
 C     *      agri_litter_bg,
 C     *      litter_ag_leaf,litter_ag_wood, ! Doug 11/12: seperate out wood and grass litter
@@ -1179,32 +1179,20 @@ c         Calculation of mid-month soil temperatures
 
 c         Interpolate monthly soil temperature to daily values
           call daily(mtemp_soil,dtemp_soil)
-          
+
 c         Calculation of autotrophic respiration and NPP
-C            IF (lat>-25) THEN 
-C              PRINT*,"*****"
-C              PRINT*, fuel_1hr_leaf(:,1)
-C            END IF
           call npp(pftpar,dtemp,dtemp_soil,tree,dphen,nind,
      *      lm_ind,sm_ind,rm_ind,mgpp,anpp,mnpp,bm_inc,present,
      * lresp,sresp,rresp,gresp,aresp,year,agpp,delt_c13_fpc,fpc_grid)
-C            IF (lat>-25) THEN 
-C              PRINT*,"npp"
-C              PRINT*, fuel_1hr_leaf(:,1)
-C            END IF
+
 c         Allocation to reproduction
           call reproduction(bm_inc,lm_sapl,sm_sapl,hm_sapl,rm_sapl,
      *        litter_ag_leaf,    !Doug 11/12: seperate out grass and wood litter
      *        fuel_1hr_leaf,
      *        fuel_1hr_leaf_inc_pos,fuel_1hr_leaf_inc_neg,    !Doug 01/09: fuel_1hr_inc_i
      *        present,tree,co2)
-	 
-c         Calculation of leaf, sapwood, and fine-root turnover
 
-C            IF (lat>-25) THEN 
-C              PRINT*,"reproduction"
-C              PRINT*, fuel_1hr_leaf(:,1)
-C            END IF
+c         Calculation of leaf, sapwood, and fine-root turnover
           call turnover(pftpar,present,tree,lm_ind,sm_ind,hm_ind,
      *      rm_ind,
      *      litter_ag_leaf, !Doug 11/12: seperate out grass and wood litter
@@ -1214,10 +1202,6 @@ C            END IF
      *      fuel_10hr_inc, fuel_100hr_inc,	!Doug 01/09: fuel_xhr_inc
      *      nind,turnover_ind)
 
-C            IF (lat>-25) THEN 
-C              PRINT*,"turnover"
-C              PRINT*, fuel_1hr_leaf(:,1)
-C            END IF
 c         Litter and soil decomposition calculations
 c         This is done before fire, so that fire probability is calculated
 c         on litter remaining after year's decomposition
@@ -1233,12 +1217,7 @@ c         on litter remaining after year's decomposition
      *      mw1,mw1_t, mtemp_soil,cpool_fast,cpool_slow,
      *      arh,mrh,year,k_fast_ave,k_slow_ave,litter_decom_ave,
      *      agri_litter_ag,agri_litter_bg,agri)		!Doug 05/09: agriculture varibles added for land use change stuff
-          !PRINT*, "------"
-          !PRINT*, fuel_1hr_leaf(:,1)
-C            IF (lat>-25) THEN 
-C              PRINT*,"littersom"
-C              PRINT*, fuel_1hr_leaf(:,1)
-C            END IF
+
 c         Removal of PFTs with negative C increment this year
 
           call kill_pft(bm_inc,present,tree,lm_ind,rm_ind,hm_ind,
@@ -1251,13 +1230,6 @@ c         Removal of PFTs with negative C increment this year
 
 c         Allocation of annual carbon increment to leaf, stem and fine root
 c         compartments
-
-
-C            IF (lat>-25) THEN 
-C              PRINT*,"kill_pft"
-C              PRINT*, fuel_1hr_leaf(:,1)
-C            END IF
-
           call allocation(pftpar,allom1,allom2,allom3,latosa,
      *      wooddens,reinickerp,tree,sla,wscal,nind,
      *      bm_inc,lm_ind,lm_inc,sm_ind,hm_ind,rm_ind,
@@ -1273,26 +1245,18 @@ C            END IF
 
 c         Implement light competition between trees and grasses
 
-
-C            IF (lat>-25) THEN 
-C              PRINT*,"allocate"
-C              PRINT*, fuel_1hr_leaf(:,1)
-C            END IF
           call light(present,tree,lm_ind,sm_ind,hm_ind,rm_ind,
      *      crownarea,fpc_grid,fpc_inc,nind,
      *      litter_ag_leaf,litter_ag_wood, !Doug 11/12: seperate out grass and wood litter
      *      litter_bg,
      *      fuel_1hr_leaf,fuel_1hr_wood,
      *      fuel_10hr,fuel_100hr,fuel_1000hr,
-     *      fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg, 
-     *      fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg, 
+     *      fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg,
+     *      fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg,
      *      fuel_10hr_inc,fuel_100hr_inc,fuel_1000hr_inc,!Doug 01/09: fuel_xhr_inc
      *      sla,year)
 
-C            IF (lat>-25) THEN 
-C              PRINT*,"light"
-C              PRINT*, fuel_1hr_leaf(:,1)
-C            END IF
+
 c         Implement light competition and background mortality among tree PFTs
 c         (including heat damage and due to lower limit of npp for boreal trees)
           call mortality(pftpar,present,tree,boreal,bm_inc,
@@ -1305,10 +1269,7 @@ c         (including heat damage and due to lower limit of npp for boreal trees)
      *      fuel_10hr_inc,fuel_100hr_inc,fuel_1000hr_inc,!Doug 01/09: fuel_xhr_inc
      *      dtemp,anpp,mtemp_max,year)
 
-C            IF (lat>-25) THEN 
-C              PRINT*,"mortaility"
-C              PRINT*, fuel_1hr_leaf(:,1)
-C            END IF
+
 c         Calculation of biomass destruction by fire disturbance
         fuel_1hr_del=fuel_1hr_del-fuel_1hr_leaf-fuel_1hr_wood		!Doug MFL1
         fuel_10hr_del=fuel_10hr_del-fuel_10hr
@@ -1316,7 +1277,7 @@ c         Calculation of biomass destruction by fire disturbance
         fuel_1000hr_del=fuel_1000hr_del-fuel_1000hr
           !PRINT*, "------"
           !PRINT*, fuel_1hr_leaf(:,1)
-		  
+
          !IF (year==1103) lm_ind(3,:)=lm_ind(3,:)/4
        !print*, "yay2"
 	   !print*, tree
@@ -1332,12 +1293,12 @@ c         Calculation of biomass destruction by fire disturbance
      *      fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg,
      *      fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg,
      *      fuel_10hr_inc,fuel_100hr_inc, fuel_1000hr_inc,	                     !Doug 01/09 MFL: fuel_xhr_inc
-     *      fuel_1hr_del, fuel_10hr_del, fuel_100hr_del, 
+     *      fuel_1hr_del, fuel_10hr_del, fuel_100hr_del,
      *      fuel_1000hr_del,                                         !Doug 01/09 MFL1
      *      mfuel_1hr_total,
      *      mfuel_1hr_leaf_total,mfuel_1hr_wood_total,
      *      mfuel_10hr_total,                       !Doug 03/09: outputs for monthly fuel loads
-     *      mfuel_100hr_total, mfuel_1000hr_total, 
+     *      mfuel_100hr_total, mfuel_1000hr_total,
      *      mlivegrass,
      *      acflux_fire,mcflux_fire,
      *      afire_frac,lm_ind,rm_ind,sm_ind,hm_ind,nind,dw1,present,
@@ -1377,7 +1338,7 @@ c         Doug 03/09: MFL; set fuel incraments to zero
           fuel_10hr_inc=0.0
           fuel_100hr_inc=0.0
           fuel_1000hr_inc=0.0
- 
+
 c         Establishment of new individuals (saplings) of woody PFTs,
 c         grass establishment, removal of PFTs not adapted to current climate,
 c         update of individual structure and FPC.
@@ -1386,7 +1347,7 @@ c         update of individual structure and FPC.
 	   !print*, tree
 	   !print*,"---"
 		!print*, BTparam2
-          call establishment(pftpar,present,survive,estab,nind,	
+          call establishment(pftpar,present,survive,estab,nind,
      *      lm_ind,sm_ind,rm_ind,hm_ind,lm_sapl,sm_sapl,rm_sapl,
      *      hm_sapl,crownarea,fpc_grid,lai_ind,height,dbh,dbh_class, ! Doug 03/13: dbh_class added
      *      tau_c,cl_t,BTparam1,BTparam2,BTmode0,		!Doug 02/13: described BT spread
@@ -1400,36 +1361,22 @@ c         update of individual structure and FPC.
      *      pas,crop,                                             !Doug 06/09
      *      tree,allom1,allom2,allom3,acflux_estab,leafondays,
      *      leafoffdays,leafon,mnpp,anpp,mnpp_add,anpp_add,year)
-        !print*, "yay5"
-	   !print*, tree
-	   !print*,"---"
-		!print*, BTparam1
-C            IF (lat>-25) THEN 
-C              PRINT*,"establishment"
-C              PRINT*, fuel_1hr_leaf(:,1)
-C            END IF
-c       Doug 05/09: agricultural production and product decomposition     
+
+c       Doug 05/09: agricultural production and product decomposition
 C
 C          call agriprod(present,agri,anpp,cflux_prod_total,
 C     *   prod10_total,prod100_total,prod1,anpp_agri,rap,x10,
 C     *   x100,agri_litter_ag,agri_litter_bg,prod10,prod100)
 
 
-
-
 c         radioactive decay of 14C
-          
+
           call decay(present,lm_ind,sm_ind,hm_ind,rm_ind,
      *      litter_ag_leaf,litter_ag_wood, !Doug 11/12: seperate out grass and wood litter
      *      litter_bg,cpool_fast,cpool_slow,
      *      fuel_1hr_leaf,fuel_1hr_wood,
      *      fuel_10hr,fuel_100hr,fuel_1000hr)
 
-C            IF (lat>-25) THEN 
-C              PRINT*,"DECAY"
-C              PRINT*, fuel_1hr_leaf(:,1)
-C              IF (year==1003) STOP
-C            END IF
 c KIRSTEN 25 July 2006: set pft array to zero, where pft not present before passing on to cpp driver.
 c Not very familiar with cpp, normally it should be done in the driver.
 
@@ -1489,7 +1436,7 @@ C				So litter_ag is summed again for output
 	        END DO
           END DO
           dprec_out=dprec
-		  
+
          call outannual(year,present,nind,lm_ind,lm_inc,rm_ind,sm_ind,
      *      hm_ind,fpc_grid,anpp,acflux_estab,
      *      litter_ag,litter_ag_leaf,litter_ag_wood, !Doug 11/12: Output seperate ggrass and wood litter
@@ -1497,7 +1444,7 @@ C				So litter_ag is summed again for output
      *      cpool_fast,cpool_slow,arh,afire_frac,acflux_fire,
      *      mcflux_fire,arunoff,sla,mpar,mapar,mphen,anpp_add,mnpp,
      *      mnpp_grid,    !Doug 06/09: monthly npp for entire cell
-     *      mrunoff,aaet,mrh,mnpp_add,maet,mtemp_soil, 
+     *      mrunoff,aaet,mrh,mnpp_add,maet,mtemp_soil,
      *      mcica,lresp,
      *      sresp,rresp,gresp,aresp,mauw1,mauw2,maep,aaep,mpet_grid,
      *      apet_grid,mintc,aintc,meangc,mgp,num_fire,annum_fire,
@@ -1523,7 +1470,7 @@ C				So litter_ag is summed again for output
      *      crop,pas,	!Doug 05/09: just checking crops and pasture are implimented properly
      *      anpp_grid,arh_grid,acflux_fire_grid,                  !Doug 07/09: cheating future run ouputs without deltaC's
      *      gdd_grid,alpha_ws,pfuel_limit,dprec_out,!Doug 07/09: biocliamtic variables for heat and water stress
-     *      BTparam1,BTparam2,cgf,fdry,lt_days,mlightn_eff)                                    
+     *      BTparam1,BTparam2,cgf,fdry,lt_days,mlightn_eff)
 
 cccc note: you can alternatively use mpet2 and apet to get PET*1.32
 cccc       instead of mpet_grid and apet_grid, respectively
@@ -1619,7 +1566,7 @@ c DM    If simulation in 2 steps, don't believe getclimate about when it's done
 
 c          pause
 
-c    Kirsten: Why are leafondays and leafoffdays not set to zero annuallY? 
+c    Kirsten: Why are leafondays and leafoffdays not set to zero annuallY?
 c             they accumulate over years, what does that mean?
 c          do pft=1,npft
 c             leafondays(pft)=0
@@ -1677,10 +1624,10 @@ c     SUBROUTINE DAILY2
 c     Doug 01/09: For calculating lightning strikes. Based on linear
 c	interpolation, but with grouping around rain events
 c
-c	Completed in two steps. Step 1 calculates the daily spread of lighning if 
-c	lighning was constant, with more ligtning on days with rainfall then days 
-c	without. Step2 to multiplys by linearly interpolated lighting strkes, and 
-c	scales so total lighting remains the same.  
+c	Completed in two steps. Step 1 calculates the daily spread of lighning if
+c	lighning was constant, with more ligtning on days with rainfall then days
+c	without. Step2 to multiplys by linearly interpolated lighting strkes, and
+c	scales so total lighting remains the same.
 
 	SUBROUTINE daily2(lat,lon,mval,dval1,dval2)
 
@@ -1703,7 +1650,7 @@ c     I/O:
       	REAL mval(nmonths),dval1(ndayyear), dval2(ndayyear)
 
 c	For step 1:
-	REAL	fdal(365)		!the value of the function that 
+	REAL	fdal(365)		!the value of the function that
 					!redistributes lighting for each day
 	REAL	nwd, pwd		!number and proption of wet days in the month
 	REAL	gceo			!coeffiant used to calculate proportion of
@@ -1734,10 +1681,10 @@ c       Step 1
             IF(dval1(day)>0) nwd=nwd+1
           END DO	!day of month
 
-          pwd=nwd/ndaymonth(month) !pwd= fraction of wet days in month 
+          pwd=nwd/ndaymonth(month) !pwd= fraction of wet days in month
             day=day-ndaymonth(month)
             DO mday=1,ndaymonth(month)	!day of month
-              day=day+1    !Seaperates days and calcualates lighting for days with and 
+              day=day+1    !Seaperates days and calcualates lighting for days with and
                            !without rain
 
               IF(dval1(day)>0) THEN
@@ -1748,11 +1695,11 @@ c       Step 1
 
             END DO
           END DO	!Month of year
-	
+
 c-------------------------------------------------------------------------------
 c Step 2
 
-	
+
 	CALL	daily1(mval,dval2)		!dval2=lighting for a simple
                                                 !linear interpolation between
                                                 !montrhly lighting values
@@ -1763,7 +1710,7 @@ c Step 2
 
 	DO month=1,nmonths !month of year
 
-		
+
           DO mday=1,ndaymonth(month)	!day of month
             day=day+1
             lmval(1)=lmval(1)+dval2(day)
@@ -1771,7 +1718,7 @@ c Step 2
             lmval(2)=lmval(2)+dval2(day)
 
           END DO 	!day of month
-	
+
           DO mday=day+1-ndaymonth(month),day
             IF (lmval(1)==0.AND.lmval(2)==0) THEN
               dval2(mday)=0
@@ -1801,10 +1748,10 @@ c     SUBROUTINE DAILY_LIGHTNING
 c     Doug 01/09: For calculating lightning strikes. Based on linear
 c	interpolation, but with grouping around rain events
 c
-c	Completed in two steps. Step 1 calculates the daily spread of lighning if 
-c	lighning was constant, with more ligtning on days with rainfall then days 
-c	without. Step2 to multiplys by linearly interpolated lighting strkes, and 
-c	scales so total lighting remains the same.  
+c	Completed in two steps. Step 1 calculates the daily spread of lighning if
+c	lighning was constant, with more ligtning on days with rainfall then days
+c	without. Step2 to multiplys by linearly interpolated lighting strkes, and
+c	scales so total lighting remains the same.
 c
 c		Doug 09/12: function changed to remove iter-cloud
 c	lightning. See Doug 09/12 comments below for deatils.
@@ -1835,41 +1782,41 @@ c     I/O:
       REAL dval2(ndayyear)
 
 c	For step 1:
-      REAL	fdal(365)		!the value of the function that 
+      REAL	fdal(365)		!the value of the function that
 					!redistributes lighting for each day
       REAL	nwd, pwd	!number and proption of wet days in the month, and number of dry days
       INTEGER  ndd, nld !Doug 11/12 number of dry days and number of lighting days
       INTEGER  r !conatains random interger
       REAL lt_days(1:nmonths) !Doug 11/12 proportion of dry days where lightning will strikes
       INTEGER ltk(1:31) !Doug 11/12 stores the day of the month when there is no rain
-		
+
 c	For step 2:
       REAL	lmval(2)		!for calculating scaling of rediustributed
 					!lightning
 
       REAL	lat,lon
       REAL flt, fdry(1:nmonths),fwet
-      
+
 C   Doug 04/13: Parameters for calculating scaling factors
 C       Doug 04/13: CG-IC ration
 c       Uses fucntion CG=cgp1*LT^cgp2
-c		found by comparing US CG and total lighting data from Vaisala/LIS 
+c		found by comparing US CG and total lighting data from Vaisala/LIS
       REAL  cgp1,cgp2
         PARAMETER (cgp1=0.0001267)
         PARAMETER (cgp2=-0.4180)
-      
-C       Doug 04/13: Wet day/Dry day       
+
+C       Doug 04/13: Wet day/Dry day
       REAL  wdp1,wdp2
         PARAMETER (wdp1=0.85033)
         PARAMETER (wdp2=-2.835)
-        
-C       Doug 04/13: Wet day/Dry day       
+
+C       Doug 04/13: Wet day/Dry day
       REAL  ldp1,ldp2
         PARAMETER (ldp1=1.099)
         PARAMETER (ldp2=94678.69)
-       
 
-c Doug 11/12 Declarations for the random generator. This is called to randomoize 
+
+c Doug 11/12 Declarations for the random generator. This is called to randomoize
 c lighting days amoungst the dry days of the month
       integer k10a(4)
        real random
@@ -1884,36 +1831,36 @@ c       Step 1
 		eff_ign(:)=0.0
         DO month=1,nmonths	!Month of year
             ltk(:)=0 !Doug 10/12
-          
+
             daily_stikes=mval(month)/
      *          (1000000.0*ndaymonth(month)) !Doug 04/13: daily strikes per m2
-     
-     
+
+
 c		Doug 09/12. Removed inter-cload lighting by calculating
 c		the fraction of cload ground (CG) from total (LT)
-c		lightning.			
-            cgf(month)=cgp1*(daily_stikes)**(cgp2)	  
+c		lightning.
+            cgf(month)=cgp1*(daily_stikes)**(cgp2)
 
             IF(cgf(month)>1.0) cgf(month)=1.0
-            IF(cgf(month)<0.0) cgf(month)=0.0          
+            IF(cgf(month)<0.0) cgf(month)=0.0
 
-                   
 
-C Doug 03/13: claculates the number of wet (nwd) and dry (ndd) days          
+
+C Doug 03/13: claculates the number of wet (nwd) and dry (ndd) days
             ndd=0.0
-            nwd=0.0  
+            nwd=0.0
             DO mday=1,ndaymonth(month)	!day of month
                 day=day+1
-                IF(dval1(day)>0.0) THEN 
+                IF(dval1(day)>0.0) THEN
                     nwd=nwd+1
                 ELSE
                     ndd=ndd+1
                     ltk(ndd)=day
                 END IF
             END DO	!day of month
-		  
-        
-            pwd=nwd/ndaymonth(month) !pwd= fraction of wet days in month 
+
+
+            pwd=nwd/ndaymonth(month) !pwd= fraction of wet days in month
             day=day-ndaymonth(month)
             flt=wdp1*exp(pwd*wdp2)
 
@@ -1925,34 +1872,34 @@ c       Doug 10/12: Determine number of lightning days
             lt_days(month)=1-1/(ldp1*
      *          (daily_stikes*cgf(month)*flt+1)**ldp2)
 
-        
+
             IF (lt_days(month)<0.0) lt_days(month)=0.0
             IF (lt_days(month)>1.0) lt_days(month)=1.0
 
             nld=ANINT(lt_days(month)*ndd)
             IF (nld==0) nld=1
 
-            IF (nwd==0) THEN  
+            IF (nwd==0) THEN
                 fdry(month)=1/(nld)
                 fwet=0
             ELSE
                 fdry(month)=(flt)/(nld)
                 fwet=(1-flt)/(nwd)
-            END IF		   	
-			
-        
+            END IF
+
+
 C Doug 03/13:   1)Randomly clalculted a day that is a) not wet and b) doesn;t have any
-c                   strikes		
+c                   strikes
 c               2)Sets lightning strikes on that day
 c               3)reduced the amount of available none wet, non lighting days by 1
 c               4) doed it again
-            DO mday=1,nld         
+            DO mday=1,nld
                 r=CEILING(ndd*random(k10a))
-                
+
                 IF (r>ndd) r=ndd
                 IF (r<1) r=1
-                
-                fdal(ltk(r))=fdry(month)                
+
+                fdal(ltk(r))=fdry(month)
                 dval2(ltk(r))=mval(month)*fdry(month)
                 eff_ign(month)=eff_ign(month)+mval(month)*fdry(month)*
      *              cgf(month)
@@ -1960,26 +1907,26 @@ c               4) doed it again
                 ltk(r:ndd)=ltk(r:ndd)+1
 
             END DO
-			
+
             DO mday=1,ndaymonth(month)	!day of month
-                day=day+1    !Seperates days and calcualates lighting for days with and 
+                day=day+1    !Seperates days and calcualates lighting for days with and
                            !without rain
-            
+
                 IF(dval1(day)>0) THEN
                     fdal(day)=0
               !ELSE
                ! fdal(day)=fdry(month) !Doug 03/13: already calculated, so now comment out
                 END IF
             END DO
-            
+
         END DO	!Month of year
-          
+
 c      Doug 04/13: Step 2 is now gone! The interpolation it contained didn't make
 c      much difference, and is just an added laye of confusion now we have lightning days
-          
+
       return
-      
-      
+
+
       END !SUBROUTINE	!daily_lightning
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
@@ -2223,7 +2170,7 @@ c Random function: provides random numbers {0-1}
      *        +float(k(4)))*0.01
 
        end
-	   
+
 
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
@@ -2443,7 +2390,7 @@ c     33 GDD base
 c     34 20-year average min warmest - coldest month temperature range
 c     35 emax (mm/day)
 c     36 intc (Interception storage parameter, unitless)
-c     37 fuel bulk density  (kg/m?³)
+c     37 fuel bulk density  (kg/m?ï¿½)
 c     38 emission factor CO2
 c     39 emission factor CO
 c     40 emission factor CH4
@@ -2489,7 +2436,7 @@ c     *  0.90,   0.0,  0.00,   0.3,  1.30,  0.35, 100.0,  0.12,        !  7
      *  0.80,   0.0,  0.00,   0.5,  1.20,  0.3, 100.0,  0.12,        !  8
      *  0.90,   0.0,  0.20,   0.5,  1.30,  0.25, 100.0,  0.01,        !  9
      *  0.85,   1.0,  0.20,   0.5,  0.70,  0.25, 100.0,  0.01,        ! 10
-     *  0.80,   0.0,  0.10,   0.5,  0.20,  0.25, 100.0,  0.70,        !  1r     
+     *  0.80,   0.0,  0.10,   0.5,  0.20,  0.25, 100.0,  0.70,        !  1r
      *  0.70,   0.0,  0.10,   0.5,  0.20,  0.25, 100.0,  0.70,        !  2r
      *  0.80,   0.0,  0.10,   0.3,  1.20,  0.25, 100.0,  0.50,        !  4r
      *  0.80,   0.0,  0.00,   0.5,  1.20,  0.25, 120.0,  0.12/        !  5r
@@ -2765,7 +2712,7 @@ c         (14) leafmass = [ lai * allom1 * x**reinickerp *
 c              (4*sla/pi/latosa)**(reinickerp*0.5) / sla ]**(2/(2-reinickerp))
 
           x=pftpar(pft,22)
-	 
+
           lm_sapl(pft,1)=(lai_sapl*allom1*x**reinickerp*
      *      (4.0*sla(pft)/pi/latosa)**(reinickerp*0.5) / sla(pft))**
      *      (2.0/(2.0-reinickerp))  !eqn 14
@@ -2814,10 +2761,10 @@ c     * lm_sapl(pft,1),lai_sapl,sla(pft)
 c         Set initial 13C values for saplings, grass
 
           if (pftpar(pft,2).eq.1) then   !C4 plants
-            lm_sapl(pft,2)=co2(2)-3.6  !from lloyd & farquhar,1994           
+            lm_sapl(pft,2)=co2(2)-3.6  !from lloyd & farquhar,1994
             lm_sapl(pft,3)=co2(3)-7.2  ! 2*3.6
           else                           !C3 plpants
-            lm_sapl(pft,2)=co2(2)-17.8  !from lloyd & farquhar,1994          
+            lm_sapl(pft,2)=co2(2)-17.8  !from lloyd & farquhar,1994
             lm_sapl(pft,3)=co2(3)-35.6  !2*17.8
           endif
 
@@ -2834,8 +2781,8 @@ c       (23) lmtorm = (leafmass) / (rootmass)
         lmtorm=pftpar(pft,18)
         rm_sapl(pft,1)=(1.0/lmtorm)*lm_sapl(pft,1)  !From Eqn 23
         rm_sapl(pft,2)=lm_sapl(pft,2) ! 13C value in permille
-        rm_sapl(pft,3)=lm_sapl(pft,3) 
-		
+        rm_sapl(pft,3)=lm_sapl(pft,3)
+
 c        Doug 02/13: Assign lower, median and upper BT paramerter values for BT=p1+p2*DBH
          DO n=1,3
            BTparam1(pft,n)=pftpar(pft,46+n)
@@ -2845,7 +2792,7 @@ c        Doug 02/13: Assign lower, median and upper BT paramerter values for BT=
          BTmode0(pft,2)=BTparam2(pft,2)
 
       enddo ! pft loop
-      
+
       return
       end
 
@@ -2913,7 +2860,7 @@ c     ARGUMENTS
       real mw1(1:12),mw2(1:12)        ! monthly values of w(2) i.e.fraction of avilable water
       real mw1_t(1:12),mw2_t(1:12)
       real uw1,uw2,fw(1:2)
-      
+
       real soilpar(1:nsoilpar)        !soil parameters
       real mcica(1:12,1:npft)
       real mgpp(1:12,1:npft,1:nco2)
@@ -2993,7 +2940,7 @@ c     LOCAL VARIABLES
             rresp(m,pft,nc)=0.0
             gresp(m,pft,nc)=0.0
             aresp(m,pft,nc)=0.0
-          enddo  
+          enddo
           mcica(m,pft)=0.0
         enddo
         do nc=1,nco2
@@ -3001,7 +2948,7 @@ c     LOCAL VARIABLES
           agpp(pft,nc)=0.0
         enddo
       enddo
-      
+
       do m=1,12
         aprec=aprec+mprec(m)
         mtemp_old(m)=mtemp(m)
@@ -3119,7 +3066,7 @@ c      real dpet(1:365)
       integer m,dm,day
       real ni,delta,w,rs_day
       real rl,gamma,lambda,s,uu,vv,hn
-      
+
       integer ndaymonth(1:12)
       data (ndaymonth(m),m=1,12)
      *  / 31,28,31,30,31,30,31,31,30,31,30,31 /
@@ -3142,8 +3089,8 @@ c      dpet(:)=0.0
       uu=0.0
       vv=0.0
       hn=0.0
-      
-      
+
+
       do m=1,12  !months
 
         do dm=1,ndaymonth(m)   !days of month
@@ -3474,7 +3421,7 @@ c     LOCAL VARIABLES:
 
       real snow_therm_cond,thaw_therm_cond,froz_therm_cond
       ! snow, thawed and frozen soil thermal conductivities (W/m*C)
-      
+
       real lat_heat
       ! latent heat of phase change (J/kg)
 
@@ -3488,8 +3435,8 @@ c     LOCAL VARIABLES:
       real alpha1,betha1,gamma1,ksi1,d,b,e
 
       adj_ampl_snow=0.0
-      
-      
+
+
       i=0
       j=0
       l=0
@@ -3703,7 +3650,7 @@ c  calculate mean annual temperature at the top of permafrost (Garagulya,1990)
 c   calculate latent heat of phase change (J/kg)
       lat_heat=335200000.0*rel_moist
 
-c   calculate volumetric heat capacity of soil J/m3?°C
+c   calculate volumetric heat capacity of soil J/m3?ï¿½C
        if (perfrost_temp.le.0.0) then
           vol_heat_cap=store(2,soilcode)*store(1,soilcode)+
      *                 2025000.0*rel_moist
@@ -3869,7 +3816,7 @@ c     LOCAL VARIABLES
       d=0
       aphen=0.0
       gddbase=0.0
-      
+
       dphen_t(:,:)=1.0
 
 c     First find warmest month
@@ -4181,7 +4128,7 @@ c******************************************************************************
 c     SUBROUTINE GPP
 c     Calculation of GPP, explicitly linking photosynthesis and water
 c     balance through canopy conductance feedback
-c     timestep: 
+c     timestep:
 
       subroutine gpp(present,co2,soilpar,pftpar,lai_ind,fpc_grid,
      *  mdayl,mtemp,mpar_day,dphen_t,w,w_t,dpet,dprec,dmelt,sla,agpp,
@@ -4300,9 +4247,9 @@ c     LOCAL:
       real inhibx3(1:npft),inhibx4(1:npft)
       real dw2(1:365)
       real fpc_tree
-     
+
        real deltaa(1:npft),deltaa_fpc
- 
+
       integer ndaymonth(1:12)    !number of days in each month
       data (ndaymonth(m),m=1,12)
      *  / 31,28,31,30,31,30,31,31,30,31,30,31 /
@@ -4392,7 +4339,7 @@ c     Other Initialisations
       apet_grid=0.0
       apet=0.0
       dphen_change(:,:)=0.0 !Doug 05/09
-      
+
 c DM  mphen is set to 0 only when present(pft) is true
 c DM  Maybe it's OK for the results, but it's not enough if we want
 c DM  the exact same results when using the standard version and
@@ -4469,7 +4416,7 @@ c DM  See above
 c            mphen(m,pft)=0.0
 c            mcica(m,pft)=0.0
 c            mgp(m,pft)=0.0
- 
+
             tsecs(m)=3600.0*mdayl(m)  !number of daylight seconds/day
 
 c           Calculate non-water-stressed net daytime photosynthesis
@@ -4556,7 +4503,7 @@ c             once the minimum water scalar is exceeded.
                 dphen_w(d,pft)=0.0
                 dphen(d,pft)=0.0
               endif
-             
+
 c
 c  stop deciduous vegetation behaving like evergreen when climate
 c  permits
@@ -4612,8 +4559,8 @@ c             part, /sum(deet) is done at the end of the month loop
 
 
 c         Store today's water content in soil layer 1
-          dw1(d)=w(1) 
-      
+          dw1(d)=w(1)
+
 
 c          dw1(d)=w_ep !upper 20 cm only
           dw2(d)=w(2)
@@ -4659,10 +4606,10 @@ c             phenology
 
               meanfpc(m,pft)=meanfpc(m,pft)+
      *          fpc_grid(pft)*dphen(d,pft)/real(ndaymonth(m))
-	 
-	 
 
-	 
+
+
+
               meangc(m,pft)=meangc(m,pft)+
      *          dgc(d,pft)/real(ndaymonth(m))
               meangmin(m,pft)=meangmin(m,pft)+
@@ -4716,7 +4663,7 @@ c             Implement numerical solution
 
               b=0  !number of tries towards solution
               fmid=epsilon+1.0
-			  
+
               do while (abs(fmid).gt.epsilon.and.b.le.10)
 
 c               Abort search if >10 iterations needed to fnind solution
@@ -4741,7 +4688,7 @@ c               guess for lambda (xmid)
                 call photosynthesis(ca,mtemp(m),fpar,mpar_day(m),
      *            mdayl(m),c4(pft),sla(pft),nmax(pft),xmid,rd,agd,adt2,
      *            inhibx1(pft),inhibx2(pft),inhibx3(pft),inhibx4(pft),
-     *            pft)   
+     *            pft)
 
 c               Evaluate fmid at the point lambda=xmid
 c               fmid will be an increasing function with xmid, with
@@ -4790,8 +4737,8 @@ c Doug 08/09: part 2 in calculating mositure availability index
 
 c Doug 05/09: For fire paradox experiment (http://www.fireparadox.org/).
 c Experiment 1&3: phenology=0 for grass for an extra month.
-c 
-C     
+c
+C
 c      IF (year>=5180.AND.year<5190) THEN
 c      IF (year>=5140.AND.year<5190) THEN
 c      IF (year>=5160) THEN
@@ -4812,7 +4759,7 @@ c            END DO
 c          END IF
 c300       CONTINUE
 c        END DO
-c 
+c
 c       DO pft=1,npft
 c          IF (tree(pft)==.FALSE.) THEN
 c            IF (day_dphen+30>365) THEN
@@ -4823,9 +4770,9 @@ c            END IF
 c          END IF
 c        END DO
 c      END IF
-cc 
-c Experiment 2: 
-c 
+cc
+c Experiment 2:
+c
 c      IF (year>=5180) THEN
 c        DO m=1,12
 c          DO pft=1,npft
@@ -4835,8 +4782,8 @@ c            END IF
 c          END DO
 c        END DO
 c      END IF
- 
- 
+
+
 c     Convert water scalar to average daily basis using phenology
        do pft=1,npft
         if (present(pft)) then
@@ -4849,14 +4796,14 @@ c     Convert water scalar to average daily basis using phenology
       enddo
 
 
-c     Calculate the carbon isotope fractionation in plants following Lloyd 
+c     Calculate the carbon isotope fractionation in plants following Lloyd
 c     & Farquhar 1994
-  
+
       deltaa_fpc=0.0
- 
+
       do pft=1,npft
-         if (present(pft)) then          
-            if (agpp(pft,1).gt.0.0) then 
+         if (present(pft)) then
+            if (agpp(pft,1).gt.0.0) then
                call isotope(pft,mcica,co2,mtemp,mlresp,
      *    c4,mgpp,agpp,fpc_grid,deltaa)
 
@@ -4875,14 +4822,14 @@ c     & Farquhar 1994
                agpp(pft,2)=0.0
                agpp(pft,3)=0.0
             endif
-         endif      
+         endif
       enddo
 
 c     Calculate annual total runoff
 
       arunoff=arunoff_surf+arunoff_drain
-	  
- 
+
+
       return
       end
 
@@ -4949,7 +4896,7 @@ c     ARGUMENTS
       integer pfti
 
 c     LOCAL VARIABLES
-      integer i 
+      integer i
       real lambdam(1:npft)
       data (lambdam(i),i=1,npft)
      *     /0.9,0.9,0.9,0.8,0.8,0.8,0.9,0.65,0.4,0.9,0.9,0.8,0.8/
@@ -4957,7 +4904,7 @@ c     LOCAL VARIABLES
       real apar,pi,ko,kc,tau,gammastar,c1,c2,b,phipi
       real s,sigma,vm,and,pa,je,jc,vmmax,cn,tk,t0,adt
       real tstress,k1,k2,k3,low,high
-      
+
       i=0
       apar=0.0
       pi=0.0
@@ -4987,7 +4934,7 @@ c     LOCAL VARIABLES
       k3=0.0
       low=0.0
       high=0.0
-      
+
 
 c     Return without performing calculations if daylength 0 hours
 
@@ -5294,7 +5241,7 @@ c     Initialisations
       fw_ep=0.0
       uw_ep=0.0
       excess=0.0
-c DM  TODO reset to 0 ?   Yan: No! We don't take into permafost,v(1)=thaw/d1;v(2)=thaw/d2;==1 
+c DM  TODO reset to 0 ?   Yan: No! We don't take into permafost,v(1)=thaw/d1;v(2)=thaw/d2;==1
       v(:) =1.0
 c Yan
       cover=0.0
@@ -5308,7 +5255,7 @@ c Yan
       pet_grid=0.0
       drunoff_drain=0.0
       drunoff_surf=0.0
-      
+
       if(d.eq.1) then
        dthaw=1500.0
        maxthaw=1500.0
@@ -5597,7 +5544,7 @@ c Calculate runoff from lower layer
       v(2)=thaw(2)/d2
       if (w(1).le.0.0001) w(1)=0.0
       if (w(2).le.0.0001) w(2)=0.0
-    
+
 
       return
       end
@@ -5624,7 +5571,7 @@ c     PARAMETERS
       parameter (a=4.4,es=1.1,a1=0.7,b=27.5,b3=30.0,e=0.0,f=8.0)
 
 
-   
+
 
 c     ARGUMENTS
       integer pft
@@ -5632,10 +5579,10 @@ c     ARGUMENTS
       real rd(1:12,1:npft,1:nco2)
       logical c4(1:npft)
       real mgpp(1:12,1:npft,1:nco2),agpp(1:npft,1:nco2)
-      
+
 
 c     LOCAL
-      integer m     
+      integer m
 
 
 !      real deltaa,b4
@@ -5668,36 +5615,36 @@ c     LOCAL
       phi=0.4                 !as suggested by Lloyd & Farquhar (1994)
       c3gpp=0.0
       c4gpp=0.0
-   
+
       do m=1,12
 
         if (mgpp(m,pft,1).gt.0.0) then
 
            if (cratio(m,pft).lt.0.05) cratio(m,pft)=0.05
-          
+
 c          define discrimination parameters
-     
+
            if (rd(m,pft,1).le.0.0) rd(m,pft,1)=0.01
-           
+
            leaftemp = 1.05*(mtemp(m)+2.5)
            gamma = 1.54*leaftemp
            rdi = rd(m,pft,1)/(86400.0*12.0)
            catm = co2(1)*1.0e6
-           k = rdi/11.0         
+           k = rdi/11.0
            b4=(26.19-(9483/(273.2+leaftemp))) !from Farquhar et al. 1982 p. 126
-           
+
            if (c4(pft)) then
-          
-c             calculate PHI for C4 pathway 
+
+c             calculate PHI for C4 pathway
 
 c              call calcphi(mgpp,pft,phi)
 
-c             calculate discrimination -> C4 pathway           
-              
+c             calculate discrimination -> C4 pathway
+
 
               deltaa(pft)=a*(1-cratio(m,pft)+0.0125)+0.0375*(es+a1)+
      *             (b4+(b3-es-a1)*phi)*(cratio(m,pft)-0.05)
-                            
+
               mgpp(m,pft,2)=co2(2) * (1-deltaa(pft)/1000.)-deltaa(pft)
               agpp(pft,2)=agpp(pft,2)+mgpp(m,pft,2)*mgpp(m,pft,1)
               mgpp(m,pft,3)=co2(3)-2*deltaa(pft)
@@ -5705,17 +5652,17 @@ c             calculate discrimination -> C4 pathway
               c4gpp=c4gpp+mgpp(m,pft,1)
 
            else
-                      
+
 c             calculate the discrimination -> C3 pathway
-              
+
               q = a*(1-cratio(m,pft)+0.025)
               r = 0.075*(es+a1)
               s = b*(cratio(m,pft)-0.1)
               t = (e*rdi/k+f*gamma)/catm
 
-              
+
               deltaa(pft) = q+r+s-t
-                       
+
               mgpp(m,pft,2)=co2(2) * (1 - deltaa(pft)/1000.)
      *                     -deltaa(pft)
               agpp(pft,2)=agpp(pft,2)+mgpp(m,pft,2)*mgpp(m,pft,1)
@@ -5724,8 +5671,8 @@ c             calculate the discrimination -> C3 pathway
               c3gpp=c3gpp+mgpp(m,pft,1)
 
            endif
-           
-        else       
+
+        else
            mgpp(m,pft,2)=0.0
         endif
       enddo                     !month
@@ -5733,8 +5680,8 @@ c             calculate the discrimination -> C3 pathway
 
       agpp(pft,2)=agpp(pft,2)/(c3gpp+c4gpp)
       agpp(pft,3)=agpp(pft,3)/(c3gpp+c4gpp)
-      
-      
+
+
       return
       end
 
@@ -5742,16 +5689,16 @@ c             calculate the discrimination -> C3 pathway
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     SUBROUTINE CALCPHI
-c     This subroutine is for calculating the phi variable used in 
+c     This subroutine is for calculating the phi variable used in
 c     C4 photosynethsis isotope discrimination calculations
 
       subroutine calcphi(mgpp,pft,phi)
 
       implicit none
-	  
+
 c	  PARAMETERS
       INTEGER npft
-        PARAMETER(npft=13)	  
+        PARAMETER(npft=13)
 
 c     ARGUMENTS
       real mgpp(1:12,1:npft,1:3),phi
@@ -5795,7 +5742,7 @@ c     which compensates for amplitude and seasonal variation in GPP.
 
       do m=1,12
         normgpp(m)=gppm(m)/meangpp
-      enddo 
+      enddo
 
       snormavg(1)=(normgpp(12)+normgpp(1)+normgpp(2))/3.0
       snormavg(2)=(normgpp(3)+normgpp(4)+normgpp(5))/3.0
@@ -5838,7 +5785,7 @@ c     scenarios of phi.
 
       return
 
-      end 
+      end
 
 
 
@@ -6014,7 +5961,7 @@ c     ARGUMENTS
       real mgpp(1:12,1:npft,1:nco2),agpp(1:npft,1:nco2)
       real anpp(1:npft,1:nco2),mnpp(1:12,1:npft,1:nco2)
       logical present(1:npft)
-      real gresp(1:12,1:npft,1:nco2)   ! monthly growth respiration 
+      real gresp(1:12,1:npft,1:nco2)   ! monthly growth respiration
       real lresp(1:12,1:npft,1:nco2)  ! monthly leaf respiration
       real sresp(1:12,1:npft,1:nco2)  ! monthly sapwood respiration
       real rresp(1:12,1:npft,1:nco2)  ! monthly root respiration
@@ -6213,13 +6160,13 @@ c           (GPP - maintenance respiration) in monthly NPP calculation
                 lresp_m(nc)=lm_ind(pft,nc)
                 sresp_m(nc)=sm_ind(pft,nc)
                 rresp_m(nc)=rm_ind(pft,nc)
-              enddo 
+              enddo
             else !grass
               mresp(1)=lresp_m(1)+rresp_m(1)
               do nc=2,nco2
                 mresp(nc)=mgpp(m,pft,nc) ! assuming that assimilate is directly used for autotr. resp.
                 lresp_m(nc)=lm_ind(pft,nc)
-                rresp_m(nc)=rm_ind(pft,nc)  
+                rresp_m(nc)=rm_ind(pft,nc)
               enddo
             endif
             gresp_m(1)=max((mgpp(m,pft,1)-mresp(1))*0.25,0.0)
@@ -6227,10 +6174,10 @@ c           (GPP - maintenance respiration) in monthly NPP calculation
             gresp_m(2)=mgpp(m,pft,2)
             gresp_m(3)=mgpp(m,pft,3)
 
-            mnpp(m,pft,1)=mgpp(m,pft,1)-mresp(1)-gresp_m(1) 
+            mnpp(m,pft,1)=mgpp(m,pft,1)-mresp(1)-gresp_m(1)
 
-            if (mnpp(m,pft,1).gt.1.E-9) then  
-               mnpp(m,pft,2)=mgpp(m,pft,2)       
+            if (mnpp(m,pft,1).gt.1.E-9) then
+               mnpp(m,pft,2)=mgpp(m,pft,2)
                mnpp(m,pft,3)=mgpp(m,pft,3)
             else
                mnpp(m,pft,2)=0.0   !PRoblem: mnpp can be <0, see also bm_inc
@@ -6252,9 +6199,9 @@ c           Increment annual NPP
                   enddo
                endif
             endif
-            
+
 c           Copy NPP to bm_inc, which will store running total of
-c           C production remaining for growth            
+c           C production remaining for growth
             do nc=1,nco2
               lresp(m,pft,nc)=lresp_m(nc)
               sresp(m,pft,nc)=sresp_m(nc)
@@ -6270,7 +6217,7 @@ c           C production remaining for growth
               enddo
             endif
 
-          enddo  !month     
+          enddo  !month
 
             do nc=1,nco2
               bm_inc(pft,nc)=anpp(pft,nc)
@@ -6284,12 +6231,12 @@ c         don't allow negative anpp. set to zero
              anpp(pft,1)=0.0
              anpp(pft,2)=0.0
              anpp(pft,3)=0.0
-             do m=1,12  
+             do m=1,12
                do nc=1,nco2
                 mnpp(m,pft,nc)=0.0
                enddo
              enddo  ! month
-          endif 
+          endif
 
         if(.not.tree(pft))then
 !!      delt_C13_pft=delt_C13_pft+anpp(pft,2)*fpc_grid(pft)*anpp(pft,1)
@@ -6362,7 +6309,7 @@ c     LOCAL VARIABLES
       nc=0
       temp=0.0
       reprod=0.0
-      
+
       do pft=1,npft	!pft
 
         temp_fuel=fuel_1hr_leaf(pft,:)	!Doug 01/09: MFL
@@ -6389,7 +6336,7 @@ c         eventually enter the litter pool
              enddo
           endif
 
- 
+
           fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)+reprod
 
           if (reprod.gt.0.0) then
@@ -6399,7 +6346,7 @@ c         eventually enter the litter pool
      *               bm_inc(pft,nc)*reprod)/(fuel_1hr_leaf(pft,1))
              enddo
           endif
-     
+
 c         Reduce biomass increment by reproductive cost
 
           bm_inc(pft,1)=bm_inc(pft,1)-reprod
@@ -6412,8 +6359,8 @@ c         Reduce biomass increment by reproductive cost
                   hm_sapl(pft,nc)=bm_inc(pft,nc)
                   rm_sapl(pft,nc)=bm_inc(pft,nc)
                enddo
-            else              
-               lm_sapl(pft,2)=co2(2)-17.8 !C3 value         
+            else
+               lm_sapl(pft,2)=co2(2)-17.8 !C3 value
                sm_sapl(pft,2)=co2(2)-17.8 !from lloyd & farquhar,1994
                hm_sapl(pft,2)=co2(2)-17.8
                rm_sapl(pft,2)=co2(2)-17.8
@@ -6431,12 +6378,12 @@ c         Reduce biomass increment by reproductive cost
             else
                if (pft.eq.npft) then
                   lm_sapl(pft,2)=co2(2)-3.6 !C4 value
-                  rm_sapl(pft,2)=co2(2)-3.6 !from lloyd & farquhar,1994 
+                  rm_sapl(pft,2)=co2(2)-3.6 !from lloyd & farquhar,1994
                   lm_sapl(pft,3)=co2(3)-7.2
                   rm_sapl(pft,3)=co2(3)-7.2
                else
                   lm_sapl(pft,2)=co2(2)-17.8 !C3 value
-                  rm_sapl(pft,2)=co2(2)-17.8 !from lloyd & farquhar,1994 
+                  rm_sapl(pft,2)=co2(2)-17.8 !from lloyd & farquhar,1994
                   lm_sapl(pft,3)=co2(3)-35.6
                   rm_sapl(pft,3)=co2(3)-35.6
                endif
@@ -6454,11 +6401,11 @@ c         Reduce biomass increment by reproductive cost
      *        fuel_1hr_leaf_inc_neg(pft,nc,:)+
      *        (fuel_1hr_leaf(pft,nc)-temp_fuel(nc))/12
           END IF
-        ENDDO                                                          !Doug 01/09: MFL 
+        ENDDO                                                          !Doug 01/09: MFL
 
       enddo	!pft
 
-      
+
 
       return
       end	!reproduction
@@ -6473,7 +6420,7 @@ c     Leaf and root C transferred to litter, sapwood C to heartwood
 c
 c     Doug 01/09: addition of fuel_ihr_inc as I/O
 
-      subroutine turnover(pftpar,present,tree,lm_ind,sm_ind, 
+      subroutine turnover(pftpar,present,tree,lm_ind,sm_ind,
      *  hm_ind,rm_ind,
      *  litter_ag_leaf,litter_bg,fuel_1hr_leaf,
      *  fuel_10hr,fuel_100hr,
@@ -6587,7 +6534,7 @@ c         Convert sapwood to heartwood
 c      Drop small branches, large & small twigs from
 c      sapwood, and then from heartwood mass. Update S & H pools.
 
-c      discussion 25/7/05: revise ratios of sm for branch & twig drop. No coarse roots in LPJ      
+c      discussion 25/7/05: revise ratios of sm for branch & twig drop. No coarse roots in LPJ
 c       small_branch_drop = (0.1422*sm_ind(pft))*small_branch_torate
 c       large_twig_drop = (0.05*sm_ind(pft))*large_twig_torate
 c       small_twig_drop = (0.03*sm_ind(pft))*small_twig_torate
@@ -6596,8 +6543,8 @@ c       sm_turn_drop=small_branch_drop +
 c     *   large_twig_drop + small_twig_drop
 
 c       sm_ind(pft)=sm_ind(pft)-sm_turn_drop
-        
-c      discussion 25/7/05: revise ratios of sm for branch & twig drop. No coarse roots in LPJ      
+
+c      discussion 25/7/05: revise ratios of sm for branch & twig drop. No coarse roots in LPJ
 
        small_branch_drop = (0.1422*hm_ind(pft,1))*small_branch_torate
        large_twig_drop = (0.05*hm_ind(pft,1))*large_twig_torate
@@ -6605,7 +6552,7 @@ c      discussion 25/7/05: revise ratios of sm for branch & twig drop. No coarse
 
 c       hm_turn_drop=small_branch_drop +
 c     *  large_twig_drop + small_twig_drop
-  
+
 c       hm_ind(pft)=hm_ind(pft)-hm_turn_drop
 
 c         Transfer to litter pools
@@ -6619,7 +6566,7 @@ c         Transfer to litter pools
      *            litter_ag_leaf(pft,1)
           enddo
        endif
-          
+
        temp=litter_bg(pft,1)
        litter_bg(pft,1)=litter_bg(pft,1)+rm_turn*nind(pft)
        if (litter_bg(pft,1).gt.0.0) then
@@ -6651,17 +6598,17 @@ c       fuel_1hr(pft)=fuel_1hr(pft)+ small_twig_drop*nind(pft) !A
 c       fuel_10hr(pft)=fuel_10hr(pft)+large_twig_drop*nind(pft) !A
 c       fuel_100hr(pft)=fuel_100hr(pft)+small_branch_drop*nind(pft) !A
 c       endif
- 
+
 c         Record total turnover
 
           turnover_ind(pft)=lm_turn+sm_turn+rm_turn
 c       Allan
 c       turnover_ind(pft)=turnover_ind(pft)+sm_turn_drop+hm_turn_drop
 
-          
+
           do nc=1,nco2
-             if (lm_ind(pft,1).le.0.) lm_ind(pft,nc)=0. 
-             if (sm_ind(pft,1).le.0.) sm_ind(pft,nc)=0. 
+             if (lm_ind(pft,1).le.0.) lm_ind(pft,nc)=0.
+             if (sm_ind(pft,1).le.0.) sm_ind(pft,nc)=0.
              if (rm_ind(pft,1).le.0.) rm_ind(pft,nc)=0.
           enddo
 
@@ -6687,13 +6634,13 @@ c       turnover_ind(pft)=turnover_ind(pft)+sm_turn_drop+hm_turn_drop
       enddo  !pft
 
       return
-      end 
+      end
 
 
 
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
-c     SUBROUTINE LITTERSOM		
+c     SUBROUTINE LITTERSOM
 c     Litter and soil decomposition
 c     Incorporates analytical solution for soil pool sizes once litter inputs
 c     are (assumed to be) at equilibrium, reducing spin-up time for carbon
@@ -6900,14 +6847,14 @@ C Doug 05/09: initialise landuse variables
         litter_decom(m,1)=0.0
         nat_decom(m,:)=0.0
         agri_decom(m)=0.0
-        
+
         do pft=1,npft
           fuel_decom_1hr_leaf(pft)=0.0
           fuel_decom_1hr_wood(pft)=0.0
           fuel_decom_10hr(pft)=0.0
           fuel_decom_100hr(pft)=0.0
           fuel_decom_1000hr(pft)=0.0
-          
+
           litter_decom_ag_leaf=litter_ag_leaf(pft,1)*
      *       (1.0-exp(-k_litter_leaf(pft)))  !eqn 4
 	      litter_decom_ag_wood=litter_ag_wood(pft,1)*
@@ -6921,7 +6868,7 @@ c   Doug 05/09: natural decomposion
           DO nc=2,nco2
              nat_decom(m,nc)=nat_decom(m,nc)+litter_ag_leaf(pft,nc)
      *         *litter_decom_ag_leaf+litter_ag_wood(pft,nc)
-     *         *litter_decom_ag_wood+litter_bg(pft,nc)*litter_decom_bg  
+     *         *litter_decom_ag_wood+litter_bg(pft,nc)*litter_decom_bg
           END DO !StopC
 
 c          litter_decom(m,1)=litter_decom(m,1)+litter_decom_ag+
@@ -6929,7 +6876,7 @@ c     *      litter_decom_bg
 c
 c          do nc=2,nco2
 c             litter_decom(m,nc)=litter_decom(m,nc)+litter_ag(pft,nc)
-c     *         *litter_decom_ag+litter_bg(pft,nc)*litter_decom_bg  
+c     *         *litter_decom_ag+litter_bg(pft,nc)*litter_decom_bg
 c          enddo
 
 c         Update the litter pools
@@ -6952,14 +6899,14 @@ c       no influence on carbon balance/fluxes
 
           fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)
      *      -fuel_decom_1hr_leaf(pft)
-	 
+
           fuel_1hr_wood(pft,1)=fuel_1hr_wood(pft,1)
      *      -fuel_decom_1hr_wood(pft)
 
           fuel_decom_10hr(pft)=fuel_10hr(pft,1)*
      *      (1.0-exp(-k_litter_wood(pft)))
           fuel_10hr(pft,1)=fuel_10hr(pft,1)-fuel_decom_10hr(pft)
-		  
+
 c          fuel_decom_1hr(pft)=fuel_1hr(pft,1)*(1.0-exp(-k_litter))
 
 C          fuel_1hr(pft,1)=fuel_1hr(pft,1)-fuel_decom_1hr(pft)
@@ -6992,14 +6939,14 @@ c          fuel_1000hr(pft)=fuel_1000hr(pft)-0.02*fuel_1000hr(pft) !A
         endif
 
 		IF (1==0) THEN !Doug 11/12: lets turn agriculate off while we're not using it
-c       Doug 05/09: agri: calculate the decomposition from the agricultural litter pools 
-        agri_decom_ag=agri_litter_ag*(1.0-exp(-k_litter_bg)) 
-        agri_decom_bg=agri_litter_bg*(1.0-exp(-k_litter_bg))  
-        agri_decom(m)=agri_decom_ag+agri_decom_bg   
+c       Doug 05/09: agri: calculate the decomposition from the agricultural litter pools
+        agri_decom_ag=agri_litter_ag*(1.0-exp(-k_litter_bg))
+        agri_decom_bg=agri_litter_bg*(1.0-exp(-k_litter_bg))
+        agri_decom(m)=agri_decom_ag+agri_decom_bg
 
-c       Doug 06/09 Update the litter pools   
-        agri_litter_ag=agri_litter_ag-agri_decom_ag 
-        agri_litter_bg=agri_litter_bg-agri_decom_bg 
+c       Doug 06/09 Update the litter pools
+        agri_litter_ag=agri_litter_ag-agri_decom_ag
+        agri_litter_bg=agri_litter_bg-agri_decom_bg
 
 c       Doug 06/09: pass forward either agricultural decomposition or natural
         if (agri) then   ! agricultural grid cel
@@ -7012,8 +6959,8 @@ c       Doug 06/09: pass forward either agricultural decomposition or natural
            litter_decom(m,2:nco2)=nat_decom(m,2:nco2)
 
         endif
-		
-        END IF !(0==1) 
+
+        END IF !(0==1)
 
 c       Calculate carbon flux to atmosphere and soil
         cflux_litter_atmos=atmfrac*litter_decom(m,1)
@@ -7029,7 +6976,7 @@ c       Further subdivide soil fraction between fast and slow soil pools
      *             *litter_decom(m,nc)*cflux_litter_soil)/cpool_fast(1)
            enddo
         endif
-        
+
         temp=cpool_slow(1)
         cpool_slow(1)=cpool_slow(1)+(1.0-fastfrac)*cflux_litter_soil
         if (cpool_slow(1).gt.0.0) then
@@ -7038,16 +6985,16 @@ c       Further subdivide soil fraction between fast and slow soil pools
      *             *cflux_litter_soil*litter_decom(m,nc))/cpool_slow(1)
            enddo
         endif
-        
+
 c     Calculate monthly soil decomposition to the atmosphere
 
         cflux_fast_atmos=cpool_fast(1)*(1.0-exp(-k_fast(m))) !eqn 4
         cflux_slow_atmos=cpool_slow(1)*(1.0-exp(-k_slow(m))) !eqn 4
-        
+
 c       Update the soil pools
 
         cpool_fast(1)=cpool_fast(1)-cflux_fast_atmos
-        cpool_slow(1)=cpool_slow(1)-cflux_slow_atmos   
+        cpool_slow(1)=cpool_slow(1)-cflux_slow_atmos
 
 c       Calculate monthly heterotrophic respiration
 
@@ -7091,7 +7038,7 @@ c       Empty soil pools below a minimum threshold
      *          fuel_1hr_leaf_inc_neg(pft,nc,m)+
      *          fuel_1hr_leaf(pft,nc)-temp_fuel(pft,nc,1)
             END IF
-			
+
             IF (fuel_1hr_wood(pft,1)-temp_fuel(pft,1,2)>0) THEN
               fuel_1hr_wood_inc_pos(pft,nc,m)=
      *          fuel_1hr_wood_inc_pos(pft,nc,m)+
@@ -7101,7 +7048,7 @@ c       Empty soil pools below a minimum threshold
      *          fuel_1hr_wood_inc_neg(pft,nc,m)+
      *          fuel_1hr_wood(pft,nc)-temp_fuel(pft,nc,2)
             END IF
-			
+
 c            IF (fuel_1hr(pft,1)-temp_fuel(pft,1,1)>0) THEN
 c              fuel_1hr_inc_pos(pft,nc,m)=fuel_1hr_inc_pos(pft,nc,m)+
 c     *          fuel_1hr(pft,nc)-temp_fuel(pft,nc,1)
@@ -7109,7 +7056,7 @@ c            ELSE
 c              fuel_1hr_inc_neg(pft,nc,m)=fuel_1hr_inc_neg(pft,nc,m)+
 c     *          fuel_1hr(pft,nc)-temp_fuel(pft,nc,1)
 c            END IF
-			
+
           END DO
 	      fuel_10hr_inc(:,nc,m)=fuel_10hr_inc(:,nc,m)+
      *      fuel_10hr(:,nc)-temp_fuel(:,nc,3)
@@ -7138,7 +7085,7 @@ c     years, when annual litter inputs should be close to equilibrium.  Assumes
 c     average climate (temperature and soil moisture) from all years up to
 c     soil_equil_year.
 
- 
+
 
 c       Analytically calculate pool sizes this year only
 
@@ -7149,8 +7096,8 @@ c         (6) dc/dt = 0
 c       From (5) & (6),
 c         (7) c = litter_decom / k
 
-         
-         
+
+
       return
       end
 
@@ -7169,8 +7116,8 @@ c     Doug 01/09: addition of fuel_1hr_inc as I/O
      *  sm_ind,nind,litter_ag_leaf,litter_ag_wood, !Doug 11/12
      *  litter_bg,year,fuel_1hr_leaf,fuel_1hr_wood,fuel_10hr,
      *  fuel_100hr,fuel_1000hr,
-     *  fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg, 
-     *  fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg, 
+     *  fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg,
+     *  fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg,
      *  fuel_10hr_inc, fuel_100hr_inc, fuel_1000hr_inc)
 
       implicit none
@@ -7235,10 +7182,10 @@ c           Transfer killed biomass to litter
             if (tree(pft)) then
                temp=litter_ag_leaf(pft,1) !Doug 11/12
 			   temp=litter_ag_wood(pft,1) !Doug 11/12
-			   
+
 			   litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)+
      *           lm_ind(pft,1)*nind(pft)
-	 
+
                IF (litter_ag_leaf(pft,1) .gt. 0.0) THEN
                  DO nc=2,nco2
                   litter_inc=lm_ind(pft,1)*lm_ind(pft,nc)
@@ -7246,10 +7193,10 @@ c           Transfer killed biomass to litter
      *                 +litter_inc*nind(pft))/litter_ag_leaf(pft,1)
                  END DO
                END IF
-	 
+
 	           litter_ag_wood(pft,1)=litter_ag_wood(pft,1)+
      *           (sm_ind(pft,1)+ hm_ind(pft,1))*nind(pft)
-	 
+
                IF (litter_ag_wood(pft,1) .gt. 0.0) THEN
                  DO nc=2,nco2
                   litter_inc=sm_ind(pft,1)
@@ -7258,7 +7205,7 @@ c           Transfer killed biomass to litter
      *                 +litter_inc*nind(pft))/litter_ag_wood(pft,1)
                  END DO
                END IF
-			   
+
 c               temp=litter_ag(pft,1)
 c               litter_ag(pft,1)=litter_ag(pft,1)+(lm_ind(pft,1)+
 c     *              sm_ind(pft,1)+ hm_ind(pft,1))*nind(pft)
@@ -7283,7 +7230,7 @@ c            KIRSTEN: fuel classes
      *                 +litter_inc*nind(pft))/fuel_1hr_leaf(pft,1)
                  END DO
                END IF
-			   
+
                temp=fuel_1hr_wood(pft,1)
                fuel_1hr_wood(pft,1)=fuel_1hr_wood(pft,1)+
      *              (0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
@@ -7335,7 +7282,7 @@ c               endif
 
                temp=fuel_1000hr(pft,1)
                fuel_1000hr(pft,1)=fuel_1000hr(pft,1)+((0.67*
-     *              *sm_ind(pft,1) 
+     *              *sm_ind(pft,1)
      *              +0.67*hm_ind(pft,1))*nind(pft))
                if (fuel_1000hr(pft,1) .gt. 0.0) then
                do nc=2,nco2
@@ -7384,8 +7331,8 @@ c            KIRSTEN: fuel classes
           endif
 
         endif
-		
-        
+
+
         DO nc=1,nco2
           DO m=1,12						!Doug 01/09: MFL !StopC
             IF (fuel_1hr_leaf(pft,1)-temp_fuel(1,1)>0) THEN
@@ -7397,7 +7344,7 @@ c            KIRSTEN: fuel classes
      *          fuel_1hr_leaf_inc_neg(pft,nc,m)+
      *          (fuel_1hr_leaf(pft,nc)-temp_fuel(nc,1))/12
             END IF
-		  
+
             IF (fuel_1hr_wood(pft,1)-temp_fuel(1,2)>0) THEN
               fuel_1hr_wood_inc_pos(pft,nc,m)=
      *          fuel_1hr_wood_inc_pos(pft,nc,m)+
@@ -7523,7 +7470,7 @@ c     ARGUMENTS
       real crownarea(1:npft)
       real lai_ind(1:npft),fpc_grid(1:npft)
       real height(1:npft)
-      real height_class(0:4,1:npft)      
+      real height_class(0:4,1:npft)
       REAL dbh(1:npft), dbh_class(0:4,1:npft) !Doug 02/13:dbh_class added
       REAL tau_c(0:4,1:npft),cl_t(0:4,1:npft)
       REAL litter_ag_leaf(1:npft,1:nco2) ! Doug 11/12
@@ -7569,7 +7516,7 @@ c     LOCAL VARIABLES
       real crownarea_max  !maximum crown area (m2)
 c  Kirsten
       integer class
-      real bt(0:4,1:npft),crown(1:npft) !crown length,bark thickness (cm?²)  
+      real bt(0:4,1:npft),crown(1:npft) !crown length,bark thickness (cm?ï¿½)
       real temp,lm_temp,rm_temp,sm_temp
       logical normal
       REAL lm_tot(1:npft)
@@ -7606,8 +7553,8 @@ c DM  If you are sure the initialization is not needed, comment out
       class=0
       bt(:,:)=0.0
       crown(:)=0.0
-      dbh_class(:,:)=0.0 
-      lm_inc(:)=0.0      
+      dbh_class(:,:)=0.0
+      lm_inc(:)=0.0
 c#ifdef CO2_THREE_VALUES
 c DM   Worse: given how rm_temp is used, it should be initialised
 c DM   at the beginning of the main loop (why should the value of
@@ -7648,7 +7595,7 @@ c         water scalar and pft specific parameter
             normal=.false.
             crownarea_max=pftpar(pft,20)
 
-c           PFT parameter crown length & bark thickness, Kirsten            
+c           PFT parameter crown length & bark thickness, Kirsten
             crown(pft)=pftpar(pft,44)
             param1(pft)=pftpar(pft,47)
             param2(pft)=pftpar(pft,48)
@@ -7919,7 +7866,7 @@ c               Add killed roots (if any) to below-ground litter
                   if (rminc_ind.lt.0.) then
                      temp=litter_bg(pft,1)
                      litter_bg(pft,1)=litter_bg(pft,1)+(-rminc_ind)
-     *                    *nind(pft)                  
+     *                    *nind(pft)
                      do nc=2,nco2
                         litter_bg(pft,nc)=(litter_bg(pft,nc)*temp+
      *                       (-rminc_ind)*rm_ind(pft,nc)*nind(pft))/
@@ -7928,13 +7875,13 @@ c               Add killed roots (if any) to below-ground litter
                   elseif (rminc_ind.ge.0.) then
                      temp=litter_bg(pft,1)
                      litter_bg(pft,1)=litter_bg(pft,1)+(rminc_ind)
-     *                    *nind(pft)                  
+     *                    *nind(pft)
                      do nc=2,nco2
                         litter_bg(pft,nc)=(litter_bg(pft,nc)*temp+
      *                       (rminc_ind)*rm_ind(pft,nc)*nind(pft))/
      *                       litter_bg(pft,1)
                      enddo
-                  endif        
+                  endif
                 endif
               else
 
@@ -7953,7 +7900,7 @@ c               Add killed leaves to litter
                 do nc=2,nco2
                    litter_ag_leaf(pft,nc)=(litter_ag_leaf(pft,nc)*temp
      *                  +(-lminc_ind)*lm_ind(pft,nc)*nind(pft))
-     *                  /litter_ag_leaf(pft,1) 
+     *                  /litter_ag_leaf(pft,1)
                 enddo
                 endif
 c            KIRSTEN: fuel classes
@@ -7964,7 +7911,7 @@ c            KIRSTEN: fuel classes
                 do nc=2,nco2
                    fuel_1hr_leaf(pft,nc)=(fuel_1hr_leaf(pft,nc)*temp
      *                  +(-lminc_ind)*lm_ind(pft,nc)*nind(pft))
-     *                  /fuel_1hr_leaf(pft,1) 
+     *                  /fuel_1hr_leaf(pft,1)
                 enddo
                 endif
               endif
@@ -7994,18 +7941,18 @@ c             Convert killed sapwood to heartwood
             endif
 
 c           Increment C compartments
-            
+
             lm_temp=lm_ind(pft,1)
             rm_temp=rm_ind(pft,1)
             sm_temp=sm_ind(pft,1)
-            
+
             lm_inc(pft)  =lminc_ind*nind(pft)
             lm_ind(pft,1)=lm_ind(pft,1)+lminc_ind
             rm_ind(pft,1)=rm_ind(pft,1)+rminc_ind
             sm_ind(pft,1)=sm_ind(pft,1)+sminc_ind
 
-            if (normal) then            
-               
+            if (normal) then
+
                do nc=2,nco2
                   lm_ind(pft,nc)=(lm_ind(pft,nc)*lm_temp+lminc_ind
      *                 *bm_inc(pft,nc))/lm_ind(pft,1)
@@ -8023,7 +7970,7 @@ c           Increment C compartments
      *                   +lminc_ind*bm_inc(pft,nc))/lm_ind(pft,1)
                  enddo
               endif
-              
+
               if (rminc_ind.gt.0.0) then
                  do nc=2,nco2
                     rm_ind(pft,nc)=(rm_ind(pft,nc)*rm_temp
@@ -8034,7 +7981,7 @@ c           Increment C compartments
             endif
             !PRINT*, "wow"
 			!		 print*, lm_ind(pft,1)
-			!		 PRINT*, rm_ind(pft,1)					 
+			!		 PRINT*, rm_ind(pft,1)
 			!		 PRINT*, sm_ind(pft,1)
             if (lm_ind(pft,1).lt.0.0.or.rm_ind(pft,1).lt.0.0
      *         .or.sm_ind(pft,1).lt.0.0) then
@@ -8089,14 +8036,14 @@ c           Increment C compartments
                rm_ind(pft,2)=0.0
                rm_ind(pft,3)=0.0
                present(pft)=.false. !remove PFT
-            endif 
+            endif
 
 c           Calculate new height, diameter and crown area
 
             sap_xsa=lm_ind(pft,1)*sla(pft)/latosa  !eqn (5)
             height(pft)=sm_ind(pft,1)/sap_xsa/wooddens
             stemdiam=(height(pft)/allom2)**(1.0/allom3)  !eqn (C)
-			                     
+
             crownarea(pft)=min(allom1*stemdiam**reinickerp,
      *        crownarea_max)  !eqn (D)
 
@@ -8104,15 +8051,15 @@ c           Kirsten: stemdiam per pft and bark thickness, critical time to cambi
             dbh(pft)=stemdiam*100       !in cm
           do class=0,4
               dbh_class(class,pft)=(2.0*dbh(pft)+
-     *                  (class*0.25*2.0*dbh(pft))-0.125*2.0*dbh(pft))   
-              
+     *                  (class*0.25*2.0*dbh(pft))-0.125*2.0*dbh(pft))
+
               bt(class,pft)=(param1(pft)*dbh_class(class,pft)
      *                    +param2(pft))
               tau_c(class,pft)=2.9*(bt(class,pft)**2.0)
 
               height_class(class,pft)=2*height(pft)-
-     *             (class*0.25*2.0*height(pft))+ 0.125*2.0*height(pft)   
-              cl_t(class,pft)=height_class(class,pft)*crown(pft)  
+     *             (class*0.25*2.0*height(pft))+ 0.125*2.0*height(pft)
+              cl_t(class,pft)=height_class(class,pft)*crown(pft)
            enddo !pseudo age class
 
           else
@@ -8164,7 +8111,7 @@ c             Add killed leaves to litter
               endif
 
 c            KIRSTEN: fuel classes
-             
+
               temp=fuel_1hr_leaf(pft,1)
               fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)
      *             +(-lminc_ind)*nind(pft)
@@ -8211,14 +8158,14 @@ C            lai_ind(pft)=(lm_ind(pft,1)*sla(pft))/crownarea(pft)
 C          else
 C            lai_ind(pft)=0.0
 C          endif
-C 
+C
 C          fpc_ind=(1.0-exp(-0.5*lai_ind(pft)))
 C          fpc_grid_old=fpc_grid(pft)
 C          fpc_grid(pft)=crownarea(pft)*nind(pft)*fpc_ind
 C---------------------------------------------------------------
 C                     NEW VERSION
           lm_tot(pft)=0.0
- 
+
           IF (tree(pft)) THEN
             lm_tot(pft)=lm_ind(pft,1)
           ELSE ! Grass
@@ -8228,24 +8175,24 @@ C                     NEW VERSION
               END IF
             END DO
           END IF
- 		  
+
           IF (crownarea(pft).GT.0.0) THEN
             lai_ind(pft)=(lm_tot(pft)*sla(pft))/crownarea(pft)
           ELSE
             lai_ind(pft)=0.0
           END IF
- 		  
-          fpc_ind=1.0-exp(-0.5*lai_ind(pft))		  
+
+          fpc_ind=1.0-exp(-0.5*lai_ind(pft))
           fpc_grid_old=fpc_grid(pft)
           fpc_grid(pft)=crownarea(pft)*nind(pft)*fpc_ind
- 		  
+
           IF (lm_tot(pft).GT.0.0) THEN
             fpc_grid(pft)=fpc_grid(pft)*lm_ind(pft,1)/lm_tot(pft)
           ELSE
             fpc_grid(pft)=0.0
           END IF
 c---------------------------------------------------------------
- 
+
           fpc_inc(pft)=max(0.0,fpc_grid(pft)-fpc_grid_old)
           if(fpc_grid(pft).eq.0.0) present(pft)=.false.
         endif
@@ -8259,7 +8206,7 @@ c---------------------------------------------------------------
      *         fuel_1hr_leaf_inc_neg(pft,nc,:)+
      *        (fuel_1hr_leaf(pft,nc)-temp_fuel(nc,1))/12
           END IF
-		  
+
           IF (fuel_1hr_wood(pft,1)-temp_fuel(1,2)>0) THEN
             fuel_1hr_wood_inc_pos(pft,nc,:)=
      *         fuel_1hr_wood_inc_pos(pft,nc,:)+
@@ -8297,8 +8244,8 @@ c     Doug 01/09: addition of fuel_1hr_inc as I/O
      *  crownarea,fpc_grid,fpc_inc,nind,litter_ag_leaf,litter_ag_wood,
      *  litter_bg,fuel_1hr_leaf,fuel_1hr_wood,
      *  fuel_10hr,fuel_100hr,fuel_1000hr,
-     *  fuel_1hr_leaf_inc_pos,fuel_1hr_leaf_inc_neg, 
-     *  fuel_1hr_wood_inc_pos,fuel_1hr_wood_inc_neg, 
+     *  fuel_1hr_leaf_inc_pos,fuel_1hr_leaf_inc_neg,
+     *  fuel_1hr_wood_inc_pos,fuel_1hr_wood_inc_neg,
      *  fuel_10hr_inc, fuel_100hr_inc, fuel_1000hr_inc, sla, year)
 
       implicit none
@@ -8438,7 +8385,7 @@ C 	Doug 11/12
      *                       litter_ag_leaf(pft,1)
                      END DO
                   END IF
-				  
+
 				  temp=litter_ag_wood(pft,1)
                   litter_ag_wood(pft,1)=litter_ag_wood(pft,1)+nind_kill*
      *                 (sm_ind(pft,1)+hm_ind(pft,1))
@@ -8451,7 +8398,7 @@ C 	Doug 11/12
      *                       litter_ag_wood(pft,1)
                      END DO
                   END IF
-				  
+
 c                  temp=litter_ag(pft,1)
 c                  litter_ag(pft,1)=litter_ag(pft,1)+nind_kill*
 c     *                 (lm_ind(pft,1)+sm_ind(pft,1)+hm_ind(pft,1))
@@ -8466,7 +8413,7 @@ c     *                       litter_ag(pft,1)
 c                     enddo
 c                  endif
 
-c                 KIRSTEN: fuel classes	
+c                 KIRSTEN: fuel classes
 
                   temp=fuel_1hr_leaf(pft,1)
                   fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)+
@@ -8477,7 +8424,7 @@ c                 KIRSTEN: fuel classes
                       fuel_1hr_leaf(pft,nc)=(fuel_1hr_leaf(pft,nc)*temp
      *                 +litter_inc*nind(pft))/fuel_1hr_leaf(pft,1)
                     END DO
-                  END IF	
+                  END IF
 
                   temp=fuel_1hr_wood(pft,1)
                   fuel_1hr_wood(pft,1)=fuel_1hr_wood(pft,1)+
@@ -8490,7 +8437,7 @@ c                 KIRSTEN: fuel classes
      *                 +litter_inc*nind(pft))/fuel_1hr_wood(pft,1)
                     END DO
                   END IF
-				  
+
 c                  temp=fuel_1hr(pft,1)
 c                  fuel_1hr(pft,1)=fuel_1hr(pft,1)+(lm_ind(pft,1)+
 c     *              0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
@@ -8503,7 +8450,7 @@ c                     fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
 c     *                 +litter_inc*nind(pft))/fuel_1hr(pft,1)
 c                  enddo
 c                  endif
-                  
+
                   temp=fuel_10hr(pft,1)
                   fuel_10hr(pft,1)=fuel_10hr(pft,1)+((0.075*
      *             sm_ind(pft,1)+0.075*hm_ind(pft,1))*nind(pft))
@@ -8549,7 +8496,7 @@ c                  endif
                          litter_bg(pft,nc)=(litter_bg(pft,nc)*temp+
      *                        nind_kill*litter_inc)/litter_bg(pft,1)
                       enddo
-                   endif    
+                   endif
              endif
          else  ! grass
              if(fpc_grass_total.gt.
@@ -8613,7 +8560,7 @@ c
             lai_ind=0.0
           endif
           fpc_ind=(1.0-exp(-0.5*lai_ind))
-		  
+
           fpc_grid(pft)=crownarea(pft)*nind(pft)*fpc_ind
           if(fpc_grid(pft).eq.0.0) present(pft)=.false.
         endif    ! present
@@ -8628,7 +8575,7 @@ c
      *         fuel_1hr_leaf_inc_neg(pft,nc,:)+
      *        (fuel_1hr_leaf(pft,nc)-temp_fuel(nc,1))/12
           END IF
-		  
+
           IF (fuel_1hr_wood(pft,1)-temp_fuel(1,2)>0) THEN
             fuel_1hr_wood_inc_pos(pft,nc,:)=
      *         fuel_1hr_wood_inc_pos(pft,nc,:)+
@@ -8638,7 +8585,7 @@ c
      *         fuel_1hr_wood_inc_neg(pft,nc,:)+
      *        (fuel_1hr_wood(pft,nc)-temp_fuel(nc,2))/12
           END IF
-		  
+
           fuel_10hr_inc(pft,nc,:)=fuel_10hr_inc(pft,nc,:)+
      *      (fuel_10hr(pft,nc)-temp_fuel(nc,3))/12
           fuel_100hr_inc(pft,nc,:)=fuel_100hr_inc(pft,nc,:)+
@@ -8805,7 +8752,7 @@ c         Transfer lost biomass to litter
      *            +litter_inc*nind_kill)/litter_ag_leaf(pft,1)
             END DO
           END IF
-		  
+
           temp=litter_ag_wood(pft,1)
           litter_ag_wood(pft,1)=litter_ag_wood(pft,1)+nind_kill
      *         *(sm_ind(pft,1)+hm_ind(pft,1))
@@ -8817,8 +8764,8 @@ c         Transfer lost biomass to litter
      *            +litter_inc*nind_kill)/litter_ag_wood(pft,1)
             END DO
           END IF
-		  
-		  
+
+
 c          temp=litter_ag(pft,1)
 c          litter_ag(pft,1)=litter_ag(pft,1)+nind_kill
 c     *         *(sm_ind(pft,1)+hm_ind(pft,1)+lm_ind(pft,1))
@@ -8846,7 +8793,7 @@ c		  Doug 11/12: See commented code below for 2007 changes to isotope code
      *            +litter_inc*nind_kill)/fuel_1hr_leaf(pft,1)
             END DO
           END IF
-		  
+
           temp=fuel_1hr_wood(pft,1)
 
           fuel_1hr_wood(pft,1)=fuel_1hr_wood(pft,1)+
@@ -8886,7 +8833,7 @@ c             fuel_1hr(pft,nc)=(fuel_1hr(pft,nc)*temp
 c     *            +litter_inc*nind_kill)/fuel_1hr(pft,1)
 c DM  END CHANGE
 c          enddo
-c          endif       
+c          endif
 
           temp=fuel_10hr(pft,1)
 c DM  CHANGE to same as CO2_NO_ISOTOPE on 08 JULY 2007
@@ -8993,7 +8940,7 @@ c DM  END CHANGE
 
       return
       end	!mortality
-	  
+
 
 
 
@@ -9006,11 +8953,11 @@ c     Biomass destruction through disturbance by fire
      *  pftpar,dtemp,dtemp_min,dtemp_max,dprec,
      *  dwindsp,dlightn,dphen,dphen_change,
      *  litter_ag_leaf,litter_ag_wood,
-     *  litter_bg,fuel_1hr_leaf,fuel_1hr_wood,    !Doug 06/09: dphen_change added for fire paradox experiments		
+     *  litter_bg,fuel_1hr_leaf,fuel_1hr_wood,    !Doug 06/09: dphen_change added for fire paradox experiments
      *  fuel_10hr, fuel_100hr,fuel_1000hr,
      *  pfuel_limit, !Doug 12/12
-     *  fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg, 
-     *  fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg, 
+     *  fuel_1hr_leaf_inc_pos, fuel_1hr_leaf_inc_neg,
+     *  fuel_1hr_wood_inc_pos, fuel_1hr_wood_inc_neg,
      *  fuel_10hr_inc,fuel_100hr_inc, fuel_1000hr_inc,
      *  fuel_1hr_del,fuel_10hr_del,fuel_100hr_del,fuel_1000hr_del,
      *  mfuel_1hr_total,
@@ -9035,7 +8982,7 @@ c     Biomass destruction through disturbance by fire
      * mfire_frac,lon,
      * crop,pas,fbdep,ni_acc,afire_frac_afap_old,
      * dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old,
-     * dpet,aprec)	 
+     * dpet,aprec)
       implicit none
 
 c     PARAMETERS
@@ -9045,7 +8992,7 @@ c     PARAMETERS
          parameter (p1=0.17,p2=0.10,p3=0.04,p4=0.01,p5=0.01
      *              ,p6=0.01,p7=0.03,p8=0.04,p9=0.09,p10=0.12,
      *              p11=0.16,p12=0.22)
- 
+
        integer nco2
         parameter (nco2=3)           !number of C variables: C,13C,14C
       real pi
@@ -9061,7 +9008,7 @@ c     total mineral content
 c     calorific heat content (kJ/kg)
       real H
          parameter(H=18000.0)
-c     surface-area-to-volume ratio (cm/cm?³)
+c     surface-area-to-volume ratio (cm/cm?ï¿½)
       real sigma_1hr,sigma_10hr,sigma_100hr
          parameter(sigma_1hr=66.0,sigma_10hr=3.58,sigma_100hr=0.98)
 c     ALLAN
@@ -9097,9 +9044,9 @@ c       parameter (moistfactor_livegrass = 0.398)   !0.524-0.066*log(sigma_liveg
 c     fire duration (min)
       real fire_durat
 c         parameter(fire_durat=420.0)   !8 hrs.
-c       parameter (fire_durat=240.0) !4 x 60 mins, Allan 
-c     LPJ limited to daily timestep.  This is assumed to be the  
-c     maximum fire duration during the 
+c       parameter (fire_durat=240.0) !4 x 60 mins, Allan
+c     LPJ limited to daily timestep.  This is assumed to be the
+c     maximum fire duration during the
 c     mid-high latitude summer or sub- /equatorial dry season.
 
        real fbd_a  !scalar used to transform FBD of 10hr fuels to 1hr equivs
@@ -9128,7 +9075,7 @@ c     ARGUMENTS
       REAL fuel_1hr_wood(1:npft,1:nco2)
       REAL f1hr_leaf_frac(1:npft)	!Doug 11/12: fraction of 1hr fuel that is grass and leaf
       REAL fuel_10hr(1:npft,1:nco2)
-      real fuel_100hr(1:npft,1:nco2)			
+      real fuel_100hr(1:npft,1:nco2)
       real fuel_1000hr(1:npft,1:nco2)
 
       REAL fuel_1hr_leaf_inc_pos(1:npft,1:nco2,1:12)
@@ -9140,7 +9087,7 @@ c     ARGUMENTS
       REAL fuel_1000hr_inc(1:npft,1:nco2,1:12)
 
       REAL dfuel_leaf(1:365,1:npft)             !Doug 03/09: redistribution of 1 hour
-                                                !fuel increments from monthly to daily 
+                                                !fuel increments from monthly to daily
                                                 !as a function of pft leaf phenology
       REAL leaf_decayc(1:npft)                  !Doug 03/09: leaf longliverty, for
                                                 !calculating daily leaf turnover into
@@ -9150,7 +9097,7 @@ c     ARGUMENTS
       REAL fuel_10hr_del(1:npft,1:nco2)
       REAL fuel_100hr_del(1:npft,1:nco2)
       REAL fuel_1000hr_del(1:npft,1:nco2)
-                                               
+
       REAL dfuel_update_1hr_leaf(1:npft,1:nco2)             !Doug 03/09: store the daily update of xhr fuel.
       REAL dfuel_update_1hr_wood(1:npft,1:nco2)
       REAL dfuel_update_10hr(1:npft,1:nco2)            !Doug 05/09
@@ -9220,7 +9167,7 @@ c     Reg_FIRM
       integer pft,d,n,i,x,count
       integer count_int,count_fdi,count_yr,n_pft
       real disturb_flux(1:nco2)
-      REAL fuel_1hr_total	  
+      REAL fuel_1hr_total
       REAL fuel_1hr_leaf_total
       REAL fuel_1hr_wood_total
       REAL fuel_10hr_total
@@ -9294,12 +9241,12 @@ c      real dtemp_min,dtemp_max
        real ratio_C4_livegrass
 c       real moistfactor_C3_livegrass
 c       real moistfactor_C4_livegrass
-c       parameter (moistfactor_C3_livegrass = 0.1, 
+c       parameter (moistfactor_C3_livegrass = 0.1,
 c     *       moistfactor_C4_livegrass =0.1)
 
 c       real moistfactor_1hr, moistfactor_10hr
 c       real moistfactor_100hr, moistfactor_1000hr
-       real   dlm_lg (1:365), dlm_1hr(1:365), dlm_10hr(1:365)  
+       real   dlm_lg (1:365), dlm_1hr(1:365), dlm_10hr(1:365)
        real   dlm_100hr (1:365), dlm_1000hr (1:365)
 c       real fbd_C3_livegrass
        real nind_fa(1:npft) !# trees affected by fire
@@ -9325,14 +9272,14 @@ C Yan
        real d_numfire_human(1:365),d_numfire_lightn(1:365)
        real d_area_burnt_human(1:365),d_area_burnt_lightn(1:365)
        real d_i_surface_human(1:365),d_i_surface_lightn(1:365)
-       real fire_frac_human,fire_frac_lightn 
-       real afire_frac_human,afire_frac_lightn 
-       real afire_frac_human_temp,afire_frac_lightn_temp 
-       real an_areafires_human_temp,an_areafires_lightn_temp 
-       real an_areafires_human,an_areafires_lightn 
-       real num_fire_human(12),num_fire_lightn(12) 
+       real fire_frac_human,fire_frac_lightn
+       real afire_frac_human,afire_frac_lightn
+       real afire_frac_human_temp,afire_frac_lightn_temp
+       real an_areafires_human_temp,an_areafires_lightn_temp
+       real an_areafires_human,an_areafires_lightn
+       real num_fire_human(12),num_fire_lightn(12)
        real annum_fire_human,annum_fire_lightn
-       real m_i_surface_human(12),m_i_surface_lightn(12) 
+       real m_i_surface_human(12),m_i_surface_lightn(12)
        real an_i_surface_human,an_i_surface_lightn
        real area_burnt_human(12),area_burnt_lightn(12)
        REAL fuel_1hr_leaf_0(1:npft,1:nco2)
@@ -9346,9 +9293,9 @@ C Yan
        real fuel_1000hr_left(1:npft,1:nco2)
        real livegrass_left(1:npft,1:nco2)
        real lm_ind_0(1:npft,1:nco2),nind_0(1:npft) ! Initial value at the beginning of the year.
-       real pot_fc_lg_0(1:npft,1:nco2) ! This is the initial leaf mass for the live grass at the beginning of the year. 
+       real pot_fc_lg_0(1:npft,1:nco2) ! This is the initial leaf mass for the live grass at the beginning of the year.
        real char_dens_fuelbed
-       real fbdep 
+       real fbdep
 !       parameter (fbdep=0.18)
        integer co2
        real fbdepth
@@ -9363,10 +9310,10 @@ C Yan
         real fbdep_dead_fuel,fbdep_live_fuel
          real p_ig,p_lcc,bet,q_ig
          integer an_lightn,dlightn_lcc(1:365)
-         integer m_lightn(1:12) 
+         integer m_lightn(1:12)
          integer day
         integer counter_fire
-        
+
         real afire_frac_afap_old,mfire_frac(1:12)
        real crop
        real pas
@@ -9392,7 +9339,7 @@ cYan  Initialise
       dhuman_ign(:)=0.0
       d_numfire_human(:)=0.0    ! Yan
       d_numfire_lightn(:)=0.0   ! Yan
-	
+
       d_area_burnt_human(:)=0.0    ! Yan
       d_area_burnt_lightn(:)=0.0   ! Yan
 
@@ -9601,7 +9548,7 @@ c          Calculate total above-ground litter
       DO pft=1,npft
         litter_ag_total=litter_ag_total+litter_ag_leaf(pft,1)
      *    +litter_ag_wood(pft,1)
-		  
+
       END DO
       f1hr_leaf_frac(pft)=fuel_1hr_leaf(pft,1)/
      *  (fuel_1hr_leaf(pft,1)+fuel_1hr_wood(pft,1))
@@ -9628,10 +9575,10 @@ c     START OF SPITFIRE, when year of observed fire reached
 c     otherwise Glob-FIRM
 
 c    !!!!! 8 Feb 2006 NEW: SPITFIRE in SPIN-UP !!!!
-c     if (year.lt.0) then    
+c     if (year.lt.0) then
 c     if (year.le.spinup_years) then        !!!! Yan: 26/10/07
-      if (year.le.1.0) then        
-           
+      if (year.le.1.0) then
+
 c     Calculate the length of the fire season (units=days)
       i=1
       do d=1,365		!day of year
@@ -9746,7 +9693,7 @@ c       Add combusted litter to carbon flux to atmosphere term
         endif
 
 
-c         Calculate trace gas emissions (gSpecies/m?²)
+c         Calculate trace gas emissions (gSpecies/m?ï¿½)
 
         do x=1,6
            if (acflux_fire(1).gt.0.0) then
@@ -9763,9 +9710,9 @@ c       Update the above ground litter term
 C        litter_ag(pft,1)=(1.0-afire_frac)*litter_ag(pft,1)
         litter_ag_leaf(pft,1)=(1.0-afire_frac)*litter_ag_leaf(pft,1)
         litter_ag_wood(pft,1)=(1.0-afire_frac)*litter_ag_wood(pft,1)
-		
+
 c       fuel classes
-		  
+
           fuel_1hr_leaf(pft,1)=(1.0-afire_frac)*fuel_1hr_leaf(pft,1)
           fuel_1hr_wood(pft,1)=(1.0-afire_frac)*fuel_1hr_wood(pft,1)
 
@@ -9781,7 +9728,7 @@ c       fuel classes
 
 ccccccccccccccc  START OF SPITFIRE ccccccccccccccccccccccc
 c    ASSIGN PFT PARAMETER VALUES FOR SPITFIRE ONLY!!
-     
+
 c    fuel bulk density
 *      dens_fuel_ave=0.0
       do pft=1,npft
@@ -9832,7 +9779,7 @@ c---------------------------------------
         count_yr=1
         count_fdi=1
         afire_frac=0.0
-		
+
         if(year.eq.1.or.year.eq.1000)afire_frac_afap_old=0.0
 
 
@@ -9845,7 +9792,7 @@ c---------------------------------------
        dead_fuel_all_0=0.0
        dead_fuel_0=0.0
 	   net_fuel=0.0
-	   
+
         dead_fuel=0.0
         fuel_1hr_total=0.0
         fuel_1hr_leaf_total=0.0
@@ -9869,39 +9816,39 @@ c---------------------------------------
        IF(fuel_100hr(pft,1).lt.0.0)fuel_100hr(pft,1)=0.0
        IF(fuel_1000hr(pft,1).lt.0.0)fuel_1000hr(pft,1)=0.0
       END DO
-	  
+
       DO pft=1,npft
         litter_ag_total=litter_ag_total+litter_ag_leaf(pft,1)
      *    +litter_ag_wood(pft,1)
-		  
+
       END DO
       f1hr_leaf_frac(pft)=fuel_1hr_leaf(pft,1)/
      *  (fuel_1hr_leaf(pft,1)+fuel_1hr_wood(pft,1))
-	  
+
         do pft=1,npft
         do co2=1,nco2
        fuel_1hr_leaf_0(pft,co2)=fuel_1hr_leaf(pft,co2)
        fuel_1hr_wood_0(pft,co2)=fuel_1hr_wood(pft,co2)
        fuel_10hr_0(pft,co2)=fuel_10hr(pft,co2)
-       fuel_100hr_0(pft,co2)=fuel_100hr(pft,co2)  
+       fuel_100hr_0(pft,co2)=fuel_100hr(pft,co2)
        fuel_1000hr_0(pft,co2)=fuel_1000hr(pft,co2)
-       fuel_1hr_leaf_left(pft,co2)=fuel_1hr_leaf(pft,co2)/0.45  	   
-       fuel_1hr_wood_left(pft,co2)=fuel_1hr_wood(pft,co2)/0.45  
-       fuel_10hr_left(pft,co2)=fuel_10hr(pft,co2)/0.45  
-       fuel_100hr_left(pft,co2)=fuel_100hr(pft,co2)/0.45  
-       fuel_1000hr_left(pft,co2)=fuel_1000hr(pft,co2)/0.45  
+       fuel_1hr_leaf_left(pft,co2)=fuel_1hr_leaf(pft,co2)/0.45
+       fuel_1hr_wood_left(pft,co2)=fuel_1hr_wood(pft,co2)/0.45
+       fuel_10hr_left(pft,co2)=fuel_10hr(pft,co2)/0.45
+       fuel_100hr_left(pft,co2)=fuel_100hr(pft,co2)/0.45
+       fuel_1000hr_left(pft,co2)=fuel_1000hr(pft,co2)/0.45
        lm_ind_0(pft,co2)=lm_ind(pft,co2)
        end do
        nind_0(pft)=nind(pft)
        end do
 
-		  
+
         do pft=1,npft
           if (present(pft)) then
 
             fuel_1hr_total=fuel_1hr_total+(fuel_1hr_leaf(pft,1)+
      *        fuel_1hr_wood(pft,1))/0.45
-	 
+
             fuel_1hr_leaf_total=fuel_1hr_leaf_total+
      *        fuel_1hr_leaf(pft,1)/0.45
             fuel_1hr_wood_total=fuel_1hr_wood_total+
@@ -9921,25 +9868,25 @@ c         todays amount of green grass leaves: [gC/m2],influence on ROS only thr
 
            do d=1,365	!day
               livegrass=livegrass+
-     *          (lm_ind(pft,1)/0.45*nind(pft))*dphen(d,pft) 
-c     *                        (lm_ind(pft)/0.45*nind(pft))  
-				
+     *          (lm_ind(pft,1)/0.45*nind(pft))*dphen(d,pft)
+c     *                        (lm_ind(pft)/0.45*nind(pft))
+
 c              used in fire effects section only
-c               pot_fc_lg(pft)=(lm_ind(pft)/0.45*nind(pft))   
+c               pot_fc_lg(pft)=(lm_ind(pft)/0.45*nind(pft))
             end do	!day
-			
+
             endif !if(tree)
 
           endif ! if(present(pft))
         enddo !do pft
 
-        
+
         dead_fuel = fuel_1hr_total + fuel_10hr_total
      *     + fuel_100hr_total  !total dead fuel g/m2
 
 
          livegrass_0=livegrass*0.45
-         dead_fuel_all_0=(dead_fuel+fuel_1000hr_total)*0.45 
+         dead_fuel_all_0=(dead_fuel+fuel_1000hr_total)*0.45
          dead_fuel_0=dead_fuel*0.45 ![gC/m2]
          fuel_1hr_total_0=fuel_1hr_total*0.45
          fuel_10hr_total_0=fuel_10hr_total*0.45
@@ -9962,7 +9909,7 @@ c       net fuel load
                            != 1 as not enough fuel this year for any fire
           GOTO 200
         END IF
-		
+
 c  TODO : remove if not inside if ...
 
 C  Doug 01/09 MFL: change fuel varables to values before this years reproducton, turnover,
@@ -9996,7 +9943,7 @@ C  littersum (dcay), kill_pft, allocaton, light & mortality subroutines did thei
         fuel_1hr_leaf_left(pft,1)=fuel_1hr_leaf_left(pft,1)
      *    -SUM(fuel_1hr_leaf_inc_pos(pft,1,:))
      *    -SUM(fuel_1hr_leaf_inc_neg(pft,1,:))-SUM(dfuel_leaf(:,pft))
-	 
+
         fuel_1hr_wood_left(pft,1)=fuel_1hr_wood_left(pft,1)
      *    -SUM(fuel_1hr_wood_inc_pos(pft,1,:))
      *    -SUM(fuel_1hr_wood_inc_neg(pft,1,:))
@@ -10043,7 +9990,7 @@ c        deadgrass=0.0  !not used
 !        ratio_live_fuel=0.0
 
         do pft=1,npft
-        do nc=1,nco2 
+        do nc=1,nco2
           fc_lg(pft,nc)=0.0
           fc_1hr_leaf(pft,nc)=0.0
           fc_1hr_wood(pft,nc)=0.0
@@ -10051,7 +9998,7 @@ c        deadgrass=0.0  !not used
           fc_100hr(pft,nc)=0.0
           fc_1000hr(pft,nc)=0.0
           pot_fc_lg(pft,nc)=0.0
-         pot_fc_lg_0(pft,nc)=0.0		  
+         pot_fc_lg_0(pft,nc)=0.0
         enddo
         nind_fa(pft)=0.0
         nind_kill(pft)=0.0
@@ -10067,7 +10014,7 @@ c        enddo
 
        d_numfire(d)=0.0
        d_area_burnt(d)=0.0
-      
+
 
 C    Doug 01/09 MFL: update fuel loads based on the increment of change to the fuel load
 C    by this years reproducton, turnover, littersum (dcay), kill_pft, allocaton, light &
@@ -10086,7 +10033,7 @@ C    mortality subroutines.
      *        fuel_1hr_leaf_inc_neg(pft,1,m)/month_length(m)+
      *        fuel_left_minus(pft,1)+dfuel_leaf(d,pft)+
      *        dfuel_update_1hr_leaf(pft,1)/0.45	!stopc
-	 
+
             IF (fuel_1hr_leaf_left(pft,1)>0.0) THEN
               DO nc=2,nco2
                 fuel_1hr_leaf_left(pft,nc)=(fuel_1hr_leaf_left(pft,nc)
@@ -10101,8 +10048,8 @@ C    mortality subroutines.
      *            dfuel_update_1hr_leaf(pft,nc)/0.45)/
      *            fuel_1hr_leaf_left(pft,1)
               END DO
-            END IF	 
-	 
+            END IF
+
             temp=fuel_1hr_wood_left(pft,1)
 
 	        fuel_1hr_wood_left(pft,1)=fuel_1hr_wood_left(pft,1)*
@@ -10127,7 +10074,7 @@ C    mortality subroutines.
      *            fuel_1hr_wood_left(pft,1)
               END DO
             END IF
-	 
+
 C            temp=fuel_1hr_left(pft,1)
 C
 C            fuel_1hr_left(pft,1)=fuel_1hr_left(pft,1)*
@@ -10233,21 +10180,21 @@ C    to calculated anything asn is reset at the end of the loop
          ELSE
            fuel_left_minus(pft,1)=0
          END IF
-		 
+
          IF (fuel_1hr_wood_left(pft,1)<0.0) THEN
            fuel_left_minus(pft,2)=fuel_1hr_wood_left(pft,1)
            fuel_1hr_wood_left(pft,1)=0.0
          ELSE
            fuel_left_minus(pft,2)=0
          END IF
-		 
+
 C         IF (fuel_1hr_left(pft,1)<0.0) THEN
 C           fuel_left_minus(pft,1)=fuel_1hr_left(pft,1)
 C           fuel_1hr_left(pft,1)=0.0
 C         ELSE
 C           fuel_left_minus(pft,1)=0
 C         END IF
-  
+
          IF (fuel_10hr_left(pft,1)<0.0) THEN
            fuel_left_minus(pft,3)=fuel_10hr_left(pft,1)
            fuel_10hr_left(pft,1)=0.0
@@ -10272,7 +10219,7 @@ C         END IF
 
        fuel_1hr_total=SUM(fuel_1hr_leaf_left(:,1))+
      *   SUM(fuel_1hr_wood_left(:,1))
-	 
+
        fuel_1hr_leaf_total=SUM(fuel_1hr_leaf_left(:,1))
        fuel_1hr_wood_total=SUM(fuel_1hr_wood_left(:,1))
 
@@ -10295,7 +10242,7 @@ C         END IF
         fuel_100hr_left(:,1)=fuel_100hr_left(:,1)*0.45
         fuel_1000hr_left(:,1)=fuel_1000hr_left(:,1)*0.45
 
- 
+
 
 c    FUEL CHARACTERISTICS
 
@@ -10310,7 +10257,7 @@ c             to calculate amount of live grass!!
 		net_fuel=0.0
 
        fuel_1000hr_total=0.0
-        
+
         do pft=1,npft
           if (present(pft)) then
 
@@ -10325,19 +10272,19 @@ c         todays amount of green grass leaves: [gC/m2],influence on ROS only thr
               livegrass=livegrass+
      *(lm_ind_0(pft,1)/0.45*nind_0(pft))*(1.0-afire_frac)*dphen(d,pft)  !g/m2
 
-	 
+
 c     *                        (lm_ind(pft)/0.45*nind(pft))  !g/m2
 
 
 c              used in fire effects section only
                pot_fc_lg(pft,1)=(lm_ind_0(pft,1)/0.45*nind_0(pft))
-     *             *(1.0-afire_frac)*dphen(d,pft) !g/m2 
+     *             *(1.0-afire_frac)*dphen(d,pft) !g/m2
               pot_fc_lg(pft,2)=lm_ind(pft,2)
               pot_fc_lg(pft,3)=lm_ind(pft,3)
-c               pot_fc_lg(pft)=(lm_ind(pft)/0.45*nind(pft))  !g/m2 
+c               pot_fc_lg(pft)=(lm_ind(pft)/0.45*nind(pft))  !g/m2
 
 		pot_fc_lg_0(pft,1)=(lm_ind_0(pft,1)/0.45*nind_0(pft))
-     *		*dphen(d,pft) !g/m2 
+     *		*dphen(d,pft) !g/m2
 
             endif
 
@@ -10346,13 +10293,13 @@ c               pot_fc_lg(pft)=(lm_ind(pft)/0.45*nind(pft))  !g/m2
 
 
 c Doug 05/09: Fire Paradox experiments
-C Experiment 1&3: remove 1 hr fuel for 
-c 
+C Experiment 1&3: remove 1 hr fuel for
+c
 c see if the day is the 1st day of the growning season
 c        IF (year>=5140.AND.year<5190) THEN
 c        IF (year>=5160) THEN
 c          DO pft=1,npft
-c            IF (tree(pft)==.FALSE.) THEN        
+c            IF (tree(pft)==.FALSE.) THEN
 c              IF (dphen_change(m,pft)==d.AND.
 c     *          test_growing_start) THEN
 c                fuel_load_subtraction(:,1)=fuel_1hr_left(:,1)
@@ -10361,30 +10308,30 @@ c                fuel_load_subtraction(:,3)=fuel_100hr_left(:,1)
 c                fuel_load_subtraction(:,4)=fuel_1000hr_left(:,1)
 c                fuel_1hr_left(:,1)=0 !experiment 1&3
 c                fuel_1hr_total=0     !experiment 1&3
-c 
+c
 c                fuel_10hr_left(:,1)=0 !experiment 3
 c                fuel_10hr_total=0     !experiment 3C
-c 
+c
 c                fuel_100hr_left(:,1)=0 !experiment 3
 c                fuel_100hr_total=0     !experiment 3
-c 
-c 
+c
+c
 c                test_growing_start=.FALSE.
 c              END IF
 c            END IF
 c          END DO
 c        END IF
-c 
+c
 c Experiment 2&4
 c        IF (year>=5180.AND.year<5190) THEN
 c          IF (d==ndaymonth(m).AND.(dphen(d,8)==1.OR.dphen(d,9)==1)) THEN
 c            fuel_load_subtraction(:,1)=fuel_load_subtraction(:,1)
-c     *        +fuel_1hr_left(:,1) 
+c     *        +fuel_1hr_left(:,1)
 c            fuel_1hr_left(:,1)=0       !experiment 2
 c            fuel_1hr_total=0           !experiment 2
 c          END IF
 c        END IF
-c 
+c
 c          fuel_1000hr_left(:,1)=0    !experiment 4
 c          fuel_1000hr_total=0        !experiment 4
 c        END IF
@@ -10398,17 +10345,17 @@ c       net fuel load
      *    net_fuel=(1.0-MINER_TOT)*(dead_fuel/1000.0)
 
 c    fuel bulk density, weighted per fuel class and fuel load
-c    ACHTUNG: WEIGHTING per fpc AND fuel load or per fuel load only? Reg-FIRM1: per FPC       
+c    ACHTUNG: WEIGHTING per fpc AND fuel load or per fuel load only? Reg-FIRM1: per FPC
         do pft=1,npft
           if (present(pft)) then
             if (dead_fuel.gt.0.0) then
               ratio_fbd(pft) = ((fuel_1hr_leaf_left(pft,1) +
      *              fuel_1hr_wood_left(pft,1) +
      *              fbd_a * fuel_10hr_left(pft,1) + 	!Doug 03/09: fuel_xhr--> fuel_xhr_left (annual to daily fuel)
-     *                     fbd_b * fuel_100hr_left(pft,1)) / 0.45) 
+     *                     fbd_b * fuel_100hr_left(pft,1)) / 0.45)
      *              / dead_fuel
               dens_fuel_ave = dens_fuel_ave+dens_fuel(pft)*
-     *              ratio_fbd(pft)    
+     *              ratio_fbd(pft)
             else
               dens_fuel_ave=0.0
             endif
@@ -10432,15 +10379,15 @@ c    ACHTUNG: change with water scalar value for grasses!!!!
        ratio_C4_livegrass = pot_fc_lg(9,1) / livegrass
        else
          dlm_lg(d)=0.0
-       ratio_C3_livegrass = 0.0 
+       ratio_C3_livegrass = 0.0
        ratio_C4_livegrass = 0.0
        endif
 
        if(livegrass.gt.0.0)then
 c      influence of livegrass on FBD
-c    Kirsten: presence of livegrass additionally lowers FBD, when trees mixed 
+c    Kirsten: presence of livegrass additionally lowers FBD, when trees mixed
 c    with grasses
-       dens_livegrass_ave =  
+       dens_livegrass_ave =
      *       fbd_C3_livegrass *  ratio_C3_livegrass +
      *      fbd_C4_livegrass *  ratio_C4_livegrass
          else
@@ -10456,10 +10403,10 @@ c    with grasses
         endif
          char_net_fuel = net_fuel +(1.0-MINER_TOT)*livegrass/1000.0 ! in kg biomass
 		 if(char_net_fuel.le.0.0)goto 201
-		 
+
          char_net_fuel_0=char_net_fuel
 
-            
+
            IF(char_dens_fuel_ave<=0.0)then	!Doug 03/09: no longer stops, but reloops. Error is now noted in file fort.10
              WRITE(10,*),'********************************'
              WRITE(10,*),'error: char_dens_fuel_ave.le.0.0'
@@ -10495,7 +10442,7 @@ c             stop
 
 
 c      moistfactor
-c     Kirsten: original method, where moistfactor is a PFT parameter 
+c     Kirsten: original method, where moistfactor is a PFT parameter
 c           moistfactor = (moistfactor_1hr * fuel_1hr_total
 c     *          + moistfactor_10hr * fuel_10hr_total
 c     *          + moistfactor_100hr * fuel_100hr_total)/dead_fuel
@@ -10505,14 +10452,14 @@ c     *          + moistfactor_100hr * fuel_100hr_total)/dead_fuel
      *          + moistfactor_100hr * fuel_100hr_total)/dead_fuel
 
 c Kirsten: moistfactor for livegrass less than for dead fuel!
-       call fire_danger_index1(dlm,dlm_lg,dtemp_min,dtemp_max,dprec,	
+       call fire_danger_index1(dlm,dlm_lg,dtemp_min,dtemp_max,dprec,
      *         d,fuel_1hr_total,fuel_10hr_total,fuel_100hr_total,
      *         dead_fuel,ratio_dead_fuel,ratio_live_fuel,dlm_1hr,
      *         dlm_10hr,dlm_100hr,dlm_1000hr,year,ni_acc,
      *         char_alpha_fuel,d_ni,lon,lat,
      *         dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old,
      *         dpet,aprec)
-       if(livegrass.gt.0.0)then 
+       if(livegrass.gt.0.0)then
         moistfactor_livegrass = 2.9*(1.0/ratio_live_fuel-1.0)*
      *                     (1.0-dlm_1hr(d)/moistfactor_1hr)-0.226
 
@@ -10535,21 +10482,21 @@ c     of magnitude difference in SAV b/w the two leaf types.
      *         fuel_10hr_total * sigma_10hr +
      *         fuel_100hr_total * sigma_100hr) / dead_fuel
 
-c    higher sigma value for livegrass increases fire 
+c    higher sigma value for livegrass increases fire
 c    WHY should the presence of livegrass increase fire additionally?
 c       char_sigma =sigma*ratio_dead_fuel+sigma_livegrass*ratio_live_fuel
 
 
       char_sigma =sigma*ratio_dead_fuel+sigma_livegrass*ratio_live_fuel
-       
+
        else
          sigma=0.00001
 c          char_sigma=0.00001
 
           char_sigma=0.00001
        endif
-       
-       
+
+
 c Doug 06/09: mask areas of fuel limitation (i.e, where 1hr, 10hr and livegrass
 c     is to small for propogation of fire
 
@@ -10562,7 +10509,7 @@ c     is to small for propogation of fire
           pfuel_limit=pfuel_limit+1/365 !Doug 12/12: add a day with fuel limitation
           GOTO 201
         END IF
-        
+
         IF (net_fuel.le.0.0) THEN
           pfuel_limit=pfuel_limit+1/365 !Doug 12/12: add a day with fuel limitation
           GOTO 201
@@ -10572,7 +10519,7 @@ c influence of wind_speed on rate of forward spread
 c wind speed from NCEP reanalysis data is in m/s, ROS is in m/min
 
         wind_speed=dwindsp(d)*60  !m/min
-c  introduce reduction factor for wind speed with respect to forest or grass fpc 
+c  introduce reduction factor for wind speed with respect to forest or grass fpc
 c       ref: Rothermel 1983, Pyne 1996
 
 
@@ -10583,13 +10530,13 @@ c     *               (fpc_grass_total*1.28*60.0*0.6)
 c      converts wind_speed (m/min) to ft/min
 c       for input into Rothermel's formula for phi_wind in the ROS S/R
 
-        wind_forward=3.281*wind_speed       
+        wind_forward=3.281*wind_speed
 
 c        back_ws=wind_speed*exp(-0.05039*wind_speed)     ! backward fire spread
 c        wind_backward=3.281*back_ws
 
-        
-    
+
+
 c       weight lb according to presence of grasses and forests
 c       wind speed in Canadian formula is in km/h
 
@@ -10610,7 +10557,7 @@ c              lb=min(8,fpc_tree_total*
 c     *   (1.0+(8.729*((1.0-(exp(-0.03*0.06*wind_speed)))**2.155)))
 c     *    +(fpc_grass_total*(1.1+((0.06*wind_speed)**0.0464))))
 c       endif
-  
+
 
 c-----------------------------------------------------------
 c      end preparing daily variables - start of simulation
@@ -10618,7 +10565,7 @@ c-----------------------------------------------------------
 
 c       climatic fire danger
 c      Assume moisture content of livegrass close to 1.0 ? NO!! Kirsten --> driven by dw1
-      
+
 
 !      call fire_danger_index(d_fdi,dlm,dlm_lg,dtemp_min,dtemp_max,dprec,
 !     *    d,moistfactor,fuel_1hr_total,fuel_10hr_total,
@@ -10628,16 +10575,16 @@ c      Assume moisture content of livegrass close to 1.0 ? NO!! Kirsten --> driv
 
         call fire_danger_index(char_moistfactor,char_alpha_fuel,
      *                         ni_acc,d_NI,d_fdi,d)
-         
+
            if (d_fdi(d).gt.0.0) then
            mfdi(m)= mfdi(m)+d_fdi(d)
            an_fdi=an_fdi+d_fdi(d)
            count=count+1
          endif
-       
+
 c  number of fires. only ignitions, when dead fuel load - save computation time
 
-         if (net_fuel.gt.0.001) then 
+         if (net_fuel.gt.0.001) then
 
       call fuel_property(dens_fuel_ave,sigma,dlm,char_dens_fuel_ave,
      *                   char_sigma,char_dens_fuelbed,d,bet,q_ig)
@@ -10651,7 +10598,7 @@ c  number of fires. only ignitions, when dead fuel load - save computation time
        end if
 
           if(p_ig.gt.1.0)p_ig=1.0
- 
+
         if(bet.lt.1.0)p_ig=p_ig*bet
 	   dlightn_cons=sum(dlightn)/365	!Doug 12/08, trying out constant lightnng
            dlightn_sca(d)=dlightn(d)*0.15	! 0.15: continous current parameter; 0.2 Cloud-Ground: Total lighting ratio
@@ -10669,7 +10616,7 @@ C Yan
 
            d_numfire_lightn(d)=d_fdi(d)*
 
-     *       dlightn_sca(d)*0.000001*area_ha*(1.0-afire_frac)		
+     *       dlightn_sca(d)*0.000001*area_ha*(1.0-afire_frac)
 
              dhuman_ign(d)=human_ign(popden,a_nd,year)
 
@@ -10695,28 +10642,28 @@ c rate of spread
 c     calculation of backward ROS taken out, because of inconsistencies
 c     Allan: calculated after Hirsch (1996)
 c         call rate_of_spread(U_front,wind_backward,dens_fuel_ave,sigma,
-c     *       dlm,d,net_fuel,moistfactor,H, char_dens_fuel_ave, 
+c     *       dlm,d,net_fuel,moistfactor,H, char_dens_fuel_ave,
 c     *             char_sigma, char_net_fuel, char_moistfactor,gamma)
-        
+
 c          ros_b(d)=U_front
 
        call rate_of_spread(U_front,wind_forward,dens_fuel_ave,sigma,dlm,
-     *            d, net_fuel,moistfactor,H, char_dens_fuel_ave, 
+     *            d, net_fuel,moistfactor,H, char_dens_fuel_ave,
      *   char_sigma, char_net_fuel, char_moistfactor,gamma,
      *    char_dens_fuelbed)
 
        ros_f(d)=U_front
 
 
- 
+
 
 c      CHECK FORMULAE: HIRSCH (1996)
 c     this doubles ros_b(d) compare to the old method to estimate backward wind speed
 
 
        ros_b(d) = ros_f(d) * exp(-0.012 * wind_speed) !Can FBP System
-           if (ros_b(d).lt. 0.05) ros_b(d) = 0.0 
-     
+           if (ros_b(d).lt. 0.05) ros_b(d) = 0.0
+
 
 c     check the parameter value!!
 c     fire duration as a function of d_fdi
@@ -10749,13 +10696,13 @@ c         afire_frac=afire_frac+fire_frac
 		  an_areafires_temp=an_areafires+d_area_burnt(d)
 
 C Yan
-          afire_frac_human_temp  
+          afire_frac_human_temp
      *   =afire_frac_human +fire_frac_human
-          afire_frac_lightn_temp  
+          afire_frac_lightn_temp
      *   =afire_frac_lightn+fire_frac_lightn
-          an_areafires_human_temp  
+          an_areafires_human_temp
      *   =an_areafires_human+d_area_burnt_human(d)
-          an_areafires_lightn_temp 
+          an_areafires_lightn_temp
      *   =an_areafires_lightn+d_area_burnt_lightn(d)
 
 c--------------------------------------------------------
@@ -10770,7 +10717,7 @@ c               afire_frac_temp=1.0
 
 
 
-c dead fuel consumption: in g biomass per m?² - not gC/m?² !!
+c dead fuel consumption: in g biomass per m?ï¿½ - not gC/m?ï¿½ !!
 
       call fuel_consumption(npft,present,fuel_consum,fire_frac,
 !     *  fuel_1hr,fuel_10hr,fuel_100hr,fuel_1000hr,livegrass,pot_fc_lg,
@@ -10834,7 +10781,7 @@ c          sh=0.0
 
           an_areafires=an_areafires+d_area_burnt(d)
 
-          if(an_areafires.le.0.0000001)an_areafires=0.0		  
+          if(an_areafires.le.0.0000001)an_areafires=0.0
           if(an_areafires.lt.0.0)then
           write(*,*)'an_areafires < 0.0'
           stop
@@ -10846,7 +10793,7 @@ c          sh=0.0
             afire_frac=afire_frac+fire_frac(d)
           else
             afire_frac=afire_frac+afire_frac_afap_old+fire_frac(d)
-          end if 
+          end if
          if(d.eq.90)afire_frac=0.0
           else   !in the South, fire season starts from Sep 1.
            if(d.le.274)then !October 1
@@ -10860,7 +10807,7 @@ c          sh=0.0
 
           m_i_surface(m)=m_i_surface(m)+d_i_surface(d)
           an_i_surface=an_i_surface+d_i_surface(d)
-			
+
           area_burnt(m)=area_burnt(m)+d_area_burnt(d)
 C Yan
           num_fire_human(m)=num_fire_human(m)+d_numfire_human(d)
@@ -10880,8 +10827,8 @@ C Yan
           an_areafires_lightn=an_areafires_lightn+d_area_burnt_lightn(d)
           afire_frac_lightn=afire_frac_lightn+fire_frac_lightn
 
-          m_i_surface_lightn(m) 
-     *  = m_i_surface_lightn(m)+d_i_surface_lightn(d) 
+          m_i_surface_lightn(m)
+     *  = m_i_surface_lightn(m)+d_i_surface_lightn(d)
           an_i_surface_lightn
      *  = an_i_surface_lightn+d_i_surface_lightn(d)
 
@@ -10891,7 +10838,7 @@ C Yan
 
 c   FIRE EFFECTS - THIS IS NEW cf REG-FIRM V1: CROWN FIRES
       do pft=1,npft
-        
+
        if (present(pft)) then
 
 c    Fire effects for trees, when surface fire intensity is greater than 50 W/m
@@ -10906,11 +10853,11 @@ c   surface fire: update fuel load per dead fuel class and litter_ag in general
          fuel_1000hr(pft,1)=fuel_1000hr(pft,1)-fc_1000hr(pft,1)
          fuel_1000hr_left(pft,1)=fuel_1000hr_left(pft,1)-
      *     fc_1000hr(pft,1)	!Doug 03/09
-	 
-	 
+
+
          litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)-
      *     (fc_1hr_leaf(pft,1)*0.45)
-	 
+
          litter_ag_wood(pft,1)=litter_ag_wood(pft,1)-
      *    (fc_1hr_wood(pft,1)*0.45)-
      *    (fc_10hr(pft,1)*0.45)-(fc_100hr(pft,1)*0.45)-fc_1000hr(pft,1)
@@ -10920,7 +10867,7 @@ c         litter_ag(pft,1)=litter_ag(pft,1)-(fc_1hr(pft,1)*0.45)-
 c     *   (fc_10hr(pft,1)*0.45)-(fc_100hr(pft,1)*0.45)-fc_1000hr(pft,1)
 
 
-	 
+
 
 c        fuel_1hr_left(pft,1)=fuel_1hr_0(pft,1)*(1.0-afire_frac)
 c        fuel_10hr_left(pft,1)=fuel_10hr_0(pft,1)*(1.0-afire_frac)
@@ -10959,7 +10906,7 @@ c   propn of canopy burnt = (SH - (height - cl))/cl = (SH - height + cl)/cl !A
           if (sh(pft).ge.height_class(class,pft)) ck_t(class,pft)=1.0
 
           ck(pft)=ck(pft)+ck_t(class,pft)
-          
+
 c       post-fire mortality from crown scorching
           pm_ck(pft)=pm_ck(pft)+(r_ck(pft)*(ck_t(class,pft)**p(pft)))
 
@@ -10968,8 +10915,8 @@ c         Allan's version after Peterson&Ryan
 c       Doug 02/13: rplaced lots with this. Do a better comment at some point.
           CALL BT_change(dbh_class(class,pft),
      *      BTparam1(pft,1:3),BTparam2(pft,1:3),
-     *      tau_l(pft),pm_tau_class)
-       
+     *      tau_l(pft),pm_tau_class(class,pft))
+
 c          if ((tau_l(pft)/tau_c(class,pft)).ge.2.0) then
 c               pm_tau_class(class,pft)=1.0
 c          else
@@ -10984,11 +10931,11 @@ c          endif
           pm_tau(pft)=pm_tau(pft)+pm_tau_class(class,pft)
 
         enddo !height class
-        
+
           ck(pft)=ck(pft)/5.0
           pm_ck(pft)=pm_ck(pft)/5.0
           pm_tau(pft)=pm_tau(pft)/5.0
-           
+
 c       Calculate total post-fire mortality from crown scorching AND cambial kill
 
        postf_mort(pft)=pm_tau(pft)+pm_ck(pft)-(pm_tau(pft)*pm_ck(pft))
@@ -11015,15 +10962,15 @@ c     and 5% of small branches combusted (Stocks et al 2004 etc).
            enddo
         endif
 
-c     Kirsten: the fractions of hm_ind and sm_ind to fuel classes should always 
+c     Kirsten: the fractions of hm_ind and sm_ind to fuel classes should always
 c       add up to 1.0.
 c       5% of 1000hr fuel involved in crown kill
 
        disturb_flux(1) = nind_fa(pft) * ck(pft) * (lm_ind(pft,1) +
      *    0.045 * ag_non_leaf_ind(pft,1) +
      *    0.075 * ag_non_leaf_ind(pft,1) +
-     *    0.21 * 0.05 * ag_non_leaf_ind(pft,1)) 
-c     *    0.21 * 0.2 * ag_non_leaf_ind(pft)) 
+     *    0.21 * 0.05 * ag_non_leaf_ind(pft,1))
+c     *    0.21 * 0.2 * ag_non_leaf_ind(pft))
         do nc=2,nco2
            disturb_flux(nc)=(nind_fa(pft) * ck(pft) * (lm_ind(pft,1)
      *          *lm_ind(pft,nc) +
@@ -11040,7 +10987,7 @@ c      check dcflux_fire_pft(d,pft)=disturb
           do nc=2,nco2
              dcflux_fire_pft(d,pft,nc)=(temp*
      *         dcflux_fire_pft(d,pft,nc)+disturb_flux(1)
-     *         *disturb_flux(nc))/dcflux_fire_pft(d,pft,1)             
+     *         *disturb_flux(nc))/dcflux_fire_pft(d,pft,1)
           enddo
        endif
 
@@ -11049,11 +10996,11 @@ c      check dcflux_fire_pft(d,pft)=disturb
 c     Calculate total number of indivs killed for fire affected area!!!
 
 C       nind_kill(pft) = postf_mort(pft) * nind_fa(pft)
-C	  Doug 12/12: resprouting pft, fraction of resprouters suriving fire is 
-        nind_kill(pft) = postf_mort(pft) * nind_fa(pft) * 
+C	  Doug 12/12: resprouting pft, fraction of resprouters suriving fire is
+        nind_kill(pft) = postf_mort(pft) * nind_fa(pft) *
      *    (1-pftpar(pft,59))
- 	 
-        nind_resp(pft) = postf_mort(pft) * nind_fa(pft) * 
+
+        nind_resp(pft) = postf_mort(pft) * nind_fa(pft) *
      *    (pftpar(pft,59))
 
 
@@ -11061,67 +11008,67 @@ c     Send a/g non-combusted biomass of dead trees to fuel cats & a/g litter !A
 c       But make them available for burning in the next year ! Kirsten
 
 
- 
+
 C       temp=fuel_update_1hr(pft,1)
-C       fuel_update_1hr(pft,1) = fuel_update_1hr(pft,1) + 
+C       fuel_update_1hr(pft,1) = fuel_update_1hr(pft,1) +
 C     *                (nind_kill(pft) * (1-ck(pft)) *
 C     *                (lm_ind(pft,1) + 0.045 * ag_non_leaf_ind(pft,1)))
-C	 
 C
-C	 
+C
+C
 C       if (fuel_update_1hr(pft,1) .gt. 0.) then
 C          do nc=2,nco2
-C             fuel_update_1hr(pft,nc) = (fuel_update_1hr(pft,nc)*temp + 
+C             fuel_update_1hr(pft,nc) = (fuel_update_1hr(pft,nc)*temp +
 C     *            (nind_kill(pft) * (1-ck(pft)) *
-C     *            (lm_ind(pft,1)*lm_ind(pft,nc) + 0.045 
+C     *            (lm_ind(pft,1)*lm_ind(pft,nc) + 0.045
 C     *            * ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc))))
 C     *            /fuel_update_1hr(pft,1)
 C
 C             dfuel_update_1hr(pft,nc)=nind_kill(pft) * (1-ck(pft)) *    !Doug 06/09
-C     *            (lm_ind(pft,1)*lm_ind(pft,nc) + 0.045 
+C     *            (lm_ind(pft,1)*lm_ind(pft,nc) + 0.045
 C     *            * ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc))
 C          enddo
 C       endif
- 
+
        temp=fuel_update_1hr_leaf(pft,1)
-       fuel_update_1hr_leaf(pft,1) = fuel_update_1hr_leaf(pft,1) + 
+       fuel_update_1hr_leaf(pft,1) = fuel_update_1hr_leaf(pft,1) +
      *    ((nind_kill(pft)+nind_resp(pft)) *   !Doug: All-but killed resprouters loose remainder of leaves
      *    (1-ck(pft)) * lm_ind(pft,1))
-	 
+
        dfuel_update_1hr_leaf(pft,1)=fuel_update_1hr_leaf(pft,1)-temp	!Doug 03/09, find daily update
-	 
+
        if (fuel_update_1hr_leaf(pft,1) .gt. 0.) then
           do nc=2,nco2
              fuel_update_1hr_leaf(pft,nc) =
-     *            (fuel_update_1hr_leaf(pft,nc)*temp + 
-     *            ((nind_kill(pft)+nind_resp(pft)) * 
+     *            (fuel_update_1hr_leaf(pft,nc)*temp +
+     *            ((nind_kill(pft)+nind_resp(pft)) *
      *            (1-ck(pft)) *
      *            (lm_ind(pft,1)*lm_ind(pft,nc))))
      *            /fuel_update_1hr_leaf(pft,1)
           enddo
        endif
- 
+
        temp=fuel_update_1hr_wood(pft,1)
-       fuel_update_1hr_wood(pft,1) = fuel_update_1hr_wood(pft,1) + 
+       fuel_update_1hr_wood(pft,1) = fuel_update_1hr_wood(pft,1) +
      *     (nind_kill(pft) * (1-ck(pft)) *
      *     (0.045 * ag_non_leaf_ind(pft,1)))
-	 
-       dfuel_update_1hr_wood(pft,1)=fuel_update_1hr_wood(pft,1)-temp	!Doug 03/09, find daily update	 
-	 
+
+       dfuel_update_1hr_wood(pft,1)=fuel_update_1hr_wood(pft,1)-temp	!Doug 03/09, find daily update
+
        if (fuel_update_1hr_wood(pft,1) .gt. 0.) then
           do nc=2,nco2
-             fuel_update_1hr_wood(pft,nc) = 
-     *            (fuel_update_1hr_wood(pft,nc)*temp + 
+             fuel_update_1hr_wood(pft,nc) =
+     *            (fuel_update_1hr_wood(pft,nc)*temp +
      *            (nind_kill(pft) * (1-ck(pft)) *
-     *            (0.045 
+     *            (0.045
      *            * ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc))))
      *            /fuel_update_1hr_wood(pft,1)
           enddo
        endif
-	   
+
 
        temp=fuel_update_10hr(pft,1)
-       fuel_update_10hr(pft,1) = fuel_update_10hr(pft,1) + 
+       fuel_update_10hr(pft,1) = fuel_update_10hr(pft,1) +
      *               (nind_kill(pft) * (1-ck(pft)) *
      *               (0.075 * ag_non_leaf_ind(pft,1)))
 
@@ -11130,7 +11077,7 @@ C       endif
 
        if (fuel_update_10hr(pft,1) .gt. 0.) then
           do nc=2,nco2
-             fuel_update_10hr(pft,nc)=(fuel_update_10hr(pft,nc)*temp + 
+             fuel_update_10hr(pft,nc)=(fuel_update_10hr(pft,nc)*temp +
      *            (nind_kill(pft) * (1-ck(pft)) *
      *            (0.075 * ag_non_leaf_ind(pft,1)*
      *            ag_non_leaf_ind(pft,nc))))/fuel_update_10hr(pft,1)
@@ -11144,9 +11091,9 @@ C       endif
 c     cambial damage and left-overs from crown scorching
 
        temp=fuel_update_100hr(pft,1)
-       fuel_update_100hr(pft,1)  = fuel_update_100hr(pft,1) +  
-     *      (nind_kill(pft) * (1-ck(pft)) * 
-     *      (0.21 * ag_non_leaf_ind(pft,1)) +  
+       fuel_update_100hr(pft,1)  = fuel_update_100hr(pft,1) +
+     *      (nind_kill(pft) * (1-ck(pft)) *
+     *      (0.21 * ag_non_leaf_ind(pft,1)) +
      *      nind_kill(pft) * ck(pft) *
      *      (0.95 * 0.21 * ag_non_leaf_ind(pft,1)))
 c     *               (0.8 * 0.21 * ag_non_leaf_ind(pft)))
@@ -11157,15 +11104,15 @@ c     *               (0.8 * 0.21 * ag_non_leaf_ind(pft)))
        if (fuel_update_100hr(pft,1) .gt. 0.) then
           do nc=2,nco2
              fuel_update_100hr(pft,nc)=(fuel_update_100hr(pft,nc)
-     *            *temp + (nind_kill(pft) * (1-ck(pft)) * 
+     *            *temp + (nind_kill(pft) * (1-ck(pft)) *
      *            (0.21*ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc))
-     *            + nind_kill(pft)*ck(pft)*(0.95 * 0.21 * 
+     *            + nind_kill(pft)*ck(pft)*(0.95 * 0.21 *
      *            ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc))))
      *            /fuel_update_100hr(pft,1)
 
              dfuel_update_100hr(pft,nc)=nind_kill(pft) * (1-ck(pft)) * 	!Doug 06/09
      *            (0.21*ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc))
-     *            + nind_kill(pft)*ck(pft)*(0.95 * 0.21 * 
+     *            + nind_kill(pft)*ck(pft)*(0.95 * 0.21 *
      *            ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc))
           enddo
        endif
@@ -11174,17 +11121,17 @@ c     *               (0.8 * 0.21 * ag_non_leaf_ind(pft)))
 c      cambial damage and crown scorching together
 
        temp=fuel_update_1000hr(pft,1)
-       fuel_update_1000hr(pft,1) = fuel_update_1000hr(pft,1) + 
+       fuel_update_1000hr(pft,1) = fuel_update_1000hr(pft,1) +
 
      *                 nind_kill(pft) * (0.67 * ag_non_leaf_ind(pft,1))
 
        dfuel_update_1000hr(pft,1)=fuel_update_1000hr(pft,1)-temp	!Doug 05/09
- 
+
 
        if (fuel_update_1000hr(pft,1) .gt. 0.) then
           do nc=2,nco2
              fuel_update_1000hr(pft,nc) = (fuel_update_1000hr(pft,nc)
-     *            *temp + nind_kill(pft) * (0.67 * 
+     *            *temp + nind_kill(pft) * (0.67 *
      *            ag_non_leaf_ind(pft,1)*ag_non_leaf_ind(pft,nc)))
      *            /fuel_update_1000hr(pft,1)
 
@@ -11207,7 +11154,7 @@ c     Send roots of dead trees to b/g litter, Kirsten: this can be done daily, n
 
 c       update individual density and send dead biomass as a result of postfire mort. to
 c       litter and fuel classes, resp. !A
-        
+
 c    add DEAD FUEL combustion to fire carbon flux per PFT
 
         temp=dcflux_fire_pft(d,pft,1)
@@ -11239,7 +11186,7 @@ c    total carbon flux from life fuel and dead fuel combustion
      *         mcflux_fire_pft(m,pft,1)
           enddo
        endif
-       
+
        temp=acflux_fire_pft(pft,1)
        acflux_fire_pft(pft,1)=acflux_fire_pft(pft,1)
      *      +dcflux_fire_pft(d,pft,1)
@@ -11255,7 +11202,7 @@ c     Number indivs NOT killed by fire
        nind_nkill(pft) = nind(pft) - nind_kill(pft)
 
 c     ALLAN: If at least partial crown kill occurs, and some fire-affected
-c       trees survive fire, and 
+c       trees survive fire, and
 c     number of trees not killed by fire is non-zero, then redistribute
 c     leaf, sapwood, and heartwood and rootmass among survivors
 
@@ -11265,12 +11212,12 @@ c   compiler. Check: performance ok now?
 c   Doug 12/12 RS: if resprouter, send suriving trees into normal pft.
 
       if ((ck(pft).gt.0.0).and.
-     *  ((nind_fa(pft)-nind_kill(pft)).gt.0.0) 
+     *  ((nind_fa(pft)-nind_kill(pft)).gt.0.0)
      *  .and. (nind_nkill(pft) .gt. 0.0)) then
 
 c       prop_fa_nk(pft) = (nind_fa(pft)-nind_kill(pft))/nind_nkill(pft)
        prop_fa_rs(pft) = nind_resp(pft)/nind_nkill(pft)
-       
+
        prop_fa_nk(pft) = (nind_fa(pft)-nind_kill(pft)-nind_resp(pft))
      *   /nind_nkill(pft)
 
@@ -11279,13 +11226,13 @@ c       prop_fa_nk(pft) = (nind_fa(pft)-nind_kill(pft))/nind_nkill(pft)
 
        sm_ind(pft,1) = sm_ind(pft,1) - prop_fa_nk(pft) * ck(pft) *
      *   (0.045 + 0.075 + (0.21 * 0.05)) * sm_ind(pft,1)
-     *   -prop_fa_rs(pft)*(0.045 + 0.075 + (0.21 * 0.05)) * 
+     *   -prop_fa_rs(pft)*(0.045 + 0.075 + (0.21 * 0.05)) *
      *   sm_ind(pft,1)
 c     *   (0.045 + 0.075 + (0.21 * 0.2)) * sm_ind(pft)
 
        hm_ind(pft,1) = hm_ind(pft,1) - prop_fa_nk(pft) * ck(pft) *
      *   (0.045 + 0.075 + (0.21 * 0.05)) * hm_ind(pft,1)
-     *   -prop_fa_rs(pft)*(0.045 + 0.075 + (0.21 * 0.05)) * 
+     *   -prop_fa_rs(pft)*(0.045 + 0.075 + (0.21 * 0.05)) *
      *   hm_ind(pft,1)
 c     *   (0.045 + 0.075 + (0.21 * 0.2)) * hm_ind(pft)
 
@@ -11293,14 +11240,14 @@ cc   KIRSTEN: where is the rootmass??? No rootmass treatment, otherwise carbon b
 c       rm_ind(pft) = rm_ind(pft) - prop_fa_nk(pft)*ck(pft)*rm_ind(pft)
 
 
-       endif 
+       endif
 
-c     ALLAN:  Assume the proportional decrease in individual root mass due 
-c     to stress of surviving a crown-fire among fire-affected indivs = 0%. 
-c     So, rm_ind(pft) stays unchanged.  
+c     ALLAN:  Assume the proportional decrease in individual root mass due
+c     to stress of surviving a crown-fire among fire-affected indivs = 0%.
+c     So, rm_ind(pft) stays unchanged.
 c     Otherwise, implement proportional reduction (z) = 0.05, say:
 c     rm_ind(pft) = rm_ind(pft) -  prop_fa_nk(pft) * ck(pft) * rm_ind(pft) * z
-c     litter_bg(pft) = litter_bg(pft) + 
+c     litter_bg(pft) = litter_bg(pft) +
 c     *  prop_fa_nk(pft) * ck(pft) * rm_ind(pft) * z
 
 
@@ -11311,7 +11258,7 @@ c     Update number of indivs surviving fire, ready for the next day. !A
 
 c       dead grass
 
-        temp=dcflux_fire_pft(d,pft,1) 
+        temp=dcflux_fire_pft(d,pft,1)
         dcflux_fire_pft(d,pft,1)=dcflux_fire_pft(d,pft,1)
      *       +((fc_1hr_leaf(pft,1)+fc_1hr_wood(pft,1))*0.45)
         if (dcflux_fire_pft(d,pft,1) .gt. 0.0) then
@@ -11323,9 +11270,9 @@ c       dead grass
           enddo
        endif
 
-c      live grass        
+c      live grass
 
-        temp=dcflux_fire_pft(d,pft,1) 
+        temp=dcflux_fire_pft(d,pft,1)
         dcflux_fire_pft(d,pft,1)=dcflux_fire_pft(d,pft,1)+fc_lg(pft,1)
         if (dcflux_fire_pft(d,pft,1) .gt. 0.0) then
           do nc=2,nco2
@@ -11338,11 +11285,11 @@ c      live grass
 c  KIRSTEN: no update of rootmass and litter_bg here, otherwise carbon balance not closed!!
        lm_ind(pft,1)=lm_ind(pft,1)-fc_lg(pft,1)
 
-c    Kirsten: update of livegrass only through lm_ind, due to combination of dphen and livegrass 
+c    Kirsten: update of livegrass only through lm_ind, due to combination of dphen and livegrass
 c       consumption
 c       livegrass=livegrass-fc_lg(pft) !A
 c       pot_fc_lg_temp(pft)=lm_ind(pft)-fc_lg(pft)
- 
+
 c     Kirsten: never forget to protect variables aganst division by zero!!
 c        ratio_lg_reduc=0.0
 c        if (pot_fc_lg_temp(pft).gt.0.0)
@@ -11371,7 +11318,7 @@ c    total carbon flux from life fuel and dead fuel combustion
      *         mcflux_fire_pft(m,pft,1)
           enddo
        endif
-       
+
        temp=acflux_fire_pft(pft,1)
        acflux_fire_pft(pft,1)=acflux_fire_pft(pft,1)
      *      +dcflux_fire_pft(d,pft,1)
@@ -11399,11 +11346,11 @@ c     *                        (lm_ind(pft)/0.45*nind(pft))  !g/m2
 
 c              used in fire effects section only
 
-c               pot_fc_lg(pft)=(lm_ind(pft)/0.45*nind(pft))  !g/m2 
+c               pot_fc_lg(pft)=(lm_ind(pft)/0.45*nind(pft))  !g/m2
 
 c       net fuel load
       m_fc_crown(m)=m_fc_crown(m)+fc_crown(d)
-      
+
       an_fc_crown=an_fc_crown+fc_crown(d)
 
 
@@ -11509,7 +11456,7 @@ c       pause
      *            fuel_1hr_leaf_left(pft,1)
               END DO
             END IF
-			
+
             temp=fuel_1hr_wood_left(pft,1)
 
             fuel_1hr_wood_left(pft,1)=fuel_1hr_wood_left(pft,1)*
@@ -11528,9 +11475,9 @@ c       pause
      *            fuel_1hr_wood_left(pft,1)
               END DO
             END IF
-	 
+
 C            temp=fuel_1hr_left(pft,1)
-C 
+C
 C            fuel_1hr_left(pft,1)=fuel_1hr_left(pft,1)*
 C     *        (1-fire_frac(365))+
 C     *        fuel_left_minus(pft,1)+
@@ -11620,16 +11567,16 @@ C            END IF
         end if
 
        afire_frac=an_areafires/area_ha
-		
+
        do m=1,12
          mfire_frac(m)=area_burnt(m)/area_ha
-		
+
          if(mfire_frac(m).lt.0.0001)then
           mfire_frac(m)=0.0
           area_burnt(m)=0.0
          end if
        end do
-         
+
        if(afire_frac.lt.0.0001)then
            afire_frac=0.0
            an_areafires=0.0
@@ -11645,13 +11592,13 @@ c  send dead biomass from cambial damage to fuel classes at the end of the year
 c  to avoid that the dead fuel influence fire spread of the actual fire season (standing dead biomass)
        DO pft=1,npft
          IF (present(pft)) THEN
-		 
+
            temp=fuel_1hr_leaf(pft,1)
            fuel_1hr_leaf(pft,1)=fuel_1hr_leaf_0(pft,1)*(1.0-afire_frac)
      *                  +fuel_update_1hr_leaf(pft,1)
      *                  -(fuel_load_subtraction(pft,1))*
      *                  f1hr_leaf_frac(pft)
-	 
+
          IF (fuel_1hr_leaf(pft,1) .gt. 0.0) THEN
            DO nc=2,nco2
               fuel_1hr_leaf(pft,nc)=(fuel_1hr_leaf(pft,nc)*temp+
@@ -11660,7 +11607,7 @@ c  to avoid that the dead fuel influence fire spread of the actual fire season (
      *          /fuel_1hr_leaf(pft,1)
            END DO
          END IF
-		 
+
            temp=fuel_1hr_wood(pft,1)
            fuel_1hr_wood(pft,1)=fuel_1hr_wood_0(pft,1)*(1.0-afire_frac)
      *                  +fuel_update_1hr_wood(pft,1)
@@ -11674,7 +11621,7 @@ c  to avoid that the dead fuel influence fire spread of the actual fire season (
      *          /fuel_1hr_wood(pft,1)
            END DO
          END IF
-		
+
 C        temp=fuel_1hr(pft,1)
 C        fuel_1hr(pft,1)=fuel_1hr_0(pft,1)*(1.0-afire_frac)
 C     *                  +fuel_update_1hr(pft,1)
@@ -11690,7 +11637,7 @@ C        endif
        fuel_10hr(pft,1)=fuel_10hr_0(pft,1)*(1.0-afire_frac)
      *                  +fuel_update_10hr(pft,1)
      *                  -fuel_load_subtraction(pft,2)
-	 
+
        if (fuel_10hr(pft,1) .gt. 0.0) then
           do nc=2,nco2
              fuel_10hr(pft,nc)=(fuel_10hr(pft,nc)*temp+
@@ -11698,7 +11645,7 @@ C        endif
      *          /fuel_10hr(pft,1)
           enddo
        endif
- 
+
        temp=fuel_100hr(pft,1)
        fuel_100hr(pft,1)=fuel_100hr_0(pft,1)*(1.0-afire_frac)
      *                    +fuel_update_100hr(pft,1)
@@ -11710,7 +11657,7 @@ C        endif
      *           /fuel_100hr(pft,1)
           enddo
        endif
- 
+
        temp=fuel_1000hr(pft,1)
        fuel_1000hr(pft,1)=fuel_1000hr_0(pft,1)*(1.0-afire_frac)
      *                    +fuel_update_1000hr(pft,1)
@@ -11722,9 +11669,9 @@ C        endif
      *          /fuel_1000hr(pft,1)
           enddo
        endif
-	   
+
        temp=litter_ag_leaf(pft,1)
-       litter_ag_leaf(pft,1) = litter_ag_leaf(pft,1) + 
+       litter_ag_leaf(pft,1) = litter_ag_leaf(pft,1) +
      *             fuel_update_1hr_leaf(pft,1)
      *             -fuel_load_subtraction(pft,1)*
      *             f1hr_leaf_frac(pft)
@@ -11736,7 +11683,7 @@ C        endif
      *        /litter_ag_leaf(pft,1)
           END DO
        END IF
-	   
+
        temp=litter_ag_wood(pft,1)
        litter_ag_wood(pft,1) = litter_ag_wood(pft,1) +
      *             fuel_update_1hr_wood(pft,1) +
@@ -11744,7 +11691,7 @@ C        endif
      *             fuel_update_1000hr(pft,1)
      *             -fuel_load_subtraction(pft,1)*
      *             (1-f1hr_leaf_frac(pft))
-     *             -SUM(fuel_load_subtraction(pft,2:4))    
+     *             -SUM(fuel_load_subtraction(pft,2:4))
        IF (litter_ag_wood(pft,1) .gt. 0.0) THEN
           DO nc=2,nco2
              litter_ag_wood(pft,nc)= (litter_ag_wood(pft,nc)*temp
@@ -11755,12 +11702,12 @@ C        endif
      *        /litter_ag_wood(pft,1)
           END DO
        END IF
- 
+
 c       temp=litter_ag(pft,1)
 c       litter_ag(pft,1) = litter_ag(pft,1) + fuel_update_1hr(pft,1) +
 c     *             fuel_update_10hr(pft,1) + fuel_update_100hr(pft,1)+
 c     *             fuel_update_1000hr(pft,1)
-c     *             -SUM(fuel_load_subtraction(pft,:))    
+c     *             -SUM(fuel_load_subtraction(pft,:))
 c       if (litter_ag(pft,1) .gt. 0.0) then
 c          do nc=2,nco2
 c             litter_ag(pft,nc)= (litter_ag(pft,nc)*temp
@@ -11812,7 +11759,7 @@ c    summation of monthly and annual variables
         an_fdi=an_fdi/count_fdi
         an_i_surface=an_i_surface/count_yr
 
-c     Calculate monthly trace gas emission resulting from biomass burning (gSpecies/m?²)
+c     Calculate monthly trace gas emission resulting from biomass burning (gSpecies/m?ï¿½)
 
 
        do m=1,12 !months
@@ -11821,7 +11768,7 @@ c     Calculate monthly trace gas emission resulting from biomass burning (gSpec
          do pft=1,npft
          if (present(pft)) then
 
-            if (mcflux_fire_pft(m,pft,1).gt.0.0) then !A 
+            if (mcflux_fire_pft(m,pft,1).gt.0.0) then !A
 
             mcflux_trace_pft(m,x,pft)=(mcflux_fire_pft(m,pft,1)*
      *                                    ef_trace(pft,x)/0.45)
@@ -11840,7 +11787,7 @@ c     Calculate monthly trace gas emission resulting from biomass burning (gSpec
       endif !year loop to switch between Glob-FIRM and SPITFIRE
 
 
-c     ALLAN: For the sake of neatness, account for rounding errors 
+c     ALLAN: For the sake of neatness, account for rounding errors
 c     leading to slightly negative balances.
 
       DO pft=1,npft
@@ -11855,7 +11802,7 @@ c     leading to slightly negative balances.
           litter_ag_wood(pft,2)=0.0
           litter_ag_wood(pft,3)=0.0
         END IF
-		
+
 c        if (litter_ag(pft,1).lt.0.0) then
 c          litter_ag(pft,1)=0.0
 c          litter_ag(pft,2)=0.0
@@ -12061,7 +12008,7 @@ c
 !      real dead_fuel
 !      integer d,year
 !      real char_moistfactor, ratio_dead_fuel,ratio_live_fuel
-!      real   dlm_1hr(1:365), dlm_10hr(1:365)  
+!      real   dlm_1hr(1:365), dlm_10hr(1:365)
 !      real   dlm_100hr(1:365), dlm_1000hr (1:365)
 !      real ni_acc
 
@@ -12069,11 +12016,11 @@ c
 !        parameter (alpha=0.0015)
 !      real alpha_1hr, alpha_10hr,alpha_100hr
 !      real alpha_livegrass,alpha_1000hr
-!        parameter (alpha_1hr=0.001,alpha_10hr=0.00005424)	
-!        parameter (alpha_100hr=0.00001485, alpha_1000hr = 0.000001) 
-c        parameter (alpha_livegrass=0.0005) 
+!        parameter (alpha_1hr=0.001,alpha_10hr=0.00005424)
+!        parameter (alpha_100hr=0.00001485, alpha_1000hr = 0.000001)
+c        parameter (alpha_livegrass=0.0005)
 c     Allan: Alpha values for livegrass and 1000hr dead fuels are particularly
-c            subjective 
+c            subjective
 c     KIRSTEN:i.e. values made up, revisit alpha_livegrass with livegrass
 c             moisture driven upper soil moisture
 
@@ -12104,7 +12051,7 @@ c         d_NI=dtemp_max(d)*(dtemp_max(d)-dtemp_min(d)-4.0)     !!! 25/10/07 Yan
 !          d_NI=0.0
 !          ni_acc=0.0
 !        endif
-        
+
 c        if (d_NI.gt.0.0) then
 c          ni_acc=ni_acc+d_NI
 c        else
@@ -12133,13 +12080,13 @@ c         alpha_fuel=0.00001
 
 c        dlm(d)=exp(-alpha_fuel*ni_acc)
 !        dlm(d)=exp(-char_alpha_fuel*ni_acc)  ! used for ROS calcs. 1000hr therefore ignored.
-       
+
 !       dlm_1hr(d) = exp(-alpha_1hr * ni_acc)
 !       dlm_10hr(d) = exp(-alpha_10hr * ni_acc)
 !       dlm_100hr(d) = exp(-alpha_100hr * ni_acc)
 !       dlm_1000hr(d) = exp(-alpha_1000hr * ni_acc)
-      
-       
+
+
 c probability of fire spread
 *        if (dlm(d).le.moistfactor) then
 *           fdi_spread=1.0-(dlm(d)/moistfactor)
@@ -12190,20 +12137,20 @@ c
       real dead_fuel
       integer d,year
       real char_moistfactor, ratio_dead_fuel,ratio_live_fuel
-      real   dlm_1hr(1:365), dlm_10hr(1:365)  
+      real   dlm_1hr(1:365), dlm_10hr(1:365)
       real   dlm_100hr(1:365), dlm_1000hr (1:365)
       real ni_acc
-      
+
       real alpha      !coefficient of fire risk function per fuel class!!
         parameter (alpha=0.0015)
       real alpha_1hr, alpha_10hr,alpha_100hr
       real alpha_livegrass,alpha_1000hr
         parameter (alpha_1hr=24,alpha_10hr=2.4)	!Doug 08/12: fiddleing with the alphas
         parameter (alpha_100hr=0.24,
-     *		alpha_1000hr = 0.024) 
+     *		alpha_1000hr = 0.024)
 
 c     Allan: Alpha values for livegrass and 1000hr dead fuels are particularly
-c            subjective 
+c            subjective
 c     KIRSTEN:i.e. values made up, revisit alpha_livegrass with livegrass
 c             moisture driven upper soil moisture
 
@@ -12214,17 +12161,17 @@ c      real dw1(1:365)
       real wk(1:365),sum_ni_acc
       integer ii
       real lon,lat
-      
+
 c    Variables for calculating new fuel moisture uisng RH
       REAL rhumid, emc
-      REAL rhumid_c1,rhumid_c2 
+      REAL rhumid_c1,rhumid_c2
         PARAMETER (rhumid_c1=17.271,rhumid_c2= 237.7)
       REAL dlm_1hr_old,dlm_10hr_old,dlm_100hr_old,dlm_1000hr_old
       REAL dpet(1:365)
       REAL aprec
       REAL temp_dew
       REAL EF
-      REAL dew_c1,dew_c2,dew_c3,dew_c4,dew_c5,dew_c6,dew_c7 
+      REAL dew_c1,dew_c2,dew_c3,dew_c4,dew_c5,dew_c6,dew_c7
         PARAMETER (dew_c1=-0.127,dew_c2= 1.121,dew_c3= 1.003,
      *      dew_c4=-1.444,dew_c5= 12.312,
      *      dew_c6=-32.766,dew_c7= 0.0006)
@@ -12248,7 +12195,7 @@ c         d_NI=dtemp_max(d)*(dtemp_max(d)-dtemp_min(d)-4.0)     !!! 25/10/07 Yan
           d_NI=0.0
           ni_acc=0.0
         endif
-        
+
 c        if (d_NI.gt.0.0) then
 c          ni_acc=ni_acc+d_NI
 c        else
@@ -12281,8 +12228,8 @@ c    Allan
 c         alpha_fuel=0.00001
          char_alpha_fuel=0.00001
        endif
-        
-C Doug 06/13: dlm_xhr calculated using NI replaced with RH 
+
+C Doug 06/13: dlm_xhr calculated using NI replaced with RH
        IF (dprec(d).le.3.0.and.(dtemp_min(d)-4.0).ge.0.0) THEN
 
             EF=dpet(d)/aprec
@@ -12291,21 +12238,21 @@ C Doug 06/13: dlm_xhr calculated using NI replaced with RH
      *           dew_c6*(EF**3))+
      *           dew_c7*(dtemp_max(d)-dtemp_min(d)))
             temp_dew=temp_dew-273.15
-     
+
            rhumid=100*(exp((rhumid_c1*(temp_dew))/
      *        (rhumid_c2+(temp_dew))))
-            
+
            rhumid=rhumid/exp((rhumid_c1*
      *        dtemp_max(d))/
      *        (rhumid_c2+dtemp_max(d)))
-     
+
             emc=0.942*(rhumid**0.679)+0.000499*exp(0.1*rhumid)+
      *          0.18*(21.1-dtemp_max(d))*
      *          (1-exp(-0.115*rhumid))
         ELSE
             emc=100
         ENDIF
-      
+
         dlm_1hr(d) = emc/100+
      *        (dlm_1hr_old-emc/100)*exp(-alpha_1hr)
         dlm_10hr(d) = emc/100+
@@ -12314,12 +12261,12 @@ C Doug 06/13: dlm_xhr calculated using NI replaced with RH
      *        (dlm_100hr_old-emc/100)*exp(-alpha_100hr)
         dlm_1000hr(d) = emc/100+
      *        (dlm_1000hr_old-emc/100)*exp(-alpha_1000hr)
-      
+
         dlm_1hr_old=dlm_1hr(d)
         dlm_10hr_old=dlm_10hr(d)
         dlm_100hr_old=dlm_100hr(d)
         dlm_1000hr_old=dlm_1000hr(d)
-      
+
 
 c Leilei 11/08: dlm= the sum of dlm for each different fuel load/
 
@@ -12328,8 +12275,8 @@ c Leilei 11/08: dlm= the sum of dlm for each different fuel load/
      *         dlm_100hr(d)*fuel_100hr_total)/dead_fuel)
      *         *ratio_dead_fuel+			!Doug 12/08 *1
      *         dlm_lg(d)*ratio_live_fuel		!Doug 12/08 remove
-c     *		*1	
- 
+c     *		*1
+
 c probability of fire spread
 *        if (dlm(d).le.moistfactor) then
 *           fdi_spread=1.0-(dlm(d)/moistfactor)
@@ -12416,7 +12363,7 @@ c       human_ign=6.8*(exp(-0.5*(popden1**0.5)))*a_nd_const*popden1
 !       human_ign=30.0*(exp(-0.5*(popden**0.5)))*a_nd*popden
       human_ign=0.0
       end
-	
+
 
 c-------------------------------------------------------------------------------
 c     FUNCTION LIGHTNING
@@ -12438,10 +12385,10 @@ c     for case of Brandenburg
 
 
 c-------------------------------------------------------------------------------
-c     subroutine Thermophysical Propertities of the Fuel Array, i.e., bet and q_ig 
+c     subroutine Thermophysical Propertities of the Fuel Array, i.e., bet and q_ig
 
       subroutine fuel_property(dens_fuel_ave,sigma,
-     *            dlm,char_dens_fuel_ave, 
+     *            dlm,char_dens_fuel_ave,
      * char_sigma,char_dens_fuelbed,d,bet,q_ig)
 
 
@@ -12449,7 +12396,7 @@ c     subroutine Thermophysical Propertities of the Fuel Array, i.e., bet and q_
 
       integer npft,npftpar
         parameter (npft=13,npftpar=59)
-        
+
       real dens_fuel_ave,sigma,H
       real dlm(1:365)
        real char_dens_fuel_ave,char_sigma
@@ -12464,8 +12411,8 @@ c     emissitivity of flames unitless
 
       real part_dens
         parameter (part_dens=513.0)! this is oven-dry particle density (kg/m3)
-		
-       real char_dens_fuelbed		
+
+       real char_dens_fuelbed
 
 c    initialise
       beta=0.0
@@ -12477,7 +12424,7 @@ c     start of function
 
 c        bet=dens_fuel_ave*0.200395*(sigma**(-0.8189))/513.0     !=beta/beta_op
 
-       beta = char_dens_fuelbed/part_dens 
+       beta = char_dens_fuelbed/part_dens
 
 
 c       beta_op = 0.200395*(char_sigma**(-0.8189))
@@ -12495,7 +12442,7 @@ c-------------------------------------------------------------------------------
 c     subroutine RATE OF forward SPREAD
 
       subroutine rate_of_spread(U_front,base_wind,dens_fuel_ave,sigma,
-     *            dlm,d,net_fuel,moistfactor,H, char_dens_fuel_ave, 
+     *            dlm,d,net_fuel,moistfactor,H, char_dens_fuel_ave,
      * char_sigma, char_net_fuel, char_moistfactor,gamma,
      *   char_dens_fuelbed)
       implicit none
@@ -12503,14 +12450,14 @@ c     subroutine RATE OF forward SPREAD
       integer npft,npftpar
         parameter (npft=13,npftpar=59)
 !        parameter (npft=13,npftpar=50)
-        
+
       real U_front,base_wind
       real dens_fuel_ave,sigma,H
       real dlm(1:365)
       integer d
       real net_fuel,moistfactor
        real char_dens_fuel_ave,char_sigma
-       real char_net_fuel 
+       real char_net_fuel
        real char_moistfactor
        real gamma
 
@@ -12532,8 +12479,8 @@ c     mineral dampening coefficient
         parameter (pi=3.14159265)
       real part_dens
         parameter (part_dens=513.0)! this is oven-dry particle density (kg/m3)
-		
-       real char_dens_fuelbed		
+
+       real char_dens_fuelbed
 
 c    initialise
 c      mw1(:)=0.0
@@ -12561,7 +12508,7 @@ c     start of function
 
 c        bet=dens_fuel_ave*0.200395*(sigma**(-0.8189))/513.0     !=beta/beta_op
 
-       beta = char_dens_fuelbed/part_dens 
+       beta = char_dens_fuelbed/part_dens
 c       beta_op = 0.200395*(char_sigma**(-0.8189))
        beta_op = 0.200395*(char_sigma**(-0.8189))
 
@@ -12599,9 +12546,9 @@ c       if (char_sigma.le.0.00001) then
 c        xi=(exp((0.792+3.7597*(sigma**0.5))*
 c     *     ((dens_fuel_ave/513.0)+0.1)))/
 c     *     (192.0+7.9095*sigma)
-	 
+
 	        xi = (exp((0.792 + 3.7597 * (char_sigma**0.5)) *
-     *     (beta + 0.1))) / (192 + 7.9095 * char_sigma) 
+     *     (beta + 0.1))) / (192 + 7.9095 * char_sigma)
 
        endif
 
@@ -12646,7 +12593,7 @@ c        ir=gamma*net_fuel*H*moist_damp*MINER_DAMP
 
 c        for use in postfire mortality (tau_r)
          gamma=gamma_aptr*moist_damp*MINER_DAMP
-      
+
 c    reaction intensity end
 
 c        if(dens_fuel_ave.le.0.0.or.eps.le.0.0.or.q_ig.le.0.0) then
@@ -12666,17 +12613,17 @@ c-------------------------------------------------------------------------------
 c Doug 02/13: Calculates tree mortality and new Bark thickness distribution from cambiol damage
       SUBROUTINE BT_change(DBH,BTparam1,BTparam2,
      *   tau_l,pm_tau_class)
-	 
+
        IMPLICIT NONE
-	   
+
 C      Inputs
        REAL DBH
        REAL tau_l
-	   
+
 C      INPUTS/OUTPUTS
        REAL BTparam1(1:3),BTparam2(1:3)
        REAL pm_tau_class
-	   
+
 C      local vaiables
        REAL W,X,Y,Z
        REAL phi,chi,psi,omg
@@ -12686,21 +12633,21 @@ C      local vaiables
        REAL d1,d2
        REAL BTmean,BTmode,BTmode0
        REAL btmode_frac
-	   
+
        pm_tau_class=0.0
-	   
+
        AA=1.125
        BB=0.563*tau_l/2.9
-	   
+
        a=sqrt(abs(BB)/AA);
        b=sqrt(abs(BB)/(AA-1));
-	   
+
        IF (isnan(DBH)) DBH=0.0
-       
-	   
+
+
        s1=BTparam1(1)+DBH*BTparam2(1)
        s2=BTparam1(3)+DBH*BTparam2(3)
-	   
+
        BTmode=BTparam1(2)+DBH*BTparam2(2)
        BTmode0=BTmode
        l1=0.0
@@ -12711,8 +12658,8 @@ C      local vaiables
        l6=0.0
        l7=0.0
        l8=0.0
-	  
-	   
+
+
        IF (a>=s2) THEN
 	     pm_tau_class=1.0
          RETURN
@@ -12765,90 +12712,90 @@ C      local vaiables
 	     l7=BTmode
 	     l8=s2
        END IF
-	   
+
       W=0.0
       X=0.0
       Y=0.0
       Z=0.0
-	  
+
       phi=0.0
       chi=0.0
       psi=0.0
       omg=0.0
-	  
+
       d1=(s2-s1)*(BTmode-s1)
-      d2=(s2-s1)*(s2-BTmode)	   
-	   
+      d2=(s2-s1)*(s2-BTmode)
+
        IF (l1>=0.0 .AND.l2>0.0) THEN
          W=-(2*AA*((l1**3)-(l2**3))+3*AA*s1*((l2**2)-(l1**2))+
      *    6*BB*s1*(log(l1)-log(l2))+6*BB*(l2-l1))/(3*d1)
-     
+
        IF (W<0.0001 .AND. W >-0.0001) W=0
-	 
+
          phi=-(AA*((l1**2)-(l2**2))+2*AA*s1*(l2-l1)+
      *     2*BB*(log(l2)-log(l1))+2*BB*s1*((1/l2)-(1/l1)))/d1
-     
+
        IF (phi<0.0001 .AND. phi >-0.0001) phi=0
-       
+
        END IF
-	   
+
        IF (l3>=0.0 .AND.l4>0.0) THEN
          X=(2*AA*((l3**3)-(l4**3))+(3*AA*s2*((l4**2)-(l3**2))+
      *     6*BB*s2*(log(l3)-log(l4))+6*BB*(l4-l3)))/(3*d2)
-     
+
          IF (X<0.001 .AND. X >-0.001) X=0.0
-	 
+
 	     chi=(AA*((l3**2)-(l4**2))+2*AA*s2*(l4-l3)+
      *     2*BB*(log(l4)-log(l3))+2*BB*s2*((1/l4)-(1/l3)))/d2
-     
+
          IF (chi<0.001 .AND. chi >-0.001) chi=0.0
-     
+
        END IF
-	   
+
        IF (l5>=0.0 .AND. l6>0.0) THEN
-	     Y=-(2*((l5**3)-(l6**3))+3*s1*((l5**2)-(l6**2)))/(3*d1)        
-         
-		 
+	     Y=-(2*((l5**3)-(l6**3))+3*s1*((l5**2)-(l6**2)))/(3*d1)
+
+
 	     psi=-((l5**2)-(l6**2)+2*s1*(l6-l5))/d1
-         
+
          IF (psi<0.0001 .AND. psi >-0.0001) psi=0.0;
          IF (Y<0.0001 .AND. Y >-0.0001) Y=0.0; psi=0.0
-         
+
        END IF
-	   
+
        IF (l7>=0.0 .AND. l8>0.0) THEN
          Z=(2*((l7**3)-(l8**3))+3*s2*((l8**2)-(l7**2)))/(3*d2)
-         
+
          IF (Z<0.0001 .AND. Z >-0.0001) Z=0.0
-	 
+
 	     omg=((l7**2)-(l8**2)+2*s2*(l8-l7))/d2
-         
+
          IF (omg<0.0001 .AND. omg >-0.0001) omg=0.0
-         
+
        END IF
-	   
+
        pm_tau_class=1-(phi+chi+psi+omg)
-	   
+
        IF (pm_tau_class<0) pm_tau_class=0
        IF (pm_tau_class>1) pm_tau_class=1
-	
+
         IF ((phi+chi+psi+omg)<=0) THEN
             BTmean=0
             BTmode_frac=0
-        ELSE        
-             BTmean=(W+X+Y+Z)/(phi+chi+psi+omg)	   
+        ELSE
+             BTmean=(W+X+Y+Z)/(phi+chi+psi+omg)
              BTmode=3*BTmean-s1-s2
-             
+
              IF (BTmode>s2) BTmode=s2*0.99
              BTmode_frac=(BTmode-BTmode0)/(5*(s2-BTmode0))
         END IF
-		 
-       
-       
+
+
+
        IF (BTmode<0 .OR. BTmode_frac>1) THEN
 	     WRITE(10,*),"+++++++"
          WRITE(10,*), "BT change fire error"
-         
+
          WRITE(10,*), "error: BT medium is lower or higher than"
          WRITE(10,*),  "lowest/highest possible limit in fire"
          WRITE(10,*), "W, X, Y, Z: ", W, X, Y, Z
@@ -12857,17 +12804,17 @@ C      local vaiables
          WRITE(10,*), "BTmode0: ", BTmode0
          WRITE(10,*), "BTmean: ", BTmean
          WRITE(10,*), "BTmode: ", BTmode
-         BTmode_frac=0.0        
-	      
+         BTmode_frac=0.0
+
        END IF
 
        BTparam1(2)=BTparam1(2)+BTmode_frac*(BTparam1(3)-BTparam1(2))
        BTparam2(2)=BTparam2(2)+BTmode_frac*(BTparam2(3)-BTparam2(2))
-       
+
        RETURN
-	   
+
        end
-            
+
 c-------------------------------------------------------------------------------
 c    subroutine for calculation of fuel consumption in the area affected by fire
 
@@ -12911,7 +12858,7 @@ c     PARAMETERS
       real fc_100hr(1:npft,1:nco2),fc_1000hr(1:npft,1:nco2)
       real cf(1:npft)
       real char_moistfactor
-      real  dlm_lg (1:365), dlm_1hr(1:365), dlm_10hr(1:365)  
+      real  dlm_lg (1:365), dlm_1hr(1:365), dlm_10hr(1:365)
       real  dlm_100hr(1:365), dlm_1000hr (1:365)
       real moistfactor_livegrass, moistfactor_1hr,moistfactor_10hr
       real moistfactor_100hr, moistfactor_1000hr
@@ -12996,19 +12943,19 @@ c     1hr fuel consumption
      *     (fuel_1hr_leaf_left(pft,1)/0.45)*fire_frac(d)
          fc_1hr_leaf(pft,2)=fuel_1hr_leaf_left(pft,2)
          fc_1hr_leaf(pft,3)=fuel_1hr_leaf_left(pft,3)
-		 
+
          fc_1hr_wood(pft,1)=1.0*(1.0-MINER_TOT)*
      *     (fuel_1hr_wood_left(pft,1)/0.45)*fire_frac(d)
          fc_1hr_wood(pft,2)=fuel_1hr_wood_left(pft,2)
          fc_1hr_wood(pft,3)=fuel_1hr_wood_left(pft,3)
-         cf_1hr=1.0  
+         cf_1hr=1.0
       else
          if(moist_1hr.gt.0.18.and.moist_1hr.le.0.73) then
             fc_1hr_leaf(pft,1)=(1.10-0.62*moist_1hr)*(1.0-MINER_TOT)*
      *                   (fuel_1hr_leaf_left(pft,1)/0.45)*fire_frac(d)    !(fuel_1hr_0(pft,1)/0.45)*fire_frac(d)
             fc_1hr_leaf(pft,2)=fuel_1hr_leaf_left(pft,2)
             fc_1hr_leaf(pft,3)=fuel_1hr_leaf_left(pft,3)
-			
+
             fc_1hr_wood(pft,1)=(1.10-0.62*moist_1hr)*(1.0-MINER_TOT)*
      *                   (fuel_1hr_wood_left(pft,1)/0.45)*fire_frac(d)    !(fuel_1hr_0(pft,1)/0.45)*fire_frac(d)
             fc_1hr_wood(pft,2)=fuel_1hr_wood_left(pft,2)
@@ -13020,7 +12967,7 @@ c     1hr fuel consumption
      *                   (fuel_1hr_leaf_left(pft,1)/0.45)*fire_frac(d)   !(fuel_1hr_0(pft,1)/0.45)*fire_frac(d)
             fc_1hr_leaf(pft,2)=fuel_1hr_leaf_left(pft,2)
             fc_1hr_leaf(pft,3)=fuel_1hr_leaf_left(pft,3)
-			
+
             fc_1hr_wood(pft,1)=(2.45-2.45*moist_1hr)*(1.0-MINER_TOT)*
      *                   (fuel_1hr_wood_left(pft,1)/0.45)*fire_frac(d)   !(fuel_1hr_0(pft,1)/0.45)*fire_frac(d)
             fc_1hr_wood(pft,2)=fuel_1hr_wood_left(pft,2)
@@ -13030,7 +12977,7 @@ c     1hr fuel consumption
             fc_1hr_leaf(pft,1)=0.0
             fc_1hr_leaf(pft,2)=0.0
             fc_1hr_leaf(pft,3)=0.0
-			
+
             fc_1hr_wood(pft,1)=0.0
             fc_1hr_wood(pft,2)=0.0
             fc_1hr_wood(pft,3)=0.0
@@ -13040,8 +12987,8 @@ c     1hr fuel consumption
       endif
 
 
-c    time required for cambial kill, 1hr fuel [gBiomass/cm?²]
-c    /1e4 to get from 1m2 to cm2, the units used by P&R(1986) 
+c    time required for cambial kill, 1hr fuel [gBiomass/cm?ï¿½]
+c    /1e4 to get from 1m2 to cm2, the units used by P&R(1986)
 c         tau_l(pft)=tau_l(pft)+((fuel_1hr(pft)/0.45/1e4)*
 c     *                     (1.0-((1.0-cf_1hr)**0.5)))
 
@@ -13053,7 +13000,7 @@ c     livegrass consumption
       if (.not.tree(pft)) then
 c      if(moist_1hr.le.0.18) then
 
-c  ACHTUNG can we use dlm_lg directly? Thresholds don't match, we set 
+c  ACHTUNG can we use dlm_lg directly? Thresholds don't match, we set
 c  dlm_lg to zero at dw1=0.3!!!!!!!!!
 
       if(dlm_lg(d).le.0.18) then
@@ -13121,7 +13068,7 @@ c    time required for cambial kill, 10hr fuel
 c         tau_l(pft)=tau_l(pft)+((fuel_10hr_left(pft)/0.45/1e4)*
 c     *                     (1.0-((1.0-cf_10hr)**0.5)))
 
-      
+
 
 c     100hr fuel consumption
       if(moist_10_100hr.le.0.38) then
@@ -13154,7 +13101,7 @@ c    calculating Cf from fuel classes, tau_r=Cf/Gamma tau_l=2*tau_r
         cf(pft)=(cf_1hr+cf_10hr+cf_100hr)/3.0
 
 
-c    Peterson& Ryan: 39.4*tau_l, assuming particle density of 510, 
+c    Peterson& Ryan: 39.4*tau_l, assuming particle density of 510,
 c    we have 513, thus 39.09*tau_l
 c         tau_l(pft)=39.09*tau_l(pft)
 
@@ -13168,11 +13115,11 @@ c    1000hr fuel consumption, not influencing rate of spread or I_surface (Rothe
 
 c    Allan: Approximate form. No data.
 
-c    total fuel consumption (without 1000hr fuel) in g biomass per m?²!!!
+c    total fuel consumption (without 1000hr fuel) in g biomass per m?ï¿½!!!
 c    Used to calculate fire intensity in the FLAMING FRONT.
       fuel_consum=fuel_consum+fc_1hr_leaf(pft,1)+fc_1hr_wood(pft,1)
      *       +fc_10hr(pft,1)+fc_100hr(pft,1)
-                 
+
 
         fuel_consum_all=fuel_consum_all
      *            +fc_1hr_leaf(pft,1)+fc_1hr_wood(pft,1)+
@@ -13182,7 +13129,7 @@ c    Used to calculate fire intensity in the FLAMING FRONT.
      *             fuel_1hr_wood_left(pft,1)+
      *             fuel_10hr_left(pft,1)+
      *             fuel_100hr_left(pft,1))
-     *             /0.45+fuel_1000hr_left(pft,1))*fire_frac(d) 
+     *             /0.45+fuel_1000hr_left(pft,1))*fire_frac(d)
 
 
 
@@ -13230,7 +13177,7 @@ c     PARAMETERS
       real char_moistfactor
       real moistfactor_livegrass, moistfactor_1hr,moistfactor_10hr
       real moistfactor_100hr, moistfactor_1000hr
-      real  dlm_lg (1:365), dlm_1hr(1:365), dlm_10hr(1:365)  
+      real  dlm_lg (1:365), dlm_1hr(1:365), dlm_10hr(1:365)
       real  dlm_100hr(1:365), dlm_1000hr (1:365)
       logical present(1:npft),tree(1:npft)
 
@@ -13255,7 +13202,7 @@ c     initialise
        cf_1000hr=0
        cf_lg=0
 c     dlm_lg as a function of upper soil moisture
-       net_moist_lg = dlm_lg(d) / moistfactor_livegrass 
+       net_moist_lg = dlm_lg(d) / moistfactor_livegrass
        net_moist_1hr = dlm_1hr(d) / moistfactor_1hr
        net_moist_10hr = dlm_10hr(d) / moistfactor_10hr
        net_moist_100hr = dlm_100hr(d) / moistfactor_100hr
@@ -13264,7 +13211,7 @@ c     dlm_lg as a function of upper soil moisture
 c     fuel consumption depending on fuel moisture
 c     ACHTUNG: This is using upper soil moisture until fuel moisture can be calculated
 c     per dead fuel class!!!
-       
+
 
 c        if (fuel_1hr(pft).lt.0) print*,'error line 7245 1hr ',
 c     *   'fuel_1hr(pft),fc_1hr(pft)',fuel_1hr(pft),fc_1hr(pft)
@@ -13290,7 +13237,7 @@ c     *   fuel_1000hr(pft),fc_1000hr(pft)
 
 c     1hr fuel consumption
       if(net_moist_1hr.le.0.18) then
-         cf_1hr=1.0 
+         cf_1hr=1.0
          fc_1hr(pft,1)= cf_1hr *(1.0-MINER_TOT)*(fuel_1hr(pft,1)/0.45)
      *     *fire_frac
          fc_1hr(pft,2)=fuel_1hr(pft,2)
@@ -13318,8 +13265,8 @@ c     1hr fuel consumption
          endif
       endif
 
-c    time required for cambial kill, 1hr fuel [gBiomass/cm?²]
-c    /1e4 to get from 1m2 to cm2, the units used by P&R(1986) 
+c    time required for cambial kill, 1hr fuel [gBiomass/cm?ï¿½]
+c    /1e4 to get from 1m2 to cm2, the units used by P&R(1986)
          tau_l(pft)=tau_l(pft)+((fuel_1hr(pft,1)/0.45/1e4)*
      *                     (1.0-((1.0-cf_1hr)**0.5)))
 
@@ -13350,8 +13297,8 @@ c     livegrass consumption. Same slopes as 1hr dead. A.
          endif
       endif
       fc_lg(pft,1)= 0.05 * pot_fc_lg(pft,1) ! not quite sure about this and the following statement, MAS, 29/04/07
-      fc_lg(pft,2)=pot_fc_lg(pft,2)      
-      fc_lg(pft,3)=pot_fc_lg(pft,3)      
+      fc_lg(pft,2)=pot_fc_lg(pft,2)
+      fc_lg(pft,3)=pot_fc_lg(pft,3)
       fc_lg(pft,1)=0.0
       fc_lg(pft,2)=0.0
       fc_lg(pft,3)=0.0
@@ -13359,7 +13306,7 @@ c     livegrass consumption. Same slopes as 1hr dead. A.
 
 c     10hr fuel consumption
       if(net_moist_10hr.le.0.12) then
-        cf_10hr=1.0 
+        cf_10hr=1.0
        fc_10hr(pft,1)=cf_10hr*(1.0-MINER_TOT)*
      *              (fuel_10hr(pft,1)/0.45)*fire_frac
       fc_10hr(pft,2)=fuel_10hr(pft,2)
@@ -13435,11 +13382,11 @@ c    1000hr fuel consumption, not influencing rate of spread or I_surface (Rothe
         endif
 c    Allan: Approximate form. No data.
 
-c    total fuel consumption (without 1000hr fuel) in g biomass per m?²!!!
+c    total fuel consumption (without 1000hr fuel) in g biomass per m?ï¿½!!!
 c    Used to calculate fire intensity in the FLAMING FRONT.
       fuel_consum=fuel_consum+fc_1hr(pft,1)+fc_10hr(pft,1)
      *       +fc_100hr(pft,1)
-                 
+
 
        endif  !present
 
@@ -13466,7 +13413,7 @@ c -----------------------------------------------------------------------------
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     SUBROUTINE ESTABLISHMENT
-c     Establishment of new individuals (saplings) of woody PFTs,	
+c     Establishment of new individuals (saplings) of woody PFTs,
 c     grass establishment, removal of PFTs not adapted to current climate,
 c     update of individual structure and FPC.
 
@@ -13480,7 +13427,7 @@ c     update of individual structure and FPC.
      *  fuel_1hr_leaf,fuel_1hr_wood,
      *  fuel_10hr,fuel_100hr,fuel_1000hr,
      *  fuel_1hr_leaf_inc_pos,fuel_1hr_leaf_inc_neg,               !Doug 03/09
-     *  fuel_1hr_wood_inc_pos,fuel_1hr_wood_inc_neg, 
+     *  fuel_1hr_wood_inc_pos,fuel_1hr_wood_inc_neg,
      *  fuel_10hr_inc,fuel_100hr_inc,fuel_1000hr_inc,    !Doug 03/09
      *  pas,crop,                                             !Doug 06/09
      *  tree,allom1,allom2,allom3,acflux_estab,
@@ -13521,7 +13468,7 @@ c     ARGUMENTS
       real dbh(1:npft),tau_c(0:4,1:npft),cl_t(0:4,1:npft)
       REAL BTparam1(1:npft,1:3)        ! Doug 02/13: lower, medium and upper bound describing 1-50-99% quantile p1 in Bark thickness equation BT=p1+p2*DBH
       REAL BTparam2(1:npft,1:3)        ! Doug 02/13: "" for p2
-      REAL BTmode0(1:npft,1:2)         ! Doug 02/13: 50% quatile starting point incase of establishment or tree death.  
+      REAL BTmode0(1:npft,1:2)         ! Doug 02/13: 50% quatile starting point incase of establishment or tree death.
       real sla(1:npft)
       real wooddens,latosa,reinickerp
       real mprec(1:12)
@@ -13575,7 +13522,7 @@ c     LOCAL VARIABLES
       real bare_max
       integer class
       !real param1(1:npft),param2(1:npft)  !Kirsten: parameter for bark thickness
-      real bt(0:4,1:npft),crown(1:npft)      !Kirsten: bark thickness (cm?²)
+      real bt(0:4,1:npft),crown(1:npft)      !Kirsten: bark thickness (cm?ï¿½)
       real dbh_class(0:4,1:npft),height_class(0:4,1:npft)
       real temp,litter_inc,all
       real fpc_total_new
@@ -13676,7 +13623,7 @@ c         Add up NPP of PFTs that are killed in extra balance
 c         Add killed biomass to litter
 
           if (tree(pft)) then
-		    temp=litter_ag_leaf(pft,1)            
+		    temp=litter_ag_leaf(pft,1)
             litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)+nind(pft)
      *           *lm_ind(pft,1)
             IF (litter_ag_leaf(pft,1) .gt. 0.0) THEN
@@ -13686,8 +13633,8 @@ c         Add killed biomass to litter
      *              +litter_inc*nind(pft))/litter_ag_leaf(pft,1)
               END DO
             END IF
-			
-            temp=litter_ag_wood(pft,1)            
+
+            temp=litter_ag_wood(pft,1)
             litter_ag_wood(pft,1)=litter_ag_wood(pft,1)+nind(pft)
      *           *(sm_ind(pft,1)+hm_ind(pft,1))
             IF (litter_ag_wood(pft,1) .gt. 0.0) THEN
@@ -13698,8 +13645,8 @@ c         Add killed biomass to litter
      *              +litter_inc*nind(pft))/litter_ag_wood(pft,1)
               END DO
             END IF
-		  
-c            temp=litter_ag(pft,1)            
+
+c            temp=litter_ag(pft,1)
 c            litter_ag(pft,1)=litter_ag(pft,1)+nind(pft)
 c     *           *(sm_ind(pft,1)+hm_ind(pft,1)+lm_ind(pft,1))
 c            if (litter_ag(pft,1) .gt. 0.0) then
@@ -13723,7 +13670,7 @@ c         KIRSTEN: per fuel class
      *              +litter_inc*nind(pft))/fuel_1hr_leaf(pft,1)
               END DO
             END IF
-			
+
             temp=fuel_1hr_wood(pft,1)
             fuel_1hr_wood(pft,1)=fuel_1hr_wood(pft,1)+
      *           (0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
@@ -13735,7 +13682,7 @@ c         KIRSTEN: per fuel class
      *              +litter_inc*nind(pft))/fuel_1hr_wood(pft,1)
             enddo
             endif
-			
+
 c            temp=fuel_1hr(pft,1)
 c            fuel_1hr(pft,1)=fuel_1hr(pft,1)+(lm_ind(pft,1)+
 c     *           0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
@@ -13875,8 +13822,8 @@ c     able to establish
               fpc_tree_total=fpc_tree_total+fpc_grid(pft)
               IF (estab(pft)) npft_estab=npft_estab+
      *          (1-0.9*pftpar(pft,59))
-                ! Doug 03/13: scale resprouting establishment success. 
-                ! (1-0.5*rs) means that 100% rs success pft only has 50% 
+                ! Doug 03/13: scale resprouting establishment success.
+                ! (1-0.5*rs) means that 100% rs success pft only has 50%
                 ! of the establistment
             else
               ngrass=ngrass+1
@@ -13929,8 +13876,8 @@ c         Add new saplings to current population
           nind_old=nind(pft)
 
           nind(pft)=nind_old+estab_grid*(1-0.9*pftpar(pft,59))
-          ! Doug 03/13: scale resprouting establishment success. 
-          ! (1-0.5*rs) means that 100% rs success pft only has 50% 
+          ! Doug 03/13: scale resprouting establishment success.
+          ! (1-0.5*rs) means that 100% rs success pft only has 50%
           ! of the establistment
 
 *          if (nind(pft).gt.0.0) then
@@ -13946,7 +13893,7 @@ c         Add new saplings to current population
             endif
             temp=sm_ind(pft,1)
             sm_ind_temp=(sm_ind(pft,1)*nind_old+sm_sapl(pft,1)
-     *           *estab_grid)/nind(pft)               
+     *           *estab_grid)/nind(pft)
             if (sm_ind_temp.gt.0.0) then
                do nc=2,nco2
                   sm_ind(pft,nc)=(sm_ind(pft,nc)*temp*nind_old+
@@ -13960,7 +13907,7 @@ c         Add new saplings to current population
             if (hm_ind(pft,1).gt.0.0) then
                do nc=2,nco2
                   hm_ind(pft,nc)=(hm_ind(pft,nc)*temp*nind_old+
-     *                 hm_sapl(pft,nc)*hm_sapl(pft,1)*estab_grid)/                  
+     *                 hm_sapl(pft,nc)*hm_sapl(pft,1)*estab_grid)/
      *                 (hm_ind(pft,1)*nind(pft))
                enddo
             endif
@@ -13983,7 +13930,7 @@ c         Add new saplings to current population
 
 
 c         Accumulate biomass increment due to sapling establishment
- 
+
             temp=acflux_estab(1)
             all=(lm_sapl(pft,1)+sm_sapl(pft,1)+hm_sapl(pft,1)
      *           +rm_sapl(pft,1))
@@ -14006,7 +13953,7 @@ c         Accumulate biomass increment due to sapling establishment
                   enddo
                endif
             endif
- 
+
 c         Calculate height, diameter and crown area for new average
 c         individual such that the basic allometric relationships (A-C below)
 c         are satisfied.
@@ -14054,16 +14001,16 @@ c    KIRSTEN: put in uniform distribution of dbh = 5 classes
              dbh_class(class,pft)=(2.0*dbh(pft)+
      *                  (class*0.25*2.0*dbh(pft))- 0.125*2.0*dbh(pft))
 
-c			Doug 02/13: add more detail here later	 
+c			Doug 02/13: add more detail here later
 c          bt(class,pft)=(param1(pft)*dbh_class(class,pft)+param2(pft))
 c              tau_c(class,pft)=2.9*(bt(class,pft)**2.0)
 
               height_class(class,pft)=2*height(pft)-
-     *            (class*0.25*2.0*height(pft))+ 0.125*2.0*height(pft)   
-              cl_t(class,pft)=height_class(class,pft)*crown(pft)  
+     *            (class*0.25*2.0*height(pft))+ 0.125*2.0*height(pft)
+              cl_t(class,pft)=height_class(class,pft)*crown(pft)
            enddo !pseudo age class
-		   
-c		Doug 02/13: add more detail here later 
+
+c		Doug 02/13: add more detail here later
            IF (tree(pft)) THEN
              !print*, "wow",tree(pft)
 		    ! print*, pft, tree
@@ -14071,7 +14018,7 @@ c		Doug 02/13: add more detail here later
 		     !print*, BTparam2(pft,1:3)
              CALL bt_establish(BTparam1(pft,1:3),BTmode0(pft,1),
      *         nind_old,estab_grid)
-	 
+
 	         CALL bt_establish(BTparam2(pft,1:3),BTmode0(pft,2),
      *         nind_old,estab_grid)
 
@@ -14083,7 +14030,7 @@ c         Recalculate sapwood mass, transferring excess sapwood to heartwood
 c         compartment, if necessary to satisfy Eqn A
 
           sm_ind(pft,1)=lm_ind(pft,1)*height(pft)*wooddens*sla(pft)
-     *         /latosa 
+     *         /latosa
           temp=hm_ind(pft,1)
           hm_ind(pft,1)=hm_ind(pft,1)+(sm_ind_temp-sm_ind(pft,1))
           if (hm_ind(pft,1).gt.0.0) then
@@ -14099,8 +14046,8 @@ c          Update LAI and FPC
            else
              lai_ind(pft)=0.0
            endif
-		   
-           fpc_ind=(1.0-exp(-0.5*lai_ind(pft)))		 
+
+           fpc_ind=(1.0-exp(-0.5*lai_ind(pft)))
            fpc_grid(pft)=crownarea(pft)*nind(pft)*fpc_ind
        endif
       enddo !pft
@@ -14125,7 +14072,7 @@ c          Update LAI and FPC
               nind_old=nind(pft)
               nind(pft)=nind(pft)/(fpc_tree_total/0.95)
               fpc_grid(pft)=fpc_grid(pft)/(fpc_tree_total/0.95)
-			  
+
               temp=litter_ag_leaf(pft,1)
               litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)+lm_ind(pft,1)
      *             *(nind_old-nind(pft))
@@ -14136,7 +14083,7 @@ c          Update LAI and FPC
      *                   (nind_old-nind(pft))))/ litter_ag_leaf(pft,1)
                  END DO
               END IF
-			  
+
               temp=litter_ag_wood(pft,1)
               litter_ag_wood(pft,1)=litter_ag_wood(pft,1)+
      *             (sm_ind(pft,1)+hm_ind(pft,1))*(nind_old-nind(pft))
@@ -14148,7 +14095,7 @@ c          Update LAI and FPC
      *                   litter_ag_wood(pft,1)
                  END DO
               END IF
-			  
+
 c              temp=litter_ag(pft,1)
 c              litter_ag(pft,1)=litter_ag(pft,1)+(lm_ind(pft,1)+
 c     *             sm_ind(pft,1)+hm_ind(pft,1))*(nind_old-nind(pft))
@@ -14172,7 +14119,7 @@ c      Kirsten: fuel class
      *              +litter_inc*nind(pft))/fuel_1hr_leaf(pft,1)
               END DO
             END IF
-			
+
             temp=fuel_1hr_wood(pft,1)
             fuel_1hr_wood(pft,1)=fuel_1hr_wood(pft,1)+
      *           (0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
@@ -14184,7 +14131,7 @@ c      Kirsten: fuel class
      *              +litter_inc*nind(pft))/fuel_1hr_wood(pft,1)
               END DO
             END IF
-			
+
 C            temp=fuel_1hr(pft,1)
 C            fuel_1hr(pft,1)=fuel_1hr(pft,1)+(lm_ind(pft,1)+
 C     *           0.045*sm_ind(pft,1)+ 0.045*hm_ind(pft,1))*nind(pft)
@@ -14259,7 +14206,7 @@ C            endif
 c     SECTION FOR GRASSES
 
       do pft=1,npft
-    
+
         if (present(pft).and..not.tree(pft)) then
            if (estab(pft)) then
 c          Grasses can establish in non-vegetated areas
@@ -14279,7 +14226,7 @@ c         Accumulate biomass increment due to grass establishment
                 litter_bg(pft,1)=litter_bg(pft,1)-(bare*rm_sapl(pft,1))
                 litter_ag_leaf(pft,1)=litter_ag_leaf(pft,1)-
      *             (bare*lm_sapl(pft,1))
-                
+
 c            KIRSTEN: per fuel class
               fuel_1hr_leaf(pft,1)=fuel_1hr_leaf(pft,1)-
      *          (bare*lm_sapl(pft,1))
@@ -14300,7 +14247,7 @@ c            KIRSTEN: per fuel class
                      rm_ind(pft,nc)=(rm_ind(pft,nc)*temp+bare*
      *                    rm_sapl(pft,1)*rm_sapl(pft,nc))/rm_ind(pft,1)
                   enddo
-               endif     
+               endif
              endif
 
              temp=acflux_estab(1)
@@ -14321,7 +14268,7 @@ c            KIRSTEN: per fuel class
      *                     *rm_sapl(pft,nc))/all
                    enddo
                 endif
-             endif             
+             endif
            endif
 
            if (lm_ind(pft,1).le.0.0) then
@@ -14389,7 +14336,7 @@ c     Doug 03/09: update changein fuel loads
      *        (fuel_1hr_leaf(pft,1)-temp_fuel(1,pft,1))/12
           END DO
         END IF
-		
+
         IF (fuel_1hr_wood(pft,1)-temp_fuel(2,pft,1)>0) THEN
           DO nc=1,nco2
             fuel_1hr_wood_inc_pos(pft,nc,:)=
@@ -14426,16 +14373,16 @@ c Doug 02/13: Calculates new bark thickness spread after establishment
 c     SUBROUTINE bt_establish
 c Doug 02/13: Calculates new bark thickness spread after establishment
        SUBROUTINE bt_establish(BTparam,BTmode0,nind0,estab_grid)
-	 
+
        IMPLICIT NONE
-	   
+
 C      Inputs
        REAL BTmode0
        REAL nind0, estab_grid
-	   
+
 C      INPUTS/OUTPUTS
        REAL BTparam(1:3)
-	   
+
 C      local vaiables
        REAL A,B,C,D
        !REAL alpha,beta,gamma,delta
@@ -14444,7 +14391,7 @@ C      local vaiables
        REAL d1,d2
        REAL m,n
        REAL BTmean,BTmode,BTmode_old,BTmode_frac
-	   
+
        IF (nind0==0) THEN
          BTparam(2)=BTmode0
          RETURN
@@ -14459,30 +14406,30 @@ C      local vaiables
        m=estab_grid
        n=nind0
        BTmode_old=BTparam(2)
-	   
+
 	   !PRINT*, "EST"
 	   !print*, "!!!!!!!"
 	   !print*, s1,s2,c1,c2,m,n
-	   
+
        A=-(2*c2**3-3*s1*c2**2+s1**3)/(3*(s1-s2)*(c2-s1))
        B=(2*c2**3-3*s2*c2**2+s2**3)/(3*(s1-s2)*(c2-s2))
        C=-m*(2*c1**3-3*s1*c1**2+s1**3)/(3*n*(s1-s2)*(c1-s1))
        D=m*(2*c1**3-3*s2*c1**2+s2**3)/(3*n*(s1-s2)*(c1-s2))
-	   
+
        !alpha=-(c2**2-2*c2*s1+s1**2)/((s1-s2)*(c2-s1))
        !beta=(c2**2-2*c2*s2+s2**2)/((s1-s2)*(c2-s2))
        !gamma=-m*(c1**2-2*c1*s1+s1**2)/(n*(s1-s2)*(c1-s1))
        !delta=m*(c1**2-2*c1*s1+s1**2)/(n*(s1-s2)*(c1-s2))
-	   
-       BTmean=(A+B+C+D)/(1+m/n);	   
-       BTmode=3*BTmean-s1-s2; 
-	   
+
+       BTmean=(A+B+C+D)/(1+m/n);
+       BTmode=3*BTmean-s1-s2;
+
        BTmode_frac=(BTmode-s1)/(s2-s1)
        BTparam(2)=BTparam(1)+BTmode_frac*(BTparam(3)-BTparam(1))
-	   
 
-	   
-	   
+
+
+
        IF (BTparam(2)<BTmode0 .OR. BTparam(2)>BTmode_old) THEN
          IF (abs(BTparam(2)-BTmode0)<0.0001) THEN
            BTparam(2)=BTmode0
@@ -14505,12 +14452,12 @@ C      local vaiables
            IF (BTparam(2)>BTmode_old) BTparam(2)=BTmode_old
          END IF
        END IF
-	   
+
        RETURN
-	   
+
        end
-           
-	   
+
+
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     SUBROUTINE decay
@@ -14529,7 +14476,7 @@ c     PARAMETERS
       integer nco2
          parameter (nco2=3)
       real lambda
-      parameter (lambda=8267) 
+      parameter (lambda=8267)
 
 c     ARGUMENTS
       logical present(1:npft)
@@ -14544,12 +14491,12 @@ c     ARGUMENTS
       real fuel_10hr(1:npft,1:nco2)          !10hr dead fuel: large twigs
       real fuel_100hr(1:npft,1:nco2)         !100hr dead fuel: small branches
       real fuel_1000hr(1:npft,1:nco2)        !1000hr dead fuel: logs, bole, large branches
-      
 
-c     LOCAL VARIABLES 
+
+c     LOCAL VARIABLES
       integer i,j,pft,c
       real dfac
-      
+
       i=0
       j=0
       pft=0
@@ -14559,8 +14506,8 @@ c     LOCAL VARIABLES
       cpool_slow(c)=(((cpool_slow(c)/1000.+1.)*dfac)-1.)*1000.
       cpool_fast(c)=(((cpool_fast(c)/1000.+1.)*dfac)-1.)*1000.
 
-      
-      
+
+
       do pft=1,npft
          lm_ind(pft,c)=(((lm_ind(pft,c)/1000.+1.)*dfac)-1.)*1000.
          sm_ind(pft,c)=(((sm_ind(pft,c)/1000.+1.)*dfac)-1.)*1000.
@@ -14580,8 +14527,8 @@ c     LOCAL VARIABLES
      *                     *dfac)-1.)*1000.
          fuel_1000hr(pft,c)=(((fuel_1000hr(pft,c)/1000.+1.)
      *                     *dfac)-1.)*1000.
-      enddo       
-      
+      enddo
+
 
       return
 
@@ -14615,47 +14562,47 @@ c     >     sum,earth
 c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     Stephen & Doug 05/09: land use change, agriculture subroutine
-c     clearance = conversion from natural gridcell - agricultural 
+c     clearance = conversion from natural gridcell - agricultural
 c     abandonment= reset the state variables, start natural regeneration
 c                  from bare ground.
 c
-      subroutine agriculture(clear,mtemp_min20,tree,agri_burn, 
+      subroutine agriculture(clear,mtemp_min20,tree,agri_burn,
      *  lm_ind,sm_ind,hm_ind,rm_ind,nind,convflux,agri_litter_ag,
      *  agri_litter_bg,litter_ag,litter_bg,abandon,prod10,prod100,
      *  fpc_grid,present)
 
-      implicit none  
+      implicit none
 
 c     PARAMETERS
       INTEGER npft
           PARAMETER(npft=13)
-      
+
 c     ARGUMENTS
       logical clear,tree(1:npft),abandon,present(1:npft)
-      real mtemp_min20,agri_burn 
+      real mtemp_min20,agri_burn
       real lm_ind(1:npft),sm_ind(1:npft)
-      real hm_ind(1:npft),rm_ind(1:npft),nind(1:npft) 
+      real hm_ind(1:npft),rm_ind(1:npft),nind(1:npft)
       real convflux,litter_ag(1:npft),litter_bg(1:npft)
       real prod10(0:10),prod100(0:100)
       real fpc_grid(1:npft)
-      real agri_litter_ag,agri_litter_bg        
+      real agri_litter_ag,agri_litter_bg
 
-c     LOCAL VARIABLES 
+c     LOCAL VARIABLES
       real above
       integer pft
-      
+
 
 c     intialisations
-      above=0.0   
+      above=0.0
       agri_burn=0.0
       prod10(0)=0.0
       prod100(0)=0.0
-      convflux=0.0      
+      convflux=0.0
 
 c     Grid cell cleared in this year for agriculture
       if (clear) then
          if (mtemp_min20.gt.15.5) then    ! tropical ecosystem
-            do pft=1,npft   
+            do pft=1,npft
                if (.not.tree(pft)) then  ! tropical grass
                  agri_burn=agri_burn+(lm_ind(pft)*nind(pft))+
      *                      litter_ag(pft)
@@ -14671,14 +14618,14 @@ c     Grid cell cleared in this year for agriculture
                  agri_litter_bg=agri_litter_bg+litter_bg(pft)
      *               +(rm_ind(pft)*nind(pft))
                endif
-             enddo 
+             enddo
              agri_litter_ag=0.0
 
            else  ! temperate or boreal
              do pft=1,npft
                if (.not.tree(pft)) then  ! grass
                  convflux=convflux+(lm_ind(pft)*nind(pft))+
-     *                    litter_ag(pft)   ! fodder or burnt  
+     *                    litter_ag(pft)   ! fodder or burnt
                  agri_litter_bg=agri_litter_bg+litter_bg(pft)
      *                          + (rm_ind(pft)*nind(pft))
                else ! woody pfts
@@ -14695,25 +14642,25 @@ c     Grid cell cleared in this year for agriculture
 
        endif  ! gridcell clearance
 
-c      abandonment of previous agricultural land to natural 
+c      abandonment of previous agricultural land to natural
 c      vegetation
-         
+
        if (abandon) then
 c
 c         set all state variables to zero: build up from bare ground
-c                                                                   
+c
          do pft=1,npft
             nind(pft)=0.0
             lm_ind(pft)=0.0
             sm_ind(pft)=0.0
-            hm_ind(pft)=0.0 
+            hm_ind(pft)=0.0
             rm_ind(pft)=0.0
             litter_ag(pft)=0.0
             litter_bg(pft)=0.0
             fpc_grid(pft)=0.0
             present(pft)=.false.
          enddo
-       endif   
+       endif
 
        return
        end
@@ -14722,13 +14669,13 @@ c//////////////////////////////////////////////////////////////////////////////
 c******************************************************************************
 c     Stephen & Doug 05/09: land use change,
 c     agricultural production and product decomposition
-c                                                    
+c
       subroutine agriprod(present,agri,anpp,cflux_prod_total,
      *   prod10_total,prod100_total,prod1,anpp_agri,rap,x10,
      *   x100,agri_litter_ag,agri_litter_bg,prod10,prod100)
 
       implicit none
- 
+
 c     PARAMETERS
       real above,below
         parameter (above=0.4,below=0.6)
@@ -14745,53 +14692,53 @@ c     ARGUMENTS
       real agri_litter_ag,agri_litter_bg
       real prod10(0:10),prod100(0:100)
 
-c     LOCAL VARIABLES 
-      integer i,j,pft       
-      real cflux_prod1,cflux_prod10,cflux_prod100 
+c     LOCAL VARIABLES
+      integer i,j,pft
+      real cflux_prod1,cflux_prod10,cflux_prod100
       real anpp_total
-     
+
 
       cflux_prod_total=0.0
       cflux_prod1=0.0
-      cflux_prod10=0.0 
+      cflux_prod10=0.0
       cflux_prod100=0.0
       prod10_total=0.0
       prod100_total=0.0
       anpp_total=0.0
-      anpp_agri=0.0 
-       
+      anpp_agri=0.0
+
       do pft=1,npft
         if (present(pft)) anpp_total=anpp_total+anpp(pft)
       enddo
-                               
-c     calculate agricultural npp
-      if (agri) anpp_agri=rap*anpp_total  
 
-c     update the product pools: as a linear decay of the 
+c     calculate agricultural npp
+      if (agri) anpp_agri=rap*anpp_total
+
+c     update the product pools: as a linear decay of the
 c     initial carbon inputs, e.g. the annual release from
 c     the prod10 pool represents 10% of the initial carbon
 c     entering the prod10 pool during the previous 10 years
-c                                          
+c
 c     x10 represents 10% of the initial conversion pool with
-c         10 year turnover. 
+c         10 year turnover.
 c     x100 represents 1% of the initial conversion pool with
-c         100 year turnover 
-c 
+c         100 year turnover
+c
 c     Each year the pool decomposes by x10, x100 respectively.
 c
       do i=0,8            ! check
        j=10-i
        cflux_prod10=cflux_prod10+x10(j-1)
        prod10(j)=prod10(j-1)-x10(j-1)
-       prod10_total=prod10_total+prod10(j) 
+       prod10_total=prod10_total+prod10(j)
        x10(j)=x10(j-1)
        if (prod10(j).lt.1.0) prod10(j)=0.0
-      enddo  
+      enddo
 
       x10(1)=0.1*prod10(0)
       prod10(1)=prod10(0)
-      prod10_total=prod10_total+prod10(1)         
-      
+      prod10_total=prod10_total+prod10(1)
+
       do i=0,98
        j=100-i
        cflux_prod100=cflux_prod100+x100(j-1)
@@ -14816,7 +14763,7 @@ c
 
 c
 c     product flux
-c                 
+c
       cflux_prod_total=cflux_prod1+cflux_prod10+cflux_prod100
 
       return
