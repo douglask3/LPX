@@ -397,7 +397,9 @@ LPJVariable LPJ_VARIABLES[] = {
   { "cgf",  SIMPLE_MONTHLY },               //Doug 12/10: cload-to-ground fraction
   { "fdry",  SIMPLE_MONTHLY },               //Doug 12/10: cload-to-ground fraction
   { "lt_days",  SIMPLE_MONTHLY },               //Doug 12/10: cload-to-ground fraction
-  { "mlightn_eff",  SIMPLE_MONTHLY }               //Doug 12/10: cload-to-ground fraction
+  { "mlightn_eff",  SIMPLE_MONTHLY },               //Doug 12/10: cload-to-ground fraction
+  { "dlm_1hr_old",      SIMPLE          },
+  { "mlm",      SIMPLE_MONTHLY          }
 };
 
 
@@ -2404,7 +2406,9 @@ extern "C" int outannual_(int *year, int *present,
                           float *anpp_grid, float *arh_grid, float *acflux_fire_grid,//Doug 07/09: the cheats
                           float *gdd_grid, float *alpha_ws, float *pfuel_limit,
 						  float* dprec_out, float* BTparam1, float* BTparam2,                          //Doug 07/09: vioclimatic varibles
-                          float *cgf, float *fdry, float *lt_days, float *mlightn_eff)                          //Doug 07/09: vioclimatic varibles
+                          float *cgf, float *fdry, float *lt_days, float *mlightn_eff,
+                          float *dlm_1hr_old, float *mlm)                          //Doug 07/09: vioclimatic varibles
+
 {
   // Skip output during spin-up if required.
   // Doug 06/09: Skip output if before fist year of ouput
@@ -2596,6 +2600,8 @@ extern "C" int outannual_(int *year, int *present,
   handle_output_record("fdry",  fdry);
   handle_output_record("lt_days",  lt_days);   //Doug 07/09: bioclimatic alpha
   handle_output_record("mlightn_eff",  mlightn_eff);   //Doug 07/09: bioclimatic alpha
+  handle_output_record("dlm_1hr_old",  dlm_1hr_old);   //Doug 07/09: bioclimatic alpha
+  handle_output_record("mlm",  mlm);   //Doug 07/09: bioclimatic alpha
 
   // Output is written every params.spinup_out_freq years during
   // spin-up (averaged over that period).  During the transient part
