@@ -593,6 +593,7 @@ c     additions by Kirsten
       REAL deet(1:365)                 ! Doug 08/09: Equilibrium evapotrainspiration for calculating alpha_ws
       real height(1:npft)              ! tree height (m)
       real height_class(0:4,1:npft)
+      REAL height_grid
       real dbh(1:npft)                 ! stem diameter per PFT, Kirsten.
       REAL dbh_class(0:4,1:npft)       ! Doug 02/13: dbh for each height class
       REAL BTparam1(1:npft,1:3)        ! Doug 02/13: lower, medium and upper bound describing 1-50-99% quantile p1 in Bark thickness equation BT=p1+p2*DBH
@@ -1419,8 +1420,11 @@ c  acflux_fire(1)
 C	Doug 11/12: Model changed to seperate out grass/leaf and wood above ground litter.
 C				So litter_ag is summed again for output
          acflux_fire_grid=acflux_fire(1)
+         height_grid = 0.0
           DO pft=1,npft
-          litter_ag(pft,1)=litter_ag_leaf(pft,1)+litter_ag_wood(pft,1)
+            height_grid = height_grid + fpc_grid(pft) *
+     *        height(pft) / sum(fpc_grid)
+            litter_ag(pft,1)=litter_ag_leaf(pft,1)+litter_ag_wood(pft,1)
             DO nc=2,nco2
               litter_ag(pft,nc)=((litter_ag_leaf(pft,nc)*
      *          litter_ag_leaf(pft,1))+(litter_ag_wood(pft,nc)*
@@ -1444,8 +1448,8 @@ C				So litter_ag is summed again for output
      *      apet_grid,mintc,aintc,meangc,mgp,num_fire,annum_fire,
      *      area_burnt,an_areafires,mfdi,an_fdi,an_fseason,
      *      acflux_trace,mcflux_trace,m_fc_crown,an_fc_crown,
-     *      m_i_surface,an_i_surface,gdd,height,mgpp,
-     *      w(1),w(2),dphen,
+     *      m_i_surface,an_i_surface,gdd,height,height_grid,
+     *      mgpp,w(1),w(2),dphen,
      *      dphen_change, !Doug 05/09: inc. dphen_change
      *      dhuman_ign,dlightn,mw1,mw2,num_fire_human,num_fire_lightn,
      *      annum_fire_human,annum_fire_lightn,area_burnt_human,

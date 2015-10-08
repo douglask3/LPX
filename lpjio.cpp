@@ -375,6 +375,7 @@ LPJVariable LPJ_VARIABLES[] = {
   { "an_i_surface",  SIMPLE          },
   { "gdd",           PER_PFT         },
   { "height",        PER_PFT         },
+  { "height_grid",   SIMPLE          },
 //  { "mgpp",          PER_PFT_MONTHLY },
   { "wu",            SIMPLE          },
   { "wl",            SIMPLE          },
@@ -2379,7 +2380,8 @@ extern "C" int outannual_(int *year, int *present,
                           float *acflux_trace, float *mcflux_trace,
                           float *m_fc_crown, float *an_fc_crown,
                           float *m_i_surface, float *an_i_surface,
-                          float *gdd, float *height, float *mgpp,
+                          float *gdd, float *height, float *height_grid,
+                          float *mgpp,
                           float *wu, float *wl, float *dphen,
                           float *dphen_change,                    // Doug 05/09
                           float *dhuman_ign, float *dlightn,      // Yan: 24/10/07
@@ -2542,6 +2544,7 @@ extern "C" int outannual_(int *year, int *present,
   handle_output_record("an_i_surface", an_i_surface);
   handle_output_record("gdd", gdd);
   handle_output_record("height", height);
+  handle_output_record("height_grid", height_grid);
 //  handle_output_record("mgpp", mgpp);
   handle_output_record("wu", wu);
   handle_output_record("wl", wl);
