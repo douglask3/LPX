@@ -285,6 +285,7 @@ LPJVariable LPJ_VARIABLES[] = {
   { "anpp",          PER_CO2_PFT     },   // Yan: 14/10/07
   { "anpp_pft_sum",  PER_CO2         },   // Yan: 14/10/07
   { "acflux_estab",  PER_CO2         },
+  { "carbon_grid",   PER_CO2         },
   { "litter_ag",     PER_CO2_PFT     },
   { "litter_ag_leaf",PER_CO2_PFT     },
   { "litter_ag_wood",PER_CO2_PFT     },
@@ -2354,7 +2355,9 @@ extern "C" int outannual_(int *year, int *present,
                           float *lm_ind, float *lm_inc, float *rm_ind,
                           float *sm_ind, float *hm_ind,
                           float *fpc_grid,
-                          float *anpp, float *acflux_estab,float *litter_ag,
+                          float *anpp, float *acflux_estab,
+                          float *carbon_grid,
+                          float *litter_ag,
                           float *litter_ag_leaf, float *litter_ag_wood, float *litter_bg,
                           float *cpool_fast, float *cpool_slow,
                           float *arh, float *afire_frac, float *acflux_fire,
@@ -2487,6 +2490,7 @@ extern "C" int outannual_(int *year, int *present,
   handle_output_record("fpc_grid", fpc_grid);
   handle_output_record("anpp_sum", anpp_sum);
   handle_output_record("acflux_estab", acflux_estab);
+  handle_output_record("carbon_grid", carbon_grid);
   handle_output_record("litter_ag", litter_ag);
   handle_output_record("litter_ag_leaf", litter_ag_leaf);
   handle_output_record("litter_ag_wood", litter_ag_wood);

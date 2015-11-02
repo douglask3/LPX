@@ -608,6 +608,9 @@ c     additions by Kirsten
       real k_slow_ave                  ! running average k_slow for subroutine
                                        ! littersom
       real lai_ind(1:npft)             ! individual leaf area index
+      REAL livemass_ag,livemass_bg     ! For output only. AG and BG live carbon
+      REAL litter_ag_grid,litter_bg_grid    ! AG and BG dead litter
+      REAL carbon_grid                 ! Total live and dead biomass
       REAL litter_ag(1:npft,1:nco2)	   ! gridcell above-ground litter (gC/m2)
 									   ! Doug 11/12: split above-ground litter into grass and wood
 									   ! components to allow for different decomosition rates
@@ -1435,8 +1438,33 @@ C				So litter_ag is summed again for output
           dprec_out=dprec
 
 
+        livemass_ag=0.0
+        livemass_bg=0.0
+        litter_ag_grid=0.0
+        litter_bg_grid=0.0
+        DO pft=1,npft
+            livemass_ag=livemass_ag+(lm_ind(pft,1)+
+     *          sm_ind(pft,1)+hm_ind(pft,1))*nind(pft)
+            livemass_bg=livemass_bg+rm_ind(pft,1)*nind(pft)
+
+            litter_ag(pft,1)=litter_ag_leaf(pft,1)+litter_ag_wood(pft,1)
+            litter_ag_grid=litter_ag_grid+
+     *          litter_ag_leaf(pft,1)+litter_ag_wood(pft,1)
+            litter_bg_grid=litter_bg_grid+litter_bg(pft,1)
+            DO nc=2,nco2
+                litter_ag(pft,nc)=((litter_ag_leaf(pft,nc)*
+     *              litter_ag_leaf(pft,1))+(litter_ag_wood(pft,nc)*
+     *              litter_ag_wood(pft,1)))/(litter_ag_wood(pft,1)+
+     *              litter_ag_leaf(pft,1))
+	        END DO
+        END DO
+
+          carbon_grid=livemass_ag+livemass_bg+
+     *      litter_ag_grid+litter_bg_grid+cpool_fast(1)+cpool_slow(1)
+
          call outannual(year,present,nind,lm_ind,lm_inc,rm_ind,sm_ind,
      *      hm_ind,fpc_grid,anpp,acflux_estab,
+     *      carbon_grid,
      *      litter_ag,litter_ag_leaf,litter_ag_wood, !Doug 11/12: Output seperate ggrass and wood litter
      *      litter_bg,
      *      cpool_fast,cpool_slow,arh,afire_frac,acflux_fire,
