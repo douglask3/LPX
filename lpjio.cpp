@@ -298,6 +298,7 @@ LPJVariable LPJ_VARIABLES[] = {
   { "afire_frac_lightn", SIMPLE      },  // Yan: 22/11/07
   { "acflux_fire",   PER_CO2         },
   { "mcflux_fire",   PER_CO2_MONTHLY },
+  { "mcflux_fire_grid",SIMPLE_MONTHLY},
   { "arunoff",       SIMPLE          },
   { "sla",           PER_PFT         },
   { "mpar",          SIMPLE_MONTHLY  },
@@ -309,6 +310,7 @@ LPJVariable LPJ_VARIABLES[] = {
   { "mrunoff",       SIMPLE_MONTHLY  },
   { "aaet",          SIMPLE          },
   { "mrh",           PER_CO2_MONTHLY },
+  { "mrh_grid",      SIMPLE_MONTHLY  },
   { "mnpp_add",      PER_CO2_MONTHLY },
   { "maet",          SIMPLE_MONTHLY  },
   { "mgpp",          PER_PFT_MONTHLY },
@@ -2361,13 +2363,14 @@ extern "C" int outannual_(int *year, int *present,
                           float *litter_ag_leaf, float *litter_ag_wood, float *litter_bg,
                           float *cpool_fast, float *cpool_slow,
                           float *arh, float *afire_frac, float *acflux_fire,
-                          float *mcflux_fire,
+                          float *mcflux_fire, float *mcflux_fire_grid,
                           float *arunoff, float *sla, float *mpar,
                           float *mapar, float *mphen, float *anpp_add,
                           float *mnpp,
                           float *mnpp_grid,    //Doug 06/09
                           float *mrunoff, float *aaet,
-                          float *mrh, float *mnpp_add, float *maet,
+                          float *mrh, float *mrh_grid,
+                          float *mnpp_add, float *maet,
                           float *mtemp_soil, float *mcica,
                           float *lresp, float *sresp, float *rresp,
                           float *gresp, float *aresp,
@@ -2501,6 +2504,7 @@ extern "C" int outannual_(int *year, int *present,
   handle_output_record("afire_frac", afire_frac);
   handle_output_record("acflux_fire", acflux_fire);
   handle_output_record("mcflux_fire", mcflux_fire);
+  handle_output_record("mcflux_fire_grid", mcflux_fire_grid);
   handle_output_record("arunoff", arunoff);
   handle_output_record("sla", sla);
   handle_output_record("mpar", mpar);
@@ -2513,6 +2517,7 @@ extern "C" int outannual_(int *year, int *present,
   handle_output_record("mrunoff", mrunoff);
   handle_output_record("aaet", aaet);
   handle_output_record("mrh", mrh);
+  handle_output_record("mrh_grid", mrh_grid);
   handle_output_record("mnpp_add", mnpp_add);
   handle_output_record("maet", maet);
   handle_output_record("mgpp", mgpp);

@@ -633,6 +633,7 @@ c     additions by Kirsten
       real mpar_day(1:12)              ! mid-monthly PAR flux (J/m2/day)
       real mrh(1:12,1:nco2)            ! monthly heterotrophic respiration
                                        ! (gC/m2)
+      real mrh_grid(1:12)
       real mrunoff(1:12)               ! total monthly runoff (mm)
       real mtemp_min_buf(1:climbuf)    ! buffer to store 'climbuf' years of
                                        ! coldest month temperatures
@@ -703,6 +704,7 @@ c     variables for fire simulation Kirsten
       real acflux_fire(1:nco2)         ! C flux to atmosphere due to fire (gC/m2)
       REAL acflux_fire_grid            ! Doug 08/09: as above, but with no nc dimension. Smaller for outputs
       real mcflux_fire(1:12,1:nco2)    ! C flux to atmosphere due to fire (gC/m?�)
+      real mcflux_fire_grid(1:12)
       real an_fseason
 c DM      real fire_length
       real afire_frac                  ! fraction of gridcell burnt this year
@@ -1462,15 +1464,19 @@ C				So litter_ag is summed again for output
           carbon_grid=livemass_ag+livemass_bg+
      *      litter_ag_grid+litter_bg_grid+cpool_fast(1)+cpool_slow(1)
 
+         mcflux_fire_grid(:) = mcflux_fire(:,1)
+
          call outannual(year,present,nind,lm_ind,lm_inc,rm_ind,sm_ind,
      *      hm_ind,fpc_grid,anpp,acflux_estab,
      *      carbon_grid,
      *      litter_ag,litter_ag_leaf,litter_ag_wood, !Doug 11/12: Output seperate ggrass and wood litter
      *      litter_bg,
      *      cpool_fast,cpool_slow,arh,afire_frac,acflux_fire,
-     *      mcflux_fire,arunoff,sla,mpar,mapar,mphen,anpp_add,mnpp,
+     *      mcflux_fire, mcflux_fire_grid,
+     *      arunoff,sla,mpar,mapar,mphen,anpp_add,mnpp,
      *      mnpp_grid,    !Doug 06/09: monthly npp for entire cell
-     *      mrunoff,aaet,mrh,mnpp_add,maet,mtemp_soil,
+     *      mrunoff,aaet,mrh,mrh_grid,
+     *      mnpp_add,maet,mtemp_soil,
      *      mcica,lresp,
      *      sresp,rresp,gresp,aresp,mauw1,mauw2,maep,aaep,mpet_grid,
      *      apet_grid,mintc,aintc,meangc,mgp,num_fire,annum_fire,
