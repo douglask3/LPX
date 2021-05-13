@@ -123,7 +123,7 @@ Once this is all set up, you’re ready to run. Run the model with the following
 2. ```> motif-lpj-step1a :```  obtained by the make two_step & make three_step commands. Runs the 
         spinup component and outputs the model state at the end of the spin-up into the file listed 
         after ```SPINUP_FILE:``` in lpj.cfg
-3, ```> motif-lpj-step1b : <file?``` obtained by the make three_step command Runs the rampup component. 
+3. ```> motif-lpj-step1b : <file?``` obtained by the make three_step command Runs the rampup component. 
         Reads state of model from ```SPINUP_FILE: <file>``` , runs through rampup, and outputs state of 
         model into ```RAMPUP_FILE: <file>```
 4.  ```> motif-lpj-step2  :``` obtained by the make two_step & make three_step commands. Runs the 
