@@ -1,6 +1,6 @@
 # LPX
 
-LPX is a fire enabled  DGVM in the LPJ suite of models. It is a development of LPJ-SPITFIRE (Thonicke et al., 2010), with some improvement in the fire component, documented in Prentice et al (2011). 
+LPX is a fire enabled  DGVM in the LPJ (Sitch et al. 2003) suite of models. It is a development of LPJ-SPITFIRE (Thonicke et al., 2010), with some improvement in the fire component, documented in Prentice et al (2011). 
 
 The configuration here (in lpj.cfg) is from Sato et al. 2021. LPX  was also used to simulate current (Murray et al., 2012) & future  (Murray et al., 2013) global hydrological cycles; carbon stores at the last ice age (Ciais et al., 2012); and in the development of a DGVM benchmarking system (Kelley et al., 2013).
 
@@ -144,8 +144,7 @@ Once this is all set up, you’re ready to run. Run the model with the following
  Doug (douglas.i.kelley@gmail.com)
 
 
-# Sitch, S., Smith, B., & Prentice, I. (2003). Evaluation of ecosystem dynamics, plant geography
-# and terrestrial carbon cycling in the LPJ dynamic global vegetation model. Global Change Biology
+
 
 
 ## references
@@ -160,5 +159,7 @@ Murray SJ, Watson IM, Prentice IC. The use of dynamic global vegetation models f
 Prentice IC, Kelley DI, Foster PN, Friedlingstein P, Harrison SP, Bartlein PJ. Modeling fire and the terrestrial carbon balance. Global Biogeochemical Cycles. 2011 Sep;25(3).
  
 Sato H, Kelley DI, Mayor S, Calvo MM, Cowling S, Prentice IC, Amazonian Dry Corridors Opened by Fire and CO2 Deprivation during the Last Glacial Maximum. 2021, accepted in Nature Geoscience 
+
+Sitch S, Smith B, Prentice IC, Arneth A, Bondeau A, Cramer W, Kaplan JO, Levis S, Lucht W, Sykes MT, Thonicke K. Evaluation of ecosystem dynamics, plant geography and terrestrial carbon cycling in the LPJ dynamic global vegetation model. Global change biology. 2003 Feb;9(2):161-85.
 
 Thonicke K, Spessa A, Prentice IC, Harrison SP, Dong L, Carmona-Moreno C. The influence of vegetation, fire spread and fire behaviour on biomass burning and trace gas emissions: results from a process-based model. Biogeosciences. 2010 Jun 23;7(6):1991-2011.
