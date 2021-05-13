@@ -152,7 +152,7 @@ Ciais P, Tagliabue A, Cuntz M, Bopp L, Scholze M, Hoffmann G, Lourantou A, Harri
 
 Kelley DI, Prentice IC, Harrison SP, Wang H, Simard M, Fisher JB, Willis KO. A comprehensive benchmarking system for evaluating global vegetation models. Biogeosciences. 2013 May 17;10(5):3313-40.
 
-Murray SJ, Watson IM, Prentice IC. The use of dynamic global vegetation models for simulating hydrology and the potential integration of satellite observations. Progress in Physical Geography. 2013 Feb;37(1):63-97.
+Murray SJ, Foster PN, Prentice IC. Future global water resources with respect to climate change and water withdrawals as estimated by a dynamic global vegetation model. Journal of Hydrology. 2012 Jul 2;448:14-29.
 
 Murray SJ, Watson IM, Prentice IC. The use of dynamic global vegetation models for simulating hydrology and the potential integration of satellite observations. Progress in Physical Geography. 2013 Feb;37(1):63-97.
 
